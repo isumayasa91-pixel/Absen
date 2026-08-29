@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
-import { FileSpreadsheet, Download, Calendar, Filter, UserCheck, ClockAlert, UserX } from 'lucide-react';
+import { FileSpreadsheet, Download, Calendar, Filter, UserCheck, ClockAlert, UserX, Trash2 } from 'lucide-react';
 
 export const RekapLaporanView: React.FC = () => {
-  const { attendanceRecords, classes } = useApp();
+  const { attendanceRecords, deleteAttendanceRecord, classes } = useApp();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClass, setSelectedClass] = useState('Semua Kelas');
   const [activeTabReport, setActiveTabReport] = useState<'kehadiran' | 'alpa' | 'terlambat'>('kehadiran');
@@ -146,6 +146,7 @@ export const RekapLaporanView: React.FC = () => {
                 <th className="p-3">Jam Masuk</th>
                 <th className="p-3">Jam Pulang</th>
                 <th className="p-3">Metode Scan</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -175,6 +176,19 @@ export const RekapLaporanView: React.FC = () => {
                   <td className="p-3 font-mono font-bold text-slate-800">{r.timeIn}</td>
                   <td className="p-3 font-mono text-slate-600">{r.timeOut}</td>
                   <td className="p-3 font-mono text-[11px] text-slate-500">{r.tapMethod}</td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus catatan presensi "${r.studentName}" tanggal ${r.date}?`)) {
+                          deleteAttendanceRecord(r.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Catatan Presensi Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

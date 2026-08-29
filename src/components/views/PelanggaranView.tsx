@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ShieldAlert, AlertTriangle, FileText, Plus, Save, Search } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, FileText, Plus, Save, Search, Trash2 } from 'lucide-react';
 
 export const PelanggaranView: React.FC = () => {
   const {
@@ -8,6 +8,7 @@ export const PelanggaranView: React.FC = () => {
     disciplineRules,
     violationRecords,
     addViolationRecord,
+    deleteViolationRecord,
     students,
   } = useApp();
 
@@ -171,6 +172,7 @@ export const PelanggaranView: React.FC = () => {
                   <th className="p-3">Tanggal</th>
                   <th className="p-3">Sanksi Ditentukan</th>
                   <th className="p-3">Pelapor</th>
+                  <th className="p-3 text-center">Hapus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -182,6 +184,19 @@ export const PelanggaranView: React.FC = () => {
                     <td className="p-3 font-mono">{v.date}</td>
                     <td className="p-3 text-slate-700">{v.sanction}</td>
                     <td className="p-3 text-slate-500 font-semibold">{v.reporter}</td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus catatan pelanggaran siswa "${v.studentName}"?`)) {
+                            deleteViolationRecord(v.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Catatan Pelanggaran"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

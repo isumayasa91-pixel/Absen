@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
-import { Library, ScanBarcode, BookMarked, Download, Plus, QrCode, CheckCircle2, Search } from 'lucide-react';
+import { Library, ScanBarcode, BookMarked, Download, Plus, QrCode, CheckCircle2, Search, Trash2 } from 'lucide-react';
 
 export const PerpustakaanView: React.FC = () => {
   const {
@@ -9,6 +9,8 @@ export const PerpustakaanView: React.FC = () => {
     libraryTAPs,
     libraryBooks,
     addLibraryTAP,
+    deleteLibraryTAP,
+    deleteLibraryBook,
     students,
   } = useApp();
 
@@ -131,6 +133,7 @@ export const PerpustakaanView: React.FC = () => {
                   <th className="p-3">Waktu Kunjungan</th>
                   <th className="p-3">Jenis Aktivitas</th>
                   <th className="p-3">Detail Buku</th>
+                  <th className="p-3 text-center">Hapus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -154,6 +157,19 @@ export const PerpustakaanView: React.FC = () => {
                       ) : (
                         '-'
                       )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Hapus log TAP perpus ini?')) {
+                            deleteLibraryTAP(t.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Log TAP"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

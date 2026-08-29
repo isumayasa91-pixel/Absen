@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Megaphone, Plus, Save, X, Calendar, User, Search, Pin } from 'lucide-react';
+import { Megaphone, Plus, Save, X, Calendar, User, Search, Pin, Trash2 } from 'lucide-react';
 
 export const PengumumanView: React.FC = () => {
-  const { announcements, addAnnouncement, classes } = useApp();
+  const { announcements, addAnnouncement, deleteAnnouncement, classes } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -79,7 +79,20 @@ export const PengumumanView: React.FC = () => {
                   </span>
                   <h3 className="font-extrabold text-slate-800 text-base leading-snug">{ann.title}</h3>
                 </div>
-                <Pin className="w-4 h-4 text-amber-500 shrink-0 mt-1" />
+                <div className="flex items-center space-x-1">
+                  <Pin className="w-4 h-4 text-amber-500 shrink-0 mt-1" />
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Hapus pengumuman "${ann.title}"?`)) {
+                        deleteAnnouncement(ann.id);
+                      }
+                    }}
+                    className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    title="Hapus Pengumuman Ini"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line">{ann.content}</p>

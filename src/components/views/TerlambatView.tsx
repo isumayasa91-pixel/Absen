@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
-import { ClockAlert, Search, Download, AlertTriangle } from 'lucide-react';
+import { ClockAlert, Search, Download, AlertTriangle, Trash2 } from 'lucide-react';
 
 export const TerlambatView: React.FC = () => {
-  const { attendanceRecords, classes } = useApp();
+  const { attendanceRecords, deleteAttendanceRecord, classes } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('Semua Kelas');
 
@@ -94,6 +94,7 @@ export const TerlambatView: React.FC = () => {
                 <th className="p-3">Jam Masuk (WIB)</th>
                 <th className="p-3">Metode Scan</th>
                 <th className="p-3">Catatan Alasan</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -110,11 +111,24 @@ export const TerlambatView: React.FC = () => {
                     <td className="p-3 font-mono font-bold text-amber-700">{r.timeIn}</td>
                     <td className="p-3 font-mono text-slate-600">{r.tapMethod}</td>
                     <td className="p-3 text-slate-600">{r.notes || 'Siswa terlambat'}</td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus catatan keterlambatan "${r.studentName}"?`)) {
+                            deleteAttendanceRecord(r.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Catatan Keterlambatan"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 font-medium text-xs">
+                  <td colSpan={7} className="p-8 text-center text-slate-400 font-medium text-xs">
                     Tidak ada siswa yang terlambat sesuai filter.
                   </td>
                 </tr>

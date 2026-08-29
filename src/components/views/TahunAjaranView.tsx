@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { CalendarDays, CheckCircle2, Plus, Save, ShieldCheck } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Plus, Save, ShieldCheck, Trash2 } from 'lucide-react';
 
 export const TahunAjaranView: React.FC = () => {
-  const { academicYears, addAcademicYear } = useApp();
+  const { academicYears, addAcademicYear, deleteAcademicYear } = useApp();
   const [yearName, setYearName] = useState('2026/2027');
   const [semester, setSemester] = useState<'Ganjil' | 'Genap'>('Ganjil');
   const [isActive, setIsActive] = useState(true);
@@ -132,6 +132,7 @@ export const TahunAjaranView: React.FC = () => {
                   <th className="p-3">Tahun Ajaran</th>
                   <th className="p-3">Semester</th>
                   <th className="p-3 text-center">Status Presensi</th>
+                  <th className="p-3 text-center">Aksi / Hapus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -154,6 +155,19 @@ export const TahunAjaranView: React.FC = () => {
                           Nonaktif
                         </span>
                       )}
+                    </td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus tahun ajaran "${ay.yearName} (${ay.semester})"?`)) {
+                            deleteAcademicYear(ay.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Tahun Ajaran Ini"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

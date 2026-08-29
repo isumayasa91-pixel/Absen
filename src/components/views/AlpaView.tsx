@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
-import { UserX, Search, Download } from 'lucide-react';
+import { UserX, Search, Download, Trash2 } from 'lucide-react';
 
 export const AlpaView: React.FC = () => {
-  const { attendanceRecords, classes } = useApp();
+  const { attendanceRecords, deleteAttendanceRecord, classes } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('Semua Kelas');
 
@@ -92,6 +92,7 @@ export const AlpaView: React.FC = () => {
                 <th className="p-3">Tanggal</th>
                 <th className="p-3">Status Masuk</th>
                 <th className="p-3 text-center">Tindakan Piket</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -111,11 +112,24 @@ export const AlpaView: React.FC = () => {
                         Follow-up Orangtua
                       </span>
                     </td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus catatan alpa "${r.studentName}"?`)) {
+                            deleteAttendanceRecord(r.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Catatan Alpa"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400 font-medium text-xs">
+                  <td colSpan={6} className="p-8 text-center text-slate-400 font-medium text-xs">
                     Tidak ada siswa yang alpa sesuai filter.
                   </td>
                 </tr>

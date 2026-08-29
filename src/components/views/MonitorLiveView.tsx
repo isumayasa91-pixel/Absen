@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AttendanceStatus } from '../../types';
-import { Radio, ScanBarcode, Edit, Plus, Save, Clock, CheckCircle2, UserCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { Radio, ScanBarcode, Edit, Plus, Save, Clock, CheckCircle2, UserCheck, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
 
 export const MonitorLiveView: React.FC = () => {
   const {
     students,
     attendanceRecords,
+    deleteAttendanceRecord,
     tapRFIDOrScan,
     manualInputAttendance,
   } = useApp();
@@ -167,6 +168,7 @@ export const MonitorLiveView: React.FC = () => {
                   <th className="p-3">Pulang (Sore)</th>
                   <th className="p-3 text-center">Metode</th>
                   <th className="p-3 text-center">Status Akhir</th>
+                  <th className="p-3 text-center">Hapus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -195,6 +197,19 @@ export const MonitorLiveView: React.FC = () => {
                       >
                         {r.statusFinal}
                       </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus log presensi real-time "${r.studentName}"?`)) {
+                            deleteAttendanceRecord(r.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Log Presensi"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

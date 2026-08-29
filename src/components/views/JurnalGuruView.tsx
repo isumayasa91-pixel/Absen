@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { BookOpenCheck, Plus, Save, Calendar, Clock, School, User } from 'lucide-react';
+import { BookOpenCheck, Plus, Save, Calendar, Clock, School, User, Trash2 } from 'lucide-react';
 
 export const JurnalGuruView: React.FC = () => {
-  const { teacherJournals, addTeacherJournal, teachers, classes, currentUser } = useApp();
+  const { teacherJournals, addTeacherJournal, deleteTeacherJournal, teachers, classes, currentUser } = useApp();
   const [showModal, setShowModal] = useState(false);
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -69,6 +69,7 @@ export const JurnalGuruView: React.FC = () => {
                 <th className="p-3">Mata Pelajaran & Kelas</th>
                 <th className="p-3">Topik Pembahasan Materi</th>
                 <th className="p-3">Catatan / Evaluasi KBM</th>
+                <th className="p-3 text-center">Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -87,6 +88,19 @@ export const JurnalGuruView: React.FC = () => {
                   </td>
                   <td className="p-3 font-bold text-slate-900">{j.topic}</td>
                   <td className="p-3 text-slate-600">{j.notes || '-'}</td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus jurnal mengajar "${j.topic}"?`)) {
+                          deleteTeacherJournal(j.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Jurnal Mengajar Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Users, UserPlus, FileSpreadsheet, KeyRound, Plus, Save, Search, CheckCircle2, QrCode } from 'lucide-react';
+import { Users, UserPlus, FileSpreadsheet, KeyRound, Plus, Save, Search, CheckCircle2, QrCode, Trash2 } from 'lucide-react';
 
 export const DataSiswaView: React.FC = () => {
   const {
@@ -8,6 +8,7 @@ export const DataSiswaView: React.FC = () => {
     addStudent,
     importStudents,
     generateMassStudentAccounts,
+    deleteStudent,
     classes,
   } = useApp();
 
@@ -153,6 +154,7 @@ export const DataSiswaView: React.FC = () => {
                 <th className="p-3 text-center">Gender</th>
                 <th className="p-3">Kartu RFID / QR</th>
                 <th className="p-3 text-center">Status</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -189,6 +191,19 @@ export const DataSiswaView: React.FC = () => {
                     <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
                       {s.status}
                     </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus data siswa "${s.fullName}"?`)) {
+                          deleteStudent(s.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Siswa Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

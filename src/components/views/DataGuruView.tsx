@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TeacherPosition } from '../../types';
-import { UserCheck, UserPlus, FileSpreadsheet, KeyRound, Save, Search, CheckCircle2, Phone, Briefcase } from 'lucide-react';
+import { UserCheck, UserPlus, FileSpreadsheet, KeyRound, Save, Search, CheckCircle2, Phone, Briefcase, Trash2 } from 'lucide-react';
 
 export const DataGuruView: React.FC = () => {
   const {
@@ -9,6 +9,7 @@ export const DataGuruView: React.FC = () => {
     addTeacher,
     importTeachers,
     generateMassTeacherAccounts,
+    deleteTeacher,
   } = useApp();
 
   const [showManualModal, setShowManualModal] = useState(false);
@@ -134,6 +135,7 @@ export const DataGuruView: React.FC = () => {
                 <th className="p-3">NIP</th>
                 <th className="p-3">Jabatan (Dropdown)</th>
                 <th className="p-3">Kontak WA / HP</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -167,6 +169,19 @@ export const DataGuruView: React.FC = () => {
                       <Phone className="w-3 h-3 text-slate-400" />
                       <span>{t.phone || '08123456789'}</span>
                     </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus data guru "${t.fullNameWithTitle}"?`)) {
+                          deleteTeacher(t.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Guru Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

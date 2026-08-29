@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Role } from '../../types';
-import { UserCog, UserPlus, Search, Save, Shield, CheckCircle2, Key } from 'lucide-react';
+import { UserCog, UserPlus, Search, Save, Shield, CheckCircle2, Key, Trash2 } from 'lucide-react';
 
 export const ManajemenUserView: React.FC = () => {
-  const { users, addUser } = useApp();
+  const { users, addUser, deleteUser } = useApp();
   const [filterRole, setFilterRole] = useState<'All' | 'admin' | 'guru' | 'siswa'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -98,6 +98,7 @@ export const ManajemenUserView: React.FC = () => {
                 <th className="p-3 text-center">Role Akses</th>
                 <th className="p-3">Tingkat Akses</th>
                 <th className="p-3 text-center">Status Akun</th>
+                <th className="p-3 text-center">Aksi / Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -123,6 +124,19 @@ export const ManajemenUserView: React.FC = () => {
                     <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
                       {u.status}
                     </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus akun user "@${u.username}"?`)) {
+                          deleteUser(u.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus User Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

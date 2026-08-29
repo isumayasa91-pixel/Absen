@@ -44,12 +44,7 @@ export const initialAcademicYears: AcademicYear[] = [
   { id: 'ay-3', yearName: '2025/2026', semester: 'Ganjil', isActive: false },
 ];
 
-export const initialClasses: ClassData[] = [
-  { id: 'c-1', className: 'X IPA 1', homeroomTeacher: 'Budi Santoso, M.Pd', academicYear: '2026/2027', studentCount: 36 },
-  { id: 'c-2', className: 'X IPA 2', homeroomTeacher: 'Siti Aminah, S.Pd', academicYear: '2026/2027', studentCount: 35 },
-  { id: 'c-3', className: 'XI IPS 1', homeroomTeacher: 'Drs. Bambang Hidayat', academicYear: '2026/2027', studentCount: 34 },
-  { id: 'c-4', className: 'XII MIPA 1', homeroomTeacher: 'Dewi Lestari, S.Si', academicYear: '2026/2027', studentCount: 36 },
-];
+export const initialClasses: ClassData[] = [];
 
 export const initialStudents: Student[] = [
   { id: 'std-1', fullName: 'Aditya Pratama', currentClass: 'X IPA 1', nisn: '0078912341', gender: 'L', rfidTag: 'RFID-1001', status: 'Aktif' },

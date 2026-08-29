@@ -48,29 +48,37 @@ interface AppContextType {
 
   academicYears: AcademicYear[];
   addAcademicYear: (yearName: string, semester: 'Ganjil' | 'Genap', isActive: boolean) => void;
+  deleteAcademicYear: (id: string) => void;
 
   classes: ClassData[];
   addClass: (className: string, homeroomTeacher: string, academicYear: string) => void;
   importClasses: (classList: Partial<ClassData>[]) => void;
+  deleteClass: (id: string) => void;
+  clearAllClasses: () => void;
 
   students: Student[];
   addStudent: (fullName: string, currentClass: string, nisn: string, gender: 'L' | 'P') => void;
   importStudents: (studentList: Partial<Student>[]) => void;
   generateMassStudentAccounts: () => void;
+  deleteStudent: (id: string) => void;
 
   teachers: Teacher[];
   addTeacher: (fullNameWithTitle: string, nip: string, position: any, phone?: string) => void;
   importTeachers: (teacherList: Partial<Teacher>[]) => void;
   generateMassTeacherAccounts: () => void;
+  deleteTeacher: (id: string) => void;
 
   users: UserAccount[];
   addUser: (username: string, name: string, role: 'admin' | 'guru' | 'siswa', accessLevel: string) => void;
+  deleteUser: (id: string) => void;
 
   announcements: Announcement[];
   addAnnouncement: (title: string, content: string, targetClass: string) => void;
+  deleteAnnouncement: (id: string) => void;
 
   attendanceRecords: AttendanceRecord[];
   addOrUpdateAttendance: (record: AttendanceRecord) => void;
+  deleteAttendanceRecord: (id: string) => void;
   manualInputAttendance: (data: {
     studentId: string;
     date: string;
@@ -86,23 +94,30 @@ interface AppContextType {
   permissions: PermissionSubmission[];
   addPermission: (data: Omit<PermissionSubmission, 'id' | 'submittedAt'>) => void;
   updatePermissionStatus: (id: string, status: 'Disetujui' | 'Ditolak') => void;
+  deletePermission: (id: string) => void;
 
   leavePermissions: LeavePermission[];
   addLeavePermission: (data: Omit<LeavePermission, 'id'>) => void;
+  deleteLeavePermission: (id: string) => void;
 
   teacherJournals: TeacherJournal[];
   addTeacherJournal: (data: Omit<TeacherJournal, 'id'>) => void;
+  deleteTeacherJournal: (id: string) => void;
 
   libraryTAPs: LibraryTAP[];
   addLibraryTAP: (studentId: string, type: 'Masuk Perpus' | 'Pinjam Buku' | 'Pengembalian Buku', barcodeBook?: string, bookTitle?: string) => void;
+  deleteLibraryTAP: (id: string) => void;
   libraryBooks: LibraryBook[];
+  deleteLibraryBook: (id: string) => void;
 
   disciplineRules: DisciplineRule[];
   violationRecords: ViolationRecord[];
   addViolationRecord: (data: Omit<ViolationRecord, 'id'>) => void;
+  deleteViolationRecord: (id: string) => void;
 
   holidays: HolidayEvent[];
   addHoliday: (date: string, title: string, type: 'Nasional' | 'Sekolah' | 'Cuti') => void;
+  deleteHoliday: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -140,7 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leavePermissions, setLeavePermissions] = useState<LeavePermission[]>(() => loadFromStorage('leavePermissions', initialLeavePermissions));
   const [teacherJournals, setTeacherJournals] = useState<TeacherJournal[]>(() => loadFromStorage('teacherJournals', initialTeacherJournals));
   const [libraryTAPs, setLibraryTAPs] = useState<LibraryTAP[]>(() => loadFromStorage('libraryTAPs', initialLibraryTAPs));
-  const [libraryBooks] = useState<LibraryBook[]>(() => loadFromStorage('libraryBooks', initialLibraryBooks));
+  const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>(() => loadFromStorage('libraryBooks', initialLibraryBooks));
   const [disciplineRules] = useState<DisciplineRule[]>(() => loadFromStorage('disciplineRules', initialDisciplineRules));
   const [violationRecords, setViolationRecords] = useState<ViolationRecord[]>(() => loadFromStorage('violationRecords', initialViolationRecords));
   const [holidays, setHolidays] = useState<HolidayEvent[]>(() => loadFromStorage('holidays', initialHolidays));
@@ -158,6 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => saveToStorage('leavePermissions', leavePermissions), [leavePermissions]);
   useEffect(() => saveToStorage('teacherJournals', teacherJournals), [teacherJournals]);
   useEffect(() => saveToStorage('libraryTAPs', libraryTAPs), [libraryTAPs]);
+  useEffect(() => saveToStorage('libraryBooks', libraryBooks), [libraryBooks]);
   useEffect(() => saveToStorage('violationRecords', violationRecords), [violationRecords]);
   useEffect(() => saveToStorage('holidays', holidays), [holidays]);
 
@@ -549,6 +565,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHolidays((prev) => [...prev, newH]);
   };
 
+  // Delete Functions
+  const deleteAcademicYear = (id: string) => setAcademicYears((prev) => prev.filter((item) => item.id !== id));
+  const deleteClass = (id: string) => setClasses((prev) => prev.filter((item) => item.id !== id));
+  const clearAllClasses = () => setClasses([]);
+  const deleteStudent = (id: string) => setStudents((prev) => prev.filter((item) => item.id !== id));
+  const deleteTeacher = (id: string) => setTeachers((prev) => prev.filter((item) => item.id !== id));
+  const deleteUser = (id: string) => setUsers((prev) => prev.filter((item) => item.id !== id));
+  const deleteAnnouncement = (id: string) => setAnnouncements((prev) => prev.filter((item) => item.id !== id));
+  const deleteAttendanceRecord = (id: string) => setAttendanceRecords((prev) => prev.filter((item) => item.id !== id));
+  const deletePermission = (id: string) => setPermissions((prev) => prev.filter((item) => item.id !== id));
+  const deleteLeavePermission = (id: string) => setLeavePermissions((prev) => prev.filter((item) => item.id !== id));
+  const deleteTeacherJournal = (id: string) => setTeacherJournals((prev) => prev.filter((item) => item.id !== id));
+  const deleteLibraryTAP = (id: string) => setLibraryTAPs((prev) => prev.filter((item) => item.id !== id));
+  const deleteLibraryBook = (id: string) => setLibraryBooks((prev) => prev.filter((item) => item.id !== id));
+  const deleteViolationRecord = (id: string) => setViolationRecords((prev) => prev.filter((item) => item.id !== id));
+  const deleteHoliday = (id: string) => setHolidays((prev) => prev.filter((item) => item.id !== id));
+
   return (
     <AppContext.Provider
       value={{
@@ -561,40 +594,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSettings,
         academicYears,
         addAcademicYear,
+        deleteAcademicYear,
         classes,
         addClass,
         importClasses,
+        deleteClass,
+        clearAllClasses,
         students,
         addStudent,
         importStudents,
         generateMassStudentAccounts,
+        deleteStudent,
         teachers,
         addTeacher,
         importTeachers,
         generateMassTeacherAccounts,
+        deleteTeacher,
         users,
         addUser,
+        deleteUser,
         announcements,
         addAnnouncement,
+        deleteAnnouncement,
         attendanceRecords,
         addOrUpdateAttendance,
+        deleteAttendanceRecord,
         manualInputAttendance,
         tapRFIDOrScan,
         permissions,
         addPermission,
         updatePermissionStatus,
+        deletePermission,
         leavePermissions,
         addLeavePermission,
+        deleteLeavePermission,
         teacherJournals,
         addTeacherJournal,
+        deleteTeacherJournal,
         libraryTAPs,
         addLibraryTAP,
+        deleteLibraryTAP,
         libraryBooks,
+        deleteLibraryBook,
         disciplineRules,
         violationRecords,
         addViolationRecord,
+        deleteViolationRecord,
         holidays,
         addHoliday,
+        deleteHoliday,
       }}
     >
       {children}

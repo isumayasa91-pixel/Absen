@@ -1,6 +1,10 @@
 {
   "name": "Aplikasi Presensi Digital Modern",
   "description": "Sistem presensi digital sekolah modern dengan manajemen akademik, perpustakaan, live monitoring RFID/FaceID, izin & sakit, serta rekap excel.",
-  "requestFramePermissions": ["camera"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

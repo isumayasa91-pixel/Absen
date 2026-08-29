@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LogOut, Plus, Save, Clock, CheckSquare } from 'lucide-react';
+import { LogOut, Plus, Save, Clock, CheckSquare, Trash2 } from 'lucide-react';
 
 export const IzinKeluarView: React.FC = () => {
-  const { leavePermissions, addLeavePermission, students } = useApp();
+  const { leavePermissions, addLeavePermission, deleteLeavePermission, students } = useApp();
   const [showModal, setShowModal] = useState(false);
 
   // Form state
@@ -70,6 +70,7 @@ export const IzinKeluarView: React.FC = () => {
                 <th className="p-3">Tipe Surat Izin</th>
                 <th className="p-3">Alasan Keperluan</th>
                 <th className="p-3 text-center">Status Gerbang</th>
+                <th className="p-3 text-center">Hapus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -93,6 +94,19 @@ export const IzinKeluarView: React.FC = () => {
                     <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
                       {l.status}
                     </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus izin keluar "${l.studentName}"?`)) {
+                          deleteLeavePermission(l.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Surat Izin Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FileCheck2, Plus, Save, CheckCircle, XCircle, Clock, Camera, Image, CheckCircle2 } from 'lucide-react';
+import { FileCheck2, Plus, Save, CheckCircle, XCircle, Clock, Camera, Image, CheckCircle2, Trash2 } from 'lucide-react';
 
 export const IzinSakitView: React.FC = () => {
   const {
     permissions,
     addPermission,
     updatePermissionStatus,
+    deletePermission,
     students,
   } = useApp();
 
@@ -89,18 +90,32 @@ export const IzinSakitView: React.FC = () => {
                 <span className="text-xs font-bold text-slate-800">{p.studentName} ({p.class})</span>
               </div>
 
-              {/* Status approval pill */}
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  p.statusApproval === 'Disetujui'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                    : p.statusApproval === 'Ditolak'
-                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                    : 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
-                }`}
-              >
-                {p.statusApproval}
-              </span>
+              {/* Status approval pill & Delete button */}
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                    p.statusApproval === 'Disetujui'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : p.statusApproval === 'Ditolak'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                      : 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
+                  }`}
+                >
+                  {p.statusApproval}
+                </span>
+
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Hapus surat izin/sakit "${p.studentName}"?`)) {
+                      deletePermission(p.id);
+                    }
+                  }}
+                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                  title="Hapus Izin/Sakit Ini"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <p className="text-xs text-slate-600 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-xl">
