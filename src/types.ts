@@ -1,0 +1,186 @@
+export type Role = 'admin' | 'guru' | 'siswa';
+
+export interface UserAccount {
+  id: string;
+  username: string;
+  name: string;
+  role: Role;
+  accessLevel: string;
+  status: 'Aktif' | 'Nonaktif';
+  email?: string;
+  avatar?: string;
+}
+
+export interface AcademicYear {
+  id: string;
+  yearName: string; // e.g., "2026/2027"
+  semester: 'Ganjil' | 'Genap';
+  isActive: boolean;
+}
+
+export interface ClassData {
+  id: string;
+  className: string;
+  homeroomTeacher: string;
+  academicYear: string;
+  studentCount?: number;
+}
+
+export interface Student {
+  id: string;
+  fullName: string;
+  currentClass: string;
+  nisn: string;
+  gender: 'L' | 'P';
+  rfidTag?: string;
+  qrCode?: string;
+  photo?: string;
+  status: 'Aktif' | 'Alumni' | 'Pindah';
+}
+
+export type TeacherPosition = 'Guru Mapel' | 'Wali Kelas' | 'Guru BK' | 'Kepala Sekolah';
+
+export interface Teacher {
+  id: string;
+  fullNameWithTitle: string;
+  nip: string;
+  position: TeacherPosition;
+  email?: string;
+  phone?: string;
+  subject?: string;
+}
+
+export interface TeacherJournal {
+  id: string;
+  date: string;
+  teacherName: string;
+  subject: string;
+  classTarget: string;
+  topic: string;
+  notes: string;
+  timeSlot: string; // Jam Ke- 1-2
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  targetClass: string; // 'Semua Kelas' or specific class
+  date: string;
+  author: string;
+  isImportant?: boolean;
+}
+
+export type AttendanceStatus = 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | 'Dispen' | 'Terlambat';
+
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  date: string; // YYYY-MM-DD
+  statusFinal: AttendanceStatus;
+  statusIn: 'Hadir' | 'Terlambat' | 'Belum';
+  statusOut: 'Pulang' | 'Belum';
+  timeIn: string; // e.g., "06:45:12"
+  timeOut: string; // e.g., "15:05:00"
+  tapMethod: 'RFID' | 'FaceID' | 'Manual' | 'QR';
+  notes?: string;
+}
+
+export interface PermissionSubmission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  type: 'Izin' | 'Sakit' | 'Alpa';
+  startDate: string;
+  endDate: string;
+  reason: string;
+  proofPhotoUrl?: string;
+  statusApproval: 'Menunggu Persetujuan' | 'Disetujui' | 'Ditolak';
+  approvalType?: 'Menunggu Persetujuan' | 'Langsung Disetujui';
+  submittedAt: string;
+}
+
+export interface LeavePermission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  date: string;
+  timeOut: string;
+  leaveType: 'Izin Sementara (kembali)' | 'Pulang Awal (Tidak Kembali)';
+  reason: string;
+  status: 'Berlaku' | 'Sudah Kembali' | 'Selesai';
+}
+
+export interface LibraryTAP {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  timestamp: string;
+  type: 'Masuk Perpus' | 'Pinjam Buku' | 'Pengembalian Buku';
+  barcodeBook?: string;
+  bookTitle?: string;
+}
+
+export interface LibraryBook {
+  id: string;
+  barcode: string;
+  title: string;
+  author: string;
+  category: string;
+  stock: number;
+}
+
+export interface DisciplineRule {
+  id: string;
+  code: string;
+  category: 'Ringan' | 'Sedang' | 'Berat';
+  name: string;
+  points: number;
+  description: string;
+}
+
+export interface ViolationRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  ruleId: string;
+  ruleName: string;
+  points: number;
+  date: string;
+  sanction: string;
+  reporter: string;
+}
+
+export interface HolidayEvent {
+  id: string;
+  date: string;
+  title: string;
+  type: 'Nasional' | 'Sekolah' | 'Cuti';
+}
+
+export interface SystemSetting {
+  schoolName: string;
+  appNameBranding: string;
+  city: string;
+  schoolAddress: string;
+  principalName: string;
+  principalNip: string;
+  schoolLogo: string;
+  enableClassAttendance: boolean;
+  enableOnlineAttendance: boolean;
+  autoViolationPoints: boolean;
+  requireMorningToken: boolean;
+  morningToken: string;
+  timeInStart: string; // e.g. "06:30"
+  timeInEnd: string;   // e.g. "07:15" (Batas terlambat)
+  timeOutStart: string;// e.g. "15:00"
+  schoolLat: number;
+  schoolLng: number;
+  geofenceRadius: number; // in meters
+}
