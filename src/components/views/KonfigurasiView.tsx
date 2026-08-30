@@ -200,6 +200,21 @@ export const KonfigurasiView: React.FC = () => {
     showNotice(`✅ Berhasil mengunggah & memperbarui ${matchedCount} pas foto siswa secara masal!`);
   };
 
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, schoolLogo: base64 }));
+        showNotice('✅ Logo sekolah berhasil diunggah!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings(formData);
@@ -854,8 +869,12 @@ export const KonfigurasiView: React.FC = () => {
                           {/* Header Bar: Biru Tua */}
                           <div className="bg-blue-900 text-white px-3 py-2 flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 rounded-md bg-red-600 border border-red-400 flex items-center justify-center shrink-0">
-                                <School className="w-3.5 h-3.5 text-white" />
+                              <div className="w-6 h-6 rounded-md bg-white border border-blue-300 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                                {settings.schoolLogo ? (
+                                  <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain" />
+                                ) : (
+                                  <School className="w-3.5 h-3.5 text-blue-900" />
+                                )}
                               </div>
                               <div className="leading-tight text-left min-w-0">
                                 <div className="text-[10px] font-black uppercase tracking-wider text-white truncate max-w-[200px]">
@@ -992,9 +1011,15 @@ export const KonfigurasiView: React.FC = () => {
                                 <div className="font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
                                 <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID & QR</div>
                               </div>
-                              <div className="text-center">
-                                <div className="text-[7px] text-slate-500 font-bold">Mengetahui,</div>
-                                <div className="font-bold text-blue-950 text-[8px] mt-1.5 border-b-2 border-red-600 pb-0.5">Kepala Sekolah</div>
+                              <div className="text-center min-w-[100px]">
+                                <div className="text-[6.5px] text-slate-500 font-bold">Mengetahui,</div>
+                                <div className="text-[6.5px] text-slate-600 font-extrabold">Kepala Sekolah</div>
+                                <div className="font-extrabold text-blue-950 text-[7.5px] mt-1 border-b border-slate-400 pb-0.5 leading-tight">
+                                  {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
+                                </div>
+                                <div className="text-[6px] font-mono text-slate-500 font-bold mt-0.5">
+                                  NIP. {settings.principalNip || '19750812 199903 1 002'}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1475,13 +1500,25 @@ export const KonfigurasiView: React.FC = () => {
                   </div>
 
                   <div className="flex-1 w-full space-y-2">
-                    <input
-                      type="text"
-                      value={formData.schoolLogo || ''}
-                      onChange={(e) => setFormData({ ...formData, schoolLogo: e.target.value })}
-                      placeholder="https://domain-sekolah.sch.id/logo.png"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
-                    />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={formData.schoolLogo || ''}
+                        onChange={(e) => setFormData({ ...formData, schoolLogo: e.target.value })}
+                        placeholder="https://domain-sekolah.sch.id/logo.png"
+                        className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
+                      />
+                      <label className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center justify-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-indigo-200" />
+                        <span>Upload File Logo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoFileUpload}
+                        />
+                      </label>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-[11px] text-slate-500 font-medium">Preset Logo Contoh:</span>
                       <button

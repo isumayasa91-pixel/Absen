@@ -33,6 +33,7 @@ export const DataSiswaView: React.FC = () => {
     generateMassStudentAccounts,
     deleteStudent,
     classes,
+    settings,
   } = useApp();
 
   const [showManualModal, setShowManualModal] = useState(false);
@@ -651,13 +652,24 @@ export const DataSiswaView: React.FC = () => {
               <div className="w-[320px] h-[200px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
                 {/* Header Bar */}
                 <div className="bg-blue-900 text-white px-3 py-1.5 flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <School className="w-4 h-4 text-amber-400" />
-                    <span className="text-[9px] font-black uppercase tracking-wider text-amber-300">
-                      KARTU PRESENSI SISWA
-                    </span>
+                  <div className="flex items-center space-x-1.5 min-w-0">
+                    <div className="w-5 h-5 rounded bg-white border border-blue-300 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                      {settings.schoolLogo ? (
+                        <img src={settings.schoolLogo} alt="Logo" className="w-full h-full object-contain" />
+                      ) : (
+                        <School className="w-3.5 h-3.5 text-blue-900" />
+                      )}
+                    </div>
+                    <div className="leading-tight truncate">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 truncate block">
+                        {settings.schoolName || 'KARTU PRESENSI SISWA'}
+                      </span>
+                      <span className="text-[7px] text-blue-200 font-bold block">
+                        SISTEM PRESENSI DIGITAL RFID & QR
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[7.5px] font-mono font-bold bg-red-600 text-white px-1.5 py-0.5 rounded">
+                  <span className="text-[7.5px] font-mono font-bold bg-red-600 text-white px-1.5 py-0.5 rounded shrink-0">
                     RFID & QR
                   </span>
                 </div>
@@ -718,6 +730,20 @@ export const DataSiswaView: React.FC = () => {
                 <p className="font-mono text-xs font-black text-blue-900 select-all bg-white p-2 rounded-xl border border-slate-200">
                   {selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
                 </p>
+              </div>
+
+              {/* Data Pengesahan Kepsek */}
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 w-full flex items-center justify-between text-left">
+                <div>
+                  <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Lembaga / Sekolah</div>
+                  <div className="text-xs font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
+                  <div className="text-[10px] text-slate-500 font-medium">Kota: {settings.city || '-'}</div>
+                </div>
+                <div className="text-right border-l border-slate-200 pl-3">
+                  <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Mengetahui Kepala Sekolah</div>
+                  <div className="text-xs font-black text-slate-900">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
+                  <div className="text-[10px] font-mono font-extrabold text-blue-900">NIP. {settings.principalNip || '19750812 199903 1 002'}</div>
+                </div>
               </div>
             </div>
 
