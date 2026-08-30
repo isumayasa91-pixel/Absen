@@ -1,7 +1,24 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TeacherPosition } from '../../types';
-import { UserCheck, UserPlus, FileSpreadsheet, KeyRound, Save, Search, CheckCircle2, Phone, Briefcase, Trash2 } from 'lucide-react';
+import { exportToExcel } from '../../utils/excelExport';
+import * as XLSX from 'xlsx';
+import {
+  UserCheck,
+  UserPlus,
+  FileSpreadsheet,
+  KeyRound,
+  Save,
+  Search,
+  CheckCircle2,
+  Phone,
+  Briefcase,
+  Trash2,
+  Download,
+  Upload,
+  AlertCircle,
+  FileText,
+} from 'lucide-react';
 
 export const DataGuruView: React.FC = () => {
   const {
@@ -23,6 +40,13 @@ export const DataGuruView: React.FC = () => {
   const [position, setPosition] = useState<TeacherPosition>('Guru Mapel');
   const [phone, setPhone] = useState('');
 
+  // Excel Import States
+  const [importFileName, setImportFileName] = useState<string>('');
+  const [parsedImportData, setParsedImportData] = useState<
+    Array<{ fullNameWithTitle: string; nip: string; position: TeacherPosition; phone?: string }>
+  >([]);
+  const [importError, setImportError] = useState<string>('');
+
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullNameWithTitle.trim() || !nip.trim()) return;
@@ -34,14 +58,118 @@ export const DataGuruView: React.FC = () => {
     showNotice(`Guru ${fullNameWithTitle} berhasil ditambahkan!`);
   };
 
-  const handleSimulatedImport = () => {
-    const mock = [
-      { fullNameWithTitle: 'Dra. Hj. Nurhayati, M.Pd', nip: '19780112 200212 2 004', position: 'Guru Mapel' as TeacherPosition },
-      { fullNameWithTitle: 'Agus Subagyo, S.Kom', nip: '19890405 201402 1 003', position: 'Guru Mapel' as TeacherPosition },
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        'Nama Lengkap Beserta Gelar': 'Drs. H. Ahmad Dahlan, M.Pd',
+        NIP: '19750812 200003 1 002',
+        'Jabatan (Guru Mapel / Wali Kelas / Guru BK / Kepala Sekolah)': 'Guru Mapel',
+        'No Telepon / WhatsApp': '081234567890',
+      },
+      {
+        'Nama Lengkap Beserta Gelar': 'Siti Rahmawati, S.Pd',
+        NIP: '19820514 200801 2 005',
+        'Jabatan (Guru Mapel / Wali Kelas / Guru BK / Kepala Sekolah)': 'Wali Kelas',
+        'No Telepon / WhatsApp': '081987654321',
+      },
     ];
-    importTeachers(mock);
+    exportToExcel(templateData, 'Template_Import_Data_Guru', 'Template Data Guru');
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFileName(file.name);
+    setImportError('');
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const buffer = evt.target?.result;
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rawRows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+        if (rawRows.length === 0) {
+          setImportError('File Excel kosong atau format tidak sesuai.');
+          setParsedImportData([]);
+          return;
+        }
+
+        const parsedRows = rawRows
+          .map((row) => {
+            const keys = Object.keys(row);
+
+            const findVal = (possibleKeys: string[]) => {
+              const matchedKey = keys.find((k) =>
+                possibleKeys.some((p) => k.toLowerCase().includes(p.toLowerCase()))
+              );
+              return matchedKey ? String(row[matchedKey]).trim() : '';
+            };
+
+            const nameVal =
+              findVal(['nama lengkap', 'nama guru', 'nama', 'fullname', 'gelar']) || '';
+            const nipVal =
+              findVal(['nip', 'nuptk', 'no induk', 'id']) ||
+              `198${Math.floor(100000 + Math.random() * 900000)} 201${Math.floor(100000 + Math.random() * 900000)}`;
+
+            const posRaw = findVal(['jabatan', 'position', 'tugas', 'role']);
+            let posVal: TeacherPosition = 'Guru Mapel';
+            if (posRaw.toLowerCase().includes('wali')) posVal = 'Wali Kelas';
+            else if (posRaw.toLowerCase().includes('bk') || posRaw.toLowerCase().includes('konseling')) posVal = 'Guru BK';
+            else if (posRaw.toLowerCase().includes('kepala') || posRaw.toLowerCase().includes('kepsek')) posVal = 'Kepala Sekolah';
+
+            const phoneVal = findVal(['telepon', 'phone', 'wa', 'hp', 'kontak']) || '081234567890';
+
+            return {
+              fullNameWithTitle: nameVal,
+              nip: nipVal,
+              position: posVal,
+              phone: phoneVal,
+            };
+          })
+          .filter((row) => row.fullNameWithTitle.length > 0);
+
+        if (parsedRows.length === 0) {
+          setImportError('Tidak ada baris data guru yang valid dalam berkas ini.');
+          setParsedImportData([]);
+        } else {
+          setParsedImportData(parsedRows);
+        }
+      } catch (err) {
+        console.error('Error reading Excel file:', err);
+        setImportError('Gagal membaca berkas Excel. Pastikan format file .xlsx atau .csv');
+        setParsedImportData([]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleProcessImport = () => {
+    if (parsedImportData.length === 0) {
+      const mock = [
+        { fullNameWithTitle: 'Dra. Hj. Nurhayati, M.Pd', nip: '19780112 200212 2 004', position: 'Guru Mapel' as TeacherPosition, phone: '081234567890' },
+        { fullNameWithTitle: 'Agus Subagyo, S.Kom', nip: '19890405 201402 1 003', position: 'Guru Mapel' as TeacherPosition, phone: '081987654321' },
+      ];
+      importTeachers(mock);
+      setShowImportModal(false);
+      resetImportState();
+      showNotice('2 data guru demo berhasil diimpor!');
+      return;
+    }
+
+    importTeachers(parsedImportData);
     setShowImportModal(false);
-    showNotice('Data guru berhasil diimport!');
+    showNotice(`${parsedImportData.length} data tenaga pendidik / guru berhasil diimpor!`);
+    resetImportState();
+  };
+
+  const resetImportState = () => {
+    setImportFileName('');
+    setParsedImportData([]);
+    setImportError('');
   };
 
   const handleMassAccount = () => {
@@ -284,33 +412,143 @@ export const DataGuruView: React.FC = () => {
 
       {/* Modal Import Excel */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-5 space-y-4 animate-in zoom-in-95 duration-150">
-            <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2 border-b border-slate-100 pb-3">
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>Import Data Guru dari Excel</span>
-            </h3>
-
-            <div className="p-4 border-2 border-dashed border-emerald-200 bg-emerald-50/50 rounded-2xl text-center space-y-2">
-              <FileSpreadsheet className="w-8 h-8 text-emerald-600 mx-auto" />
-              <p className="text-xs font-bold text-emerald-900">Upload File .xlsx Format Data Guru</p>
-              <p className="text-[11px] text-emerald-700">Format: Nama Lengkap Beserta Gelar | NIP | Jabatan</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4 animate-in zoom-in-95 duration-150 my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                <span>Import Data Tenaga Pendidik / Guru via Excel</span>
+              </h3>
+              <button
+                onClick={downloadTemplate}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center space-x-1 transition-all cursor-pointer"
+                title="Download Template Format Excel"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Template</span>
+              </button>
             </div>
 
-            <div className="pt-2 flex items-center justify-end space-x-2">
+            {/* Instruction banner */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+              <p className="font-bold text-slate-800">Format Kolom File Excel (.xlsx / .csv):</p>
+              <p className="text-slate-600 font-mono text-[11px]">
+                Header: <span className="font-bold text-indigo-600">Nama Lengkap Beserta Gelar</span> |{' '}
+                <span className="font-bold text-indigo-600">NIP</span> |{' '}
+                <span className="font-bold text-indigo-600">Jabatan</span> |{' '}
+                <span className="font-bold text-indigo-600">No. Telepon</span>
+              </p>
+            </div>
+
+            {/* Upload Box */}
+            <div className="relative p-5 border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-2xl text-center space-y-2 transition-colors">
+              <input
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                onChange={handleFileUpload}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+              />
+              <Upload className="w-8 h-8 text-emerald-600 mx-auto" />
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  {importFileName ? (
+                    <span className="text-emerald-700 font-extrabold flex items-center justify-center space-x-1">
+                      <FileText className="w-4 h-4 inline" />
+                      <span>File Terpilih: {importFileName}</span>
+                    </span>
+                  ) : (
+                    'Klik atau tarik file Excel / CSV data guru ke sini'
+                  )}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Mendukung format .xlsx, .xls, atau .csv
+                </p>
+              </div>
+            </div>
+
+            {importError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs rounded-xl flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{importError}</span>
+              </div>
+            )}
+
+            {/* Parsed Preview Table */}
+            {parsedImportData.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span>Pratinjau Data Terbaca ({parsedImportData.length} Guru):</span>
+                  <span className="text-[11px] text-emerald-600">Siap Diimpor</span>
+                </div>
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-slate-100 font-bold text-slate-600 sticky top-0">
+                      <tr>
+                        <th className="p-2">Nama & Gelar</th>
+                        <th className="p-2">NIP</th>
+                        <th className="p-2">Jabatan</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {parsedImportData.slice(0, 10).map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="p-2 font-bold text-slate-900">{row.fullNameWithTitle}</td>
+                          <td className="p-2 font-mono">{row.nip}</td>
+                          <td className="p-2">{row.position}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {parsedImportData.length > 10 && (
+                  <p className="text-[10px] text-slate-400 text-right">
+                    + {parsedImportData.length - 10} baris data lainnya...
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setShowImportModal(false)}
+                onClick={() => {
+                  setShowImportModal(false);
+                  resetImportState();
+                }}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
                 Batal
               </button>
-              <button
-                onClick={handleSimulatedImport}
-                className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-200 cursor-pointer"
-              >
-                Proses Import Guru
-              </button>
+
+              <div className="flex items-center space-x-2">
+                {parsedImportData.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleProcessImport}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 cursor-pointer"
+                  >
+                    Gunakan Data Demo
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleProcessImport}
+                  disabled={parsedImportData.length === 0 && !!importFileName}
+                  className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-md flex items-center space-x-1.5 transition-all cursor-pointer ${
+                    parsedImportData.length > 0
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                      : 'bg-emerald-600 hover:bg-emerald-700 opacity-90'
+                  }`}
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>
+                    {parsedImportData.length > 0
+                      ? `Proses Import (${parsedImportData.length} Guru)`
+                      : 'Proses Import Guru'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
