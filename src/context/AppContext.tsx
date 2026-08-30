@@ -406,7 +406,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const tapRFIDOrScan = (studentId: string, method: 'RFID' | 'FaceID' | 'QR') => {
-    const query = (studentId || '').trim();
+    let query = (studentId || '').trim();
+    if (query.includes(':')) {
+      const parts = query.split(':');
+      query = parts[1] || parts[2] || query;
+    }
     const cleanDigits = query.replace(/[^0-9]/g, '');
 
     const std = students.find((s) => {
@@ -423,7 +427,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sName === q ||
         (cleanDigits.length >= 4 && sNisn === cleanDigits) ||
         (q.startsWith('tap-rfid-') && q.includes(sNisn.slice(-6))) ||
-        (sRfid && q.includes(sRfid))
+        (sRfid && (q.includes(sRfid) || sRfid.includes(q))) ||
+        (sNisn && (q.includes(sNisn) || sNisn.includes(q)))
       );
     });
 

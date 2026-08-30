@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../context/AppContext';
 import { Student } from '../types';
+import { CameraQrScanner } from './CameraQrScanner';
 import {
   ScanBarcode,
   X,
@@ -15,6 +16,9 @@ import {
   Sparkles,
   School,
   Zap,
+  Camera,
+  Keyboard,
+  QrCode,
 } from 'lucide-react';
 
 interface RfidScanModalProps {
@@ -24,6 +28,7 @@ interface RfidScanModalProps {
 
 export const RfidScanModal: React.FC<RfidScanModalProps> = ({ isOpen, onClose }) => {
   const { students, tapRFIDOrScan, settings } = useApp();
+  const [scanMode, setScanMode] = useState<'camera' | 'usb'>('camera');
   const [scanInput, setScanInput] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastScanResult, setLastScanResult] = useState<{
@@ -169,14 +174,14 @@ export const RfidScanModal: React.FC<RfidScanModalProps> = ({ isOpen, onClose })
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-black text-slate-900 text-lg tracking-tight">Terminal Scan Kartu RFID Siswa</h3>
+                <h3 className="font-black text-slate-900 text-lg tracking-tight">Terminal Scan Kartu QR & RFID Siswa</h3>
                 <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  SENSOR ACTIVE
+                  LIVE SCANNER
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium">
-                Tempelkan kartu RFID pada scanner USB atau ketik ID/NISN di bawah ini
+                Pindai QR / Barcode pada kartu fisik siswa lewat Kamera Langsung atau alat RFID USB
               </p>
             </div>
           </div>
@@ -206,35 +211,76 @@ export const RfidScanModal: React.FC<RfidScanModalProps> = ({ isOpen, onClose })
           </div>
         </div>
 
-        {/* Live Input Field & Scanner Animation */}
+        {/* Scanner Mode Selector Tabs */}
+        <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200 max-w-md">
+          <button
+            type="button"
+            onClick={() => setScanMode('camera')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+              scanMode === 'camera'
+                ? 'bg-blue-900 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Camera className="w-4 h-4 text-amber-400" />
+            <span>📷 Kamera Live (Scan QR/Barcode)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setScanMode('usb');
+              setTimeout(() => inputRef.current?.focus(), 100);
+            }}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
+              scanMode === 'usb'
+                ? 'bg-blue-900 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Keyboard className="w-4 h-4 text-amber-400" />
+            <span>⌨️ Sensor RFID USB / Manual</span>
+          </button>
+        </div>
+
+        {/* Main Scanner Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-4">
-            <form onSubmit={handleFormSubmit} className="space-y-3">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Zap className="w-5 h-5 text-red-600 animate-bounce" />
-                </div>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={scanInput}
-                  onChange={(e) => setScanInput(e.target.value)}
-                  placeholder="Tempelkan kartu RFID / Scan Barcode di sini..."
-                  className="w-full pl-11 pr-24 py-3.5 bg-slate-900 text-amber-300 font-mono text-base font-black rounded-2xl border-2 border-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-900/30 shadow-inner placeholder:text-slate-500 tracking-wider"
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-2 bottom-2 bg-blue-900 hover:bg-blue-950 text-white font-extrabold text-xs px-4 rounded-xl shadow-xs cursor-pointer transition-all flex items-center space-x-1"
-                >
-                  <span>Scan</span>
-                </button>
+            {scanMode === 'camera' ? (
+              <div className="space-y-2">
+                <CameraQrScanner onScan={(code) => processScan(code)} isActive={isOpen && scanMode === 'camera'} />
+                <p className="text-[11px] text-slate-500 font-medium flex items-center justify-between px-1">
+                  <span>📷 Arahkan QR Code / Barcode pada kartu siswa ke depan kamera.</span>
+                  <span className="text-blue-900 font-bold">Jam: {new Date().toLocaleTimeString('id-ID')}</span>
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium flex items-center justify-between px-1">
-                <span>💡 Scanner USB mendukung auto-submit saat kartu ditempelkan.</span>
-                <span className="text-blue-900 font-bold">Jam Sekarang: {new Date().toLocaleTimeString('id-ID')}</span>
-              </p>
-            </form>
+            ) : (
+              <form onSubmit={handleFormSubmit} className="space-y-3">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Zap className="w-5 h-5 text-red-600 animate-bounce" />
+                  </div>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={scanInput}
+                    onChange={(e) => setScanInput(e.target.value)}
+                    placeholder="Tempelkan kartu RFID / Scan Barcode di sini..."
+                    className="w-full pl-11 pr-24 py-3.5 bg-slate-900 text-amber-300 font-mono text-base font-black rounded-2xl border-2 border-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-900/30 shadow-inner placeholder:text-slate-500 tracking-wider"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-2 bottom-2 bg-blue-900 hover:bg-blue-950 text-white font-extrabold text-xs px-4 rounded-xl shadow-xs cursor-pointer transition-all flex items-center space-x-1"
+                  >
+                    <span>Scan</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium flex items-center justify-between px-1">
+                  <span>💡 Scanner USB mendukung auto-submit saat kartu ditempelkan.</span>
+                  <span className="text-blue-900 font-bold">Jam: {new Date().toLocaleTimeString('id-ID')}</span>
+                </p>
+              </form>
+            )}
 
             {/* Display Visual Result Card Popup */}
             {lastScanResult ? (
