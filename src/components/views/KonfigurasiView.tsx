@@ -31,6 +31,10 @@ import {
   AlertCircle,
   FileText,
   Tag,
+  Printer,
+  QrCode,
+  Download,
+  Upload,
 } from 'lucide-react';
 
 export const KonfigurasiView: React.FC = () => {
@@ -44,6 +48,8 @@ export const KonfigurasiView: React.FC = () => {
     addCardRequest,
     updateCardRequestStatus,
     deleteCardRequest,
+    updateStudentPhoto,
+    updateMassStudentPhotos,
   } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' => {
@@ -93,6 +99,10 @@ export const KonfigurasiView: React.FC = () => {
   const [cardRequestStatus, setCardRequestStatus] = useState<'Menunggu' | 'Diproses' | 'Selesai Cetak' | 'Sudah Diterima'>('Menunggu');
   const [cardNotes, setCardNotes] = useState('');
 
+  // Card Print Modal States
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [selectedCardForPrint, setSelectedCardForPrint] = useState<any | null>(null);
+
   // Card Requests Filters & Search
   const [cardSearchQuery, setCardSearchQuery] = useState('');
   const [cardClassFilter, setCardClassFilter] = useState('Semua Kelas');
@@ -101,9 +111,92 @@ export const KonfigurasiView: React.FC = () => {
   // Notice toast
   const [cardNotice, setCardNotice] = useState<string | null>(null);
 
+  // Mass Photo Upload States
+  const [showMassPhotoModal, setShowMassPhotoModal] = useState(false);
+  const [massPhotoItems, setMassPhotoItems] = useState<
+    Array<{ fileName: string; studentId: string; previewUrl: string }>
+  >([]);
+
   const showNotice = (msg: string) => {
     setCardNotice(msg);
     setTimeout(() => setCardNotice(null), 3500);
+  };
+
+  const handleSinglePhotoUpload = (studentId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        updateStudentPhoto(studentId, base64);
+        showNotice('✅ Pas foto siswa berhasil diperbarui!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleMassPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    const parsedItems: Array<{ fileName: string; studentId: string; previewUrl: string }> = [];
+
+    let loadedCount = 0;
+    fileList.forEach((file: File) => {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const previewUrl = evt.target?.result as string;
+        const fileNameNoExt = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase().trim();
+
+        // Auto-match student by NISN or Name or Student ID
+        const matchedStudent = students.find((s) => {
+          const sNisn = s.nisn.toLowerCase().trim();
+          const sName = s.fullName.toLowerCase().trim();
+          const sId = s.id.toLowerCase().trim();
+          return sNisn === fileNameNoExt || sName === fileNameNoExt || sId === fileNameNoExt || fileNameNoExt.includes(sNisn);
+        });
+
+        parsedItems.push({
+          fileName: file.name,
+          studentId: matchedStudent ? matchedStudent.id : '',
+          previewUrl,
+        });
+
+        loadedCount++;
+        if (loadedCount === fileList.length) {
+          setMassPhotoItems(parsedItems);
+          setShowMassPhotoModal(true);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleApplyMassPhotos = () => {
+    if (massPhotoItems.length === 0) return;
+
+    const map: { [key: string]: string } = {};
+    let matchedCount = 0;
+
+    massPhotoItems.forEach((item) => {
+      if (item.studentId && item.previewUrl) {
+        map[item.studentId] = item.previewUrl;
+        matchedCount++;
+      }
+    });
+
+    if (matchedCount === 0) {
+      alert('Silakan hubungkan minimal 1 foto ke siswa sebelum menyimpan!');
+      return;
+    }
+
+    updateMassStudentPhotos(map);
+    setShowMassPhotoModal(false);
+    setMassPhotoItems([]);
+    showNotice(`✅ Berhasil mengunggah & memperbarui ${matchedCount} pas foto siswa secara masal!`);
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -374,6 +467,11 @@ export const KonfigurasiView: React.FC = () => {
           }
         };
 
+        const handleOpenCardPrintModal = (req: any) => {
+          setSelectedCardForPrint(req);
+          setShowPrintModal(true);
+        };
+
         return (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
             {/* Header & Notice Toast */}
@@ -388,14 +486,28 @@ export const KonfigurasiView: React.FC = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAddCardModal(!showAddCardModal)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-emerald-100 flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Buat Pengajuan Kartu</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center justify-center space-x-1.5 cursor-pointer transition-all">
+                  <Upload className="w-4 h-4 text-red-400" />
+                  <span>Upload Masal Pas Foto</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleMassPhotoSelect}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddCardModal(!showAddCardModal)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-emerald-100 flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Buat Pengajuan Kartu</span>
+                </button>
+              </div>
             </div>
 
             {/* Notice Alert Banner */}
@@ -644,7 +756,14 @@ export const KonfigurasiView: React.FC = () => {
                         <td className="p-3 text-center">
                           <select
                             value={c.status}
-                            onChange={(e) => updateCardRequestStatus(c.id, e.target.value as any)}
+                            onChange={(e) => {
+                              const newStatus = e.target.value as any;
+                              updateCardRequestStatus(c.id, newStatus);
+                              if (newStatus === 'Selesai Cetak') {
+                                handleOpenCardPrintModal(c);
+                                showNotice(`✅ Status kartu ${c.studentName} diset ke 'Selesai Cetak'. Pratinjau cetak kartu dibuka!`);
+                              }
+                            }}
                             className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold border cursor-pointer focus:outline-none ${
                               c.status === 'Selesai Cetak'
                                 ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -662,17 +781,29 @@ export const KonfigurasiView: React.FC = () => {
                           </select>
                         </td>
 
-                        {/* Menu Hapus ketika data salah */}
+                        {/* Menu Cetak & Hapus ketika data salah */}
                         <td className="p-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCard(c.id, c.studentName)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
-                            title="Hapus data pengajuan jika salah input"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Hapus</span>
-                          </button>
+                          <div className="flex items-center justify-center space-x-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenCardPrintModal(c)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                              title="Cetak Kartu Siswa RFID"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              <span>Cetak Kartu</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCard(c.id, c.studentName)}
+                              className="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                              title="Hapus data pengajuan jika salah input"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Hapus</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -680,6 +811,395 @@ export const KonfigurasiView: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* MODAL PRATINJAU & CETAK KARTU SISWA RFID */}
+            {showPrintModal && selectedCardForPrint && (() => {
+              const studentData = students.find((s) => s.id === selectedCardForPrint.studentId || s.nisn === selectedCardForPrint.nisn);
+              const studentPhoto = studentData?.photo;
+
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+                  <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-8">
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold shadow-xs">
+                          <Printer className="w-5 h-5 text-blue-900" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-slate-800 text-base">Cetak Kartu Presensi RFID Siswa</h3>
+                          <p className="text-xs text-slate-500 font-medium">Desain Biru Tua & Merah, Latar Belakang Putih (CR80 Standard)</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowPrintModal(false)}
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Printable Card Preview Canvas */}
+                    <div className="space-y-4 bg-slate-100/80 p-5 rounded-2xl border border-slate-200/80">
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wider px-1">
+                        <span>📇 Pratinjau Desain Kartu RFID (CR80 Standard)</span>
+                        <span className="text-blue-900 font-black">Siap Cetak Fisik / PDF</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center pt-1">
+                        {/* TAMPILAN DEPAN / FRONT SIDE */}
+                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
+                          {/* Header Bar: Biru Tua */}
+                          <div className="bg-blue-900 text-white px-3 py-2 flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-6 h-6 rounded-md bg-red-600 border border-red-400 flex items-center justify-center shrink-0">
+                                <School className="w-3.5 h-3.5 text-white" />
+                              </div>
+                              <div className="leading-tight text-left min-w-0">
+                                <div className="text-[10px] font-black uppercase tracking-wider text-white truncate max-w-[200px]">
+                                  {settings.schoolName || 'SMP NEGERI 1'}
+                                </div>
+                                <div className="text-[7.5px] text-red-400 font-extrabold uppercase tracking-widest">
+                                  KARTU PRESENSI DIGITAL RFID
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Accent Bar: Kombinasi Merah */}
+                          <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
+
+                          {/* Body Info Siswa: Latar Belakang Putih */}
+                          <div className="p-3 bg-white flex space-x-3 items-center my-auto text-left relative z-10">
+                            {/* Photo Box & Chip Graphic */}
+                            <div className="relative shrink-0">
+                              <div className="w-16 h-20 bg-slate-50 border-2 border-blue-900 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-sm relative group">
+                                {studentPhoto ? (
+                                  <img src={studentPhoto} alt={selectedCardForPrint.studentName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center p-1 text-center">
+                                    <User className="w-7 h-7 text-blue-900/40" />
+                                    <span className="text-[6.5px] font-bold text-red-600 mt-0.5">PAS FOTO</span>
+                                  </div>
+                                )}
+
+                                {/* Hover / Quick Upload Pas Foto */}
+                                <label className="absolute inset-0 bg-blue-900/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[7.5px] font-bold">
+                                  <Upload className="w-3.5 h-3.5 text-red-400 mb-0.5" />
+                                  <span>Ganti Foto</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
+                                  />
+                                </label>
+                              </div>
+
+                              {/* Chip Sensor RFID Graphic */}
+                              <div className="absolute -top-1 -right-1 w-4 h-3 bg-gradient-to-br from-amber-400 to-yellow-300 rounded border border-amber-600 flex items-center justify-center shadow-xs">
+                                <div className="w-2 h-1 border-t border-b border-amber-800" />
+                              </div>
+                            </div>
+
+                            {/* Text Info */}
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div>
+                                <div className="text-[7.5px] uppercase tracking-wider text-red-600 font-black">NAMA LENGKAP SISWA</div>
+                                <div className="text-xs font-black truncate text-blue-950 leading-tight">{selectedCardForPrint.studentName}</div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1 text-[8.5px]">
+                                <div>
+                                  <span className="text-slate-500 font-bold">NISN:</span>{' '}
+                                  <span className="font-mono font-black text-blue-900">{selectedCardForPrint.nisn || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 font-bold">Kelas:</span>{' '}
+                                  <span className="font-extrabold text-red-600 bg-red-50 px-1 py-0.2 rounded border border-red-200">{selectedCardForPrint.class}</span>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-[7px] text-slate-500 font-mono uppercase font-bold">TAG SENSOR RFID</div>
+                                <div className="text-[8.5px] font-mono font-black text-white bg-blue-900 px-1.5 py-0.5 rounded border-l-2 border-red-600 inline-block shadow-2xs">
+                                  {studentData?.rfidTag || `RFID-${selectedCardForPrint.nisn}`}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Footer Barcode */}
+                          <div className="bg-slate-50 border-t border-slate-200 px-3 py-1.5 flex items-center justify-between text-[8px] text-blue-950 font-mono">
+                            <div className="flex items-center space-x-1 font-bold text-red-700">
+                              <QrCode className="w-3.5 h-3.5 text-blue-900" />
+                              <span>TAP-RFID-{selectedCardForPrint.nisn.slice(-6)}</span>
+                            </div>
+                            <span className="font-sans font-black text-[8px] text-blue-900 bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200">TA {settings.academicYear || '2026/2027'}</span>
+                          </div>
+                        </div>
+
+                        {/* TAMPILAN BELAKANG / BACK SIDE */}
+                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
+                          {/* Header Bar: Biru Tua */}
+                          <div className="bg-blue-900 text-white px-3 py-1.5 flex items-center justify-between">
+                            <div className="text-[8.5px] font-black uppercase tracking-wider text-red-400">
+                              KETENTUAN PENGGUNAAN KARTU PRESENSI
+                            </div>
+                            <div className="text-[7.5px] text-white font-mono font-bold">CR80 RFID</div>
+                          </div>
+
+                          {/* Accent Bar: Kombinasi Merah */}
+                          <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
+
+                          {/* Body Content: Latar Belakang Putih */}
+                          <div className="p-3 text-[8px] space-y-2 flex-1 flex flex-col justify-between bg-white">
+                            <ol className="text-[8px] text-slate-700 space-y-1 list-decimal pl-3.5 leading-tight font-medium">
+                              <li>Kartu ini wajib dibawa setiap hari untuk tap presensi masuk & pulang.</li>
+                              <li>Dilarang merusak, memotong, atau melipat area chip sensor RFID.</li>
+                              <li>Kartu tidak dapat dipindahtangankan kepada siswa lain.</li>
+                              <li>Jika menemukan kartu ini, mohon kembalikan ke bagian piket sekolah.</li>
+                            </ol>
+
+                            <div className="flex justify-between items-end border-t border-slate-200 pt-1.5 text-[8px] text-slate-600">
+                              <div>
+                                <div className="font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
+                                <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-[7px] text-slate-500 font-bold">Mengetahui,</div>
+                                <div className="font-bold text-blue-950 text-[8px] mt-2 border-b-2 border-red-600 pb-0.5">Kepala Sekolah</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Manual Upload Pas Foto Section in Print Modal */}
+                    <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-4 h-4 text-blue-900 shrink-0" />
+                        <div>
+                          <span className="font-bold text-blue-950">Pas Foto Siswa: </span>
+                          {studentPhoto ? (
+                            <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">✅ Foto Tersedia</span>
+                          ) : (
+                            <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded border border-red-300">⚠️ Belum Ada Foto</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-red-400" />
+                        <span>Upload Pas Foto Manual Siswa Ini</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Status Banner */}
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="font-bold text-emerald-900">
+                          Status Kartu: <span className="bg-emerald-200 text-emerald-900 px-2.5 py-0.5 rounded-md font-extrabold">{selectedCardForPrint.status}</span>
+                        </span>
+                      </div>
+
+                      {selectedCardForPrint.status !== 'Selesai Cetak' && selectedCardForPrint.status !== 'Sudah Diterima' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateCardRequestStatus(selectedCardForPrint.id, 'Selesai Cetak');
+                            setSelectedCardForPrint({ ...selectedCardForPrint, status: 'Selesai Cetak' });
+                            showNotice(`✅ Status kartu ${selectedCardForPrint.studentName} diperbarui ke 'Selesai Cetak'!`);
+                          }}
+                          className="text-[11px] font-extrabold bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-xl cursor-pointer shadow-2xs"
+                        >
+                          Tandai Selesai Cetak
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Modal Footer Controls */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateCardRequestStatus(selectedCardForPrint.id, 'Sudah Diterima');
+                          setShowPrintModal(false);
+                          showNotice(`🎉 Kartu untuk ${selectedCardForPrint.studentName} ditandai 'Sudah Diterima' oleh siswa.`);
+                        }}
+                        className="w-full sm:w-auto text-xs font-bold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl cursor-pointer"
+                      >
+                        Tandai Sudah Diterima Siswa
+                      </button>
+
+                      <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowPrintModal(false)}
+                          className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs font-bold cursor-pointer"
+                        >
+                          Tutup
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          className="bg-blue-900 hover:bg-blue-950 active:scale-95 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md flex items-center space-x-2 cursor-pointer transition-all"
+                        >
+                          <Printer className="w-4 h-4 text-red-400" />
+                          <span>Cetak Kartu Sekarang (Print / PDF)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* MODAL UPLOAD MASAL PAS FOTO SISWA */}
+            {showMassPhotoModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+                <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-8">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold shadow-xs">
+                        <Upload className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-800 text-base">Upload Masal Pas Foto Siswa (Kartu RFID)</h3>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {massPhotoItems.length} File Foto Terdeteksi. Sistem mencocokkan nama file dengan NISN/Nama Siswa.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMassPhotoModal(false);
+                        setMassPhotoItems([]);
+                      }}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Information Banner */}
+                  <div className="bg-blue-50 border border-blue-200 text-blue-950 p-3.5 rounded-2xl text-xs space-y-1">
+                    <div className="font-bold flex items-center space-x-1.5 text-blue-900">
+                      <Sparkles className="w-4 h-4 text-red-600" />
+                      <span>Tips Penamaan File Foto Masal:</span>
+                    </div>
+                    <p className="text-[11.5px] text-slate-600">
+                      Beri nama file foto sesuai NISN (contoh: <code className="bg-white px-1.5 py-0.5 rounded font-mono font-bold text-red-600 border border-blue-200">0078912341.jpg</code>) atau Nama Siswa (contoh: <code className="bg-white px-1.5 py-0.5 rounded font-mono font-bold text-blue-900 border border-blue-200">Aditya Pratama.jpg</code>).
+                    </p>
+                  </div>
+
+                  {/* Photo Preview Grid & Mapping */}
+                  <div className="max-h-96 overflow-y-auto pr-1 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {massPhotoItems.map((item, idx) => {
+                        const targetStudent = students.find((s) => s.id === item.studentId);
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-2xl border flex items-center space-x-3 transition-all ${
+                              item.studentId
+                                ? 'bg-emerald-50/70 border-emerald-300'
+                                : 'bg-slate-50 border-amber-300'
+                            }`}
+                          >
+                            {/* Thumbnail */}
+                            <div className="w-14 h-16 bg-white border-2 border-blue-900 rounded-xl overflow-hidden shrink-0 shadow-xs relative">
+                              <img src={item.previewUrl} alt={item.fileName} className="w-full h-full object-cover" />
+                            </div>
+
+                            {/* Details & Mapping */}
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="text-[11px] font-mono font-bold text-slate-700 truncate" title={item.fileName}>
+                                📄 {item.fileName}
+                              </div>
+
+                              <select
+                                value={item.studentId}
+                                onChange={(e) => {
+                                  const updated = [...massPhotoItems];
+                                  updated[idx].studentId = e.target.value;
+                                  setMassPhotoItems(updated);
+                                }}
+                                className="w-full text-xs font-bold px-2 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900"
+                              >
+                                <option value="">-- Pilih Siswa Terkait --</option>
+                                {students.map((std) => (
+                                  <option key={std.id} value={std.id}>
+                                    {std.fullName} ({std.currentClass} - NISN: {std.nisn})
+                                  </option>
+                                ))}
+                              </select>
+
+                              {targetStudent ? (
+                                <div className="text-[10px] font-bold text-emerald-700 flex items-center space-x-1">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span className="truncate">Terhubung ke: {targetStudent.fullName}</span>
+                                </div>
+                              ) : (
+                                <div className="text-[10px] font-bold text-amber-700 flex items-center space-x-1">
+                                  <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>Belum terhubung ke siswa</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Footer Buttons */}
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <label className="text-xs font-bold text-blue-900 hover:text-blue-950 underline cursor-pointer">
+                      + Tambah File Foto Lainnya
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleMassPhotoSelect}
+                      />
+                    </label>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMassPhotoModal(false);
+                          setMassPhotoItems([]);
+                        }}
+                        className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs font-bold cursor-pointer"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleApplyMassPhotos}
+                        className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md shadow-blue-200 flex items-center space-x-1.5 cursor-pointer transition-all"
+                      >
+                        <Save className="w-4 h-4 text-red-400" />
+                        <span>Simpan & Terapkan Semua Foto ({massPhotoItems.filter((i) => i.studentId).length})</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}

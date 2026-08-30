@@ -61,6 +61,8 @@ interface AppContextType {
   students: Student[];
   addStudent: (fullName: string, currentClass: string, nisn: string, gender: 'L' | 'P') => void;
   importStudents: (studentList: Partial<Student>[]) => void;
+  updateStudentPhoto: (studentId: string, photo: string) => void;
+  updateMassStudentPhotos: (photosMap: { [key: string]: string }) => void;
   generateMassStudentAccounts: () => void;
   deleteStudent: (id: string) => void;
 
@@ -257,6 +259,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Aktif',
     }));
     setStudents((prev) => [...prev, ...formatted]);
+  };
+
+  const updateStudentPhoto = (studentId: string, photo: string) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId || s.nisn === studentId ? { ...s, photo } : s))
+    );
+  };
+
+  const updateMassStudentPhotos = (photosMap: { [key: string]: string }) => {
+    setStudents((prev) =>
+      prev.map((s) => {
+        const keyId = s.id;
+        const keyNisn = s.nisn;
+        const keyName = s.fullName.toLowerCase().trim();
+        const found = photosMap[keyId] || photosMap[keyNisn] || photosMap[keyName];
+        if (found) {
+          return { ...s, photo: found };
+        }
+        return s;
+      })
+    );
   };
 
   const generateMassStudentAccounts = () => {
@@ -630,6 +653,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         students,
         addStudent,
         importStudents,
+        updateStudentPhoto,
+        updateMassStudentPhotos,
         generateMassStudentAccounts,
         deleteStudent,
         teachers,
