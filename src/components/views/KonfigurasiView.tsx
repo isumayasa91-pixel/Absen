@@ -24,10 +24,27 @@ import {
   UserCheck,
   Globe,
   Award,
+  Trash2,
+  Search,
+  Filter,
+  User,
+  AlertCircle,
+  FileText,
+  Tag,
 } from 'lucide-react';
 
 export const KonfigurasiView: React.FC = () => {
-  const { activeTab: globalActiveTab, settings, updateSettings } = useApp();
+  const {
+    activeTab: globalActiveTab,
+    settings,
+    updateSettings,
+    students,
+    classes,
+    cardRequests,
+    addCardRequest,
+    updateCardRequestStatus,
+    deleteCardRequest,
+  } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' => {
     if (tab === 'kalender-libur') return 'libur';
@@ -67,11 +84,27 @@ export const KonfigurasiView: React.FC = () => {
   const [newHolidayDate, setNewHolidayDate] = useState('');
   const [newHolidayName, setNewHolidayName] = useState('');
 
-  // Card requests
-  const [cardRequests, setCardRequests] = useState([
-    { id: '1', studentName: 'Ahmad Subagyo', class: 'X IPA 1', reason: 'Kartu Hilang', date: '2026-08-20', status: 'Diproses' },
-    { id: '2', studentName: 'Siti Rahma', class: 'XI IPS 1', reason: 'Kartu Rusak/Patah', date: '2026-08-22', status: 'Selesai Cetak' },
-  ]);
+  // Card requests Local UI States
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [cardReasonOption, setCardReasonOption] = useState('Kartu Hilang / Lupa Taruh');
+  const [customCardReason, setCustomCardReason] = useState('');
+  const [cardRequestDate, setCardRequestDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cardRequestStatus, setCardRequestStatus] = useState<'Menunggu' | 'Diproses' | 'Selesai Cetak' | 'Sudah Diterima'>('Menunggu');
+  const [cardNotes, setCardNotes] = useState('');
+
+  // Card Requests Filters & Search
+  const [cardSearchQuery, setCardSearchQuery] = useState('');
+  const [cardClassFilter, setCardClassFilter] = useState('Semua Kelas');
+  const [cardStatusFilter, setCardStatusFilter] = useState('Semua Status');
+
+  // Notice toast
+  const [cardNotice, setCardNotice] = useState<string | null>(null);
+
+  const showNotice = (msg: string) => {
+    setCardNotice(msg);
+    setTimeout(() => setCardNotice(null), 3500);
+  };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,43 +315,374 @@ export const KonfigurasiView: React.FC = () => {
       )}
 
       {/* TAB CONTENT 3: PENGAJUAN KARTU */}
-      {activeConfigTab === 'kartu' && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
-          <h3 className="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-3 flex items-center space-x-2">
-            <CreditCard className="w-4 h-4 text-emerald-600" />
-            <span>Pengajuan & Cetak Ulang Kartu Siswa RFID</span>
-          </h3>
+      {activeConfigTab === 'kartu' && (() => {
+        const availableClassList = Array.from(new Set(students.map((s) => s.currentClass))).filter(Boolean);
+        const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
-                <tr>
-                  <th className="p-3">Nama Siswa</th>
-                  <th className="p-3">Kelas</th>
-                  <th className="p-3">Alasan Pengajuan</th>
-                  <th className="p-3">Tanggal Pengajuan</th>
-                  <th className="p-3 text-center">Status Cetak</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {cardRequests.map((c) => (
-                  <tr key={c.id}>
-                    <td className="p-3 font-bold text-slate-900">{c.studentName}</td>
-                    <td className="p-3">{c.class}</td>
-                    <td className="p-3 text-slate-600">{c.reason}</td>
-                    <td className="p-3 font-mono">{c.date}</td>
-                    <td className="p-3 text-center">
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
-                        {c.status}
-                      </span>
-                    </td>
+        const filteredCardRequests = cardRequests.filter((c) => {
+          const q = cardSearchQuery.toLowerCase();
+          const matchSearch =
+            !q ||
+            c.studentName.toLowerCase().includes(q) ||
+            c.nisn.includes(q) ||
+            c.reason.toLowerCase().includes(q);
+
+          const matchClass = cardClassFilter === 'Semua Kelas' || c.class === cardClassFilter;
+          const matchStatus = cardStatusFilter === 'Semua Status' || c.status === cardStatusFilter;
+
+          return matchSearch && matchClass && matchStatus;
+        });
+
+        const handleAddCardSubmit = (e: React.FormEvent) => {
+          e.preventDefault();
+          if (!selectedStudent) {
+            alert('Silakan pilih data siswa terlebih dahulu!');
+            return;
+          }
+          const finalReason = cardReasonOption === 'Lainnya' ? customCardReason : cardReasonOption;
+          if (!finalReason.trim()) {
+            alert('Alasan pengajuan kartu wajib diisi!');
+            return;
+          }
+
+          addCardRequest({
+            studentId: selectedStudent.id,
+            studentName: selectedStudent.fullName,
+            class: selectedStudent.currentClass,
+            nisn: selectedStudent.nisn,
+            reason: finalReason,
+            date: cardRequestDate,
+            status: cardRequestStatus,
+            notes: cardNotes,
+          });
+
+          setShowAddCardModal(false);
+          setSelectedStudentId('');
+          setCustomCardReason('');
+          setCardNotes('');
+          showNotice(`✅ Pengajuan kartu untuk ${selectedStudent.fullName} (${selectedStudent.currentClass}) berhasil disimpan!`);
+        };
+
+        const handleDeleteCard = (id: string, name: string) => {
+          if (
+            window.confirm(
+              `Apakah Anda yakin ingin menghapus data pengajuan kartu siswa "${name}"?\n\nGunakan tombol hapus ini jika terdapat kesalahan input data.`
+            )
+          ) {
+            deleteCardRequest(id);
+            showNotice(`🗑️ Data pengajuan kartu "${name}" berhasil dihapus.`);
+          }
+        };
+
+        return (
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+            {/* Header & Notice Toast */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                  <CreditCard className="w-5 h-5 text-emerald-600" />
+                  <span>Pengajuan & Cetak Ulang Kartu Siswa RFID</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Data pengajuan terintegrasi secara otomatis dengan <strong>Master Data Siswa ({students.length} Siswa Terdaftar)</strong>.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAddCardModal(!showAddCardModal)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-emerald-100 flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Buat Pengajuan Kartu</span>
+              </button>
+            </div>
+
+            {/* Notice Alert Banner */}
+            {cardNotice && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-2xs">
+                <span>{cardNotice}</span>
+                <button onClick={() => setCardNotice(null)} className="text-emerald-700 hover:text-emerald-900 font-bold">
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* FORM TAMBAH PENGAJUAN (EXPANDABLE MODAL / PANEL) */}
+            {showAddCardModal && (
+              <form onSubmit={handleAddCardSubmit} className="bg-slate-50/90 border-2 border-emerald-200/80 p-5 rounded-2xl space-y-4 shadow-sm animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-3">
+                  <h4 className="font-black text-xs uppercase tracking-wider text-emerald-900 flex items-center space-x-2">
+                    <CreditCard className="w-4 h-4 text-emerald-600" />
+                    <span>Form Pengajuan Kartu Siswa Baru (Sincron Data Siswa)</span>
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCardModal(false)}
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 1. Pilih Siswa (Synced with Data Siswa) */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
+                      <User className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Pilih Siswa Terdaftar (Sincron Data Siswa) <span className="text-rose-500">*</span></span>
+                    </label>
+                    <select
+                      required
+                      value={selectedStudentId}
+                      onChange={(e) => setSelectedStudentId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Pilih Siswa dari Data Siswa --</option>
+                      {students.map((std) => (
+                        <option key={std.id} value={std.id}>
+                          {std.fullName} — Kelas {std.currentClass} (NISN: {std.nisn})
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Preview Box for Selected Student */}
+                    {selectedStudent && (
+                      <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs space-y-1 mt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-emerald-900 text-xs">{selectedStudent.fullName}</span>
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-900 font-extrabold text-[10px]">
+                            Kelas: {selectedStudent.currentClass}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1">
+                          <div><span className="font-semibold text-slate-500">NISN:</span> <span className="font-mono font-bold text-slate-800">{selectedStudent.nisn}</span></div>
+                          <div><span className="font-semibold text-slate-500">RFID Tag Current:</span> <span className="font-mono font-bold text-slate-800">{selectedStudent.rfidTag || 'Belum Terdaftar'}</span></div>
+                          <div><span className="font-semibold text-slate-500">Jenis Kelamin:</span> <span className="font-bold">{selectedStudent.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</span></div>
+                          <div><span className="font-semibold text-slate-500">Status Siswa:</span> <span className="font-bold text-emerald-700">{selectedStudent.status}</span></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Alasan Pengajuan */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Alasan Pengajuan / Masalah Kartu <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={cardReasonOption}
+                      onChange={(e) => setCardReasonOption(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white"
+                    >
+                      <option value="Kartu Hilang / Lupa Taruh">Kartu Hilang / Lupa Taruh</option>
+                      <option value="Kartu Rusak / Patah Microchip">Kartu Rusak / Patah Microchip</option>
+                      <option value="Ganti Kode RFID Tag Baru">Ganti Kode RFID Tag Baru</option>
+                      <option value="Pengajuan Kartu Perdana (Siswa Baru)">Pengajuan Kartu Perdana (Siswa Baru)</option>
+                      <option value="Lainnya">Lainnya (Ketik Manual)</option>
+                    </select>
+
+                    {cardReasonOption === 'Lainnya' && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Tuliskan alasan spesifik..."
+                        value={customCardReason}
+                        onChange={(e) => setCustomCardReason(e.target.value)}
+                        className="w-full mt-2 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium bg-white"
+                      />
+                    )}
+                  </div>
+
+                  {/* 3. Tanggal Pengajuan */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Tanggal Pengajuan <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={cardRequestDate}
+                      onChange={(e) => setCardRequestDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold bg-white"
+                    />
+                  </div>
+
+                  {/* 4. Status Cetak Awal */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Status Cetak Awal
+                    </label>
+                    <select
+                      value={cardRequestStatus}
+                      onChange={(e) => setCardRequestStatus(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white text-emerald-800"
+                    >
+                      <option value="Menunggu">Menunggu</option>
+                      <option value="Diproses">Diproses</option>
+                      <option value="Selesai Cetak">Selesai Cetak</option>
+                      <option value="Sudah Diterima">Sudah Diterima</option>
+                    </select>
+                  </div>
+
+                  {/* 5. Catatan / Notes */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Catatan Tambahan (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Sudah bayar cetak ulang Rp 15.000"
+                      value={cardNotes}
+                      onChange={(e) => setCardNotes(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-200/80 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCardModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs font-bold cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Simpan Pengajuan Kartu</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* FILTER & PENCARIAN BAR */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Cari Nama Siswa / NISN / Alasan..."
+                  value={cardSearchQuery}
+                  onChange={(e) => setCardSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium bg-white"
+                />
+              </div>
+
+              <div>
+                <select
+                  value={cardClassFilter}
+                  onChange={(e) => setCardClassFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white"
+                >
+                  <option value="Semua Kelas">-- Filter Semua Kelas --</option>
+                  {availableClassList.map((cls) => (
+                    <option key={cls} value={cls}>
+                      Kelas {cls}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <select
+                  value={cardStatusFilter}
+                  onChange={(e) => setCardStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white"
+                >
+                  <option value="Semua Status">-- Filter Semua Status --</option>
+                  <option value="Menunggu">Menunggu</option>
+                  <option value="Diproses">Diproses</option>
+                  <option value="Selesai Cetak">Selesai Cetak</option>
+                  <option value="Sudah Diterima">Sudah Diterima</option>
+                </select>
+              </div>
+            </div>
+
+            {/* TABEL DATA PENGAJUAN KARTU */}
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th className="p-3 w-10 text-center">#</th>
+                    <th className="p-3">Nama Siswa & Kelas</th>
+                    <th className="p-3">NISN</th>
+                    <th className="p-3">Alasan Pengajuan</th>
+                    <th className="p-3">Tanggal Pengajuan</th>
+                    <th className="p-3 text-center">Status Cetak</th>
+                    <th className="p-3 text-center">Menu Aksi / Hapus</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {filteredCardRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-slate-400 italic">
+                        Tidak ada data pengajuan kartu siswa yang sesuai dengan pencarian / filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCardRequests.map((c, idx) => (
+                      <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
+                        <td className="p-3">
+                          <div className="font-bold text-slate-900 text-xs">{c.studentName}</div>
+                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-extrabold text-[10px] border border-indigo-100">
+                            Kelas: {c.class}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono text-slate-600 font-bold">{c.nisn || '-'}</td>
+                        <td className="p-3">
+                          <div className="font-semibold text-slate-800">{c.reason}</div>
+                          {c.notes && <div className="text-[10px] text-slate-400 italic">Ket: {c.notes}</div>}
+                        </td>
+                        <td className="p-3 font-mono text-slate-600">{c.date}</td>
+
+                        {/* Status Selectable Badge */}
+                        <td className="p-3 text-center">
+                          <select
+                            value={c.status}
+                            onChange={(e) => updateCardRequestStatus(c.id, e.target.value as any)}
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold border cursor-pointer focus:outline-none ${
+                              c.status === 'Selesai Cetak'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : c.status === 'Diproses'
+                                ? 'bg-sky-100 text-sky-800 border-sky-300'
+                                : c.status === 'Sudah Diterima'
+                                ? 'bg-purple-100 text-purple-800 border-purple-300'
+                                : 'bg-amber-100 text-amber-800 border-amber-300'
+                            }`}
+                          >
+                            <option value="Menunggu">⏳ Menunggu</option>
+                            <option value="Diproses">⚙️ Diproses</option>
+                            <option value="Selesai Cetak">✅ Selesai Cetak</option>
+                            <option value="Sudah Diterima">🎉 Sudah Diterima</option>
+                          </select>
+                        </td>
+
+                        {/* Menu Hapus ketika data salah */}
+                        <td className="p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCard(c.id, c.studentName)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                            title="Hapus data pengajuan jika salah input"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* TAB CONTENT 4: FACEID */}
       {activeConfigTab === 'faceid' && (

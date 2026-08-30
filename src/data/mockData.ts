@@ -14,6 +14,7 @@ import {
   DisciplineRule,
   ViolationRecord,
   HolidayEvent,
+  CardRequest,
   SystemSetting,
 } from '../types';
 
@@ -129,3 +130,10 @@ export const initialHolidays: HolidayEvent[] = [
   { id: 'hol-2', date: '2026-10-28', title: 'Hari Sumpah Pemuda', type: 'Sekolah' },
   { id: 'hol-3', date: '2026-12-25', title: 'Hari Raya Natal', type: 'Nasional' },
 ];
+
+export const initialCardRequests: CardRequest[] = [
+  { id: 'cr-1', studentId: 'std-1', studentName: 'Aditya Pratama', class: 'X IPA 1', nisn: '0078912341', reason: 'Kartu Hilang / Lupa Taruh', date: '2026-08-20', status: 'Diproses' },
+  { id: 'cr-2', studentId: 'std-2', studentName: 'Anisa Rahmawati', class: 'X IPA 1', nisn: '0078912342', reason: 'Kartu Rusak / Patah Microchip', date: '2026-08-22', status: 'Selesai Cetak' },
+  { id: 'cr-3', studentId: 'std-5', studentName: 'Daffa Rizky', class: 'XI IPS 1', nisn: '0078912345', reason: 'Ganti Kode RFID Tag Baru', date: '2026-08-28', status: 'Menunggu' },
+];
+

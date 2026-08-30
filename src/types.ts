@@ -164,6 +164,18 @@ export interface HolidayEvent {
   type: 'Nasional' | 'Sekolah' | 'Cuti';
 }
 
+export interface CardRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  nisn: string;
+  reason: string;
+  date: string;
+  status: 'Menunggu' | 'Diproses' | 'Selesai Cetak' | 'Sudah Diterima';
+  notes?: string;
+}
+
 export interface SystemSetting {
   schoolName: string;
   appNameBranding: string;

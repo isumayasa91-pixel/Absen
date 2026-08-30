@@ -15,6 +15,7 @@ import {
   DisciplineRule,
   ViolationRecord,
   HolidayEvent,
+  CardRequest,
   SystemSetting,
 } from '../types';
 import {
@@ -34,6 +35,7 @@ import {
   initialLibraryBooks,
   initialLibraryTAPs,
   initialHolidays,
+  initialCardRequests,
 } from '../data/mockData';
 
 interface AppContextType {
@@ -118,6 +120,11 @@ interface AppContextType {
   holidays: HolidayEvent[];
   addHoliday: (date: string, title: string, type: 'Nasional' | 'Sekolah' | 'Cuti') => void;
   deleteHoliday: (id: string) => void;
+
+  cardRequests: CardRequest[];
+  addCardRequest: (data: Omit<CardRequest, 'id'>) => void;
+  updateCardRequestStatus: (id: string, status: CardRequest['status']) => void;
+  deleteCardRequest: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -159,6 +166,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [disciplineRules] = useState<DisciplineRule[]>(() => loadFromStorage('disciplineRules', initialDisciplineRules));
   const [violationRecords, setViolationRecords] = useState<ViolationRecord[]>(() => loadFromStorage('violationRecords', initialViolationRecords));
   const [holidays, setHolidays] = useState<HolidayEvent[]>(() => loadFromStorage('holidays', initialHolidays));
+  const [cardRequests, setCardRequests] = useState<CardRequest[]>(() => loadFromStorage('cardRequests', initialCardRequests));
 
   useEffect(() => saveToStorage('currentUser', currentUser), [currentUser]);
   useEffect(() => saveToStorage('settings', settings), [settings]);
@@ -176,6 +184,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => saveToStorage('libraryBooks', libraryBooks), [libraryBooks]);
   useEffect(() => saveToStorage('violationRecords', violationRecords), [violationRecords]);
   useEffect(() => saveToStorage('holidays', holidays), [holidays]);
+  useEffect(() => saveToStorage('cardRequests', cardRequests), [cardRequests]);
 
   const login = (user: UserAccount) => setCurrentUser(user);
   const logout = () => {
@@ -582,6 +591,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteViolationRecord = (id: string) => setViolationRecords((prev) => prev.filter((item) => item.id !== id));
   const deleteHoliday = (id: string) => setHolidays((prev) => prev.filter((item) => item.id !== id));
 
+  const addCardRequest = (data: Omit<CardRequest, 'id'>) => {
+    const newReq: CardRequest = {
+      id: `cr-${Date.now()}`,
+      ...data,
+    };
+    setCardRequests((prev) => [newReq, ...prev]);
+  };
+
+  const updateCardRequestStatus = (id: string, status: CardRequest['status']) => {
+    setCardRequests((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status } : item))
+    );
+  };
+
+  const deleteCardRequest = (id: string) => {
+    setCardRequests((prev) => prev.filter((item) => item.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -643,6 +670,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         holidays,
         addHoliday,
         deleteHoliday,
+        cardRequests,
+        addCardRequest,
+        updateCardRequestStatus,
+        deleteCardRequest,
       }}
     >
       {children}
