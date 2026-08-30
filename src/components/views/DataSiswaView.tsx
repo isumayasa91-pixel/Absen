@@ -649,22 +649,22 @@ export const DataSiswaView: React.FC = () => {
 
             {/* Visual Card Representation */}
             <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="w-[320px] h-[200px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
+              <div className="w-[320px] h-[200px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
                 {/* Header Bar */}
-                <div className="bg-blue-900 text-white px-3 py-1.5 flex items-center justify-between">
+                <div className="bg-blue-600 text-white px-3 py-1.5 flex items-center justify-between">
                   <div className="flex items-center space-x-1.5 min-w-0">
-                    <div className="w-5 h-5 rounded bg-white border border-blue-300 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                    <div className="w-5 h-5 rounded bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
                       {settings.schoolLogo ? (
                         <img src={settings.schoolLogo} alt="Logo" className="w-full h-full object-contain" />
                       ) : (
-                        <School className="w-3.5 h-3.5 text-blue-900" />
+                        <School className="w-3.5 h-3.5 text-blue-600" />
                       )}
                     </div>
                     <div className="leading-tight truncate">
                       <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 truncate block">
                         {settings.schoolName || 'KARTU PRESENSI SISWA'}
                       </span>
-                      <span className="text-[7px] text-blue-200 font-bold block">
+                      <span className="text-[7px] text-blue-100 font-bold block">
                         SISTEM PRESENSI DIGITAL RFID & QR
                       </span>
                     </div>
@@ -682,17 +682,17 @@ export const DataSiswaView: React.FC = () => {
                     {selectedStudentForQr.photo ? (
                       <img src={selectedStudentForQr.photo} alt={selectedStudentForQr.fullName} className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-8 h-8 text-blue-900/40" />
+                      <User className="w-8 h-8 text-blue-600/40" />
                     )}
                   </div>
 
                   <div className="space-y-1 min-w-0 flex-1 text-left">
                     <div className="text-[7px] uppercase tracking-wider text-red-600 font-black">NAMA SISWA</div>
-                    <div className="text-xs font-black truncate text-blue-950 leading-tight">{selectedStudentForQr.fullName}</div>
+                    <div className="text-xs font-black truncate text-slate-900 leading-tight">{selectedStudentForQr.fullName}</div>
                     <div className="grid grid-cols-2 gap-1 text-[8.5px]">
                       <div>
                         <span className="text-slate-500 font-bold">NISN:</span>{' '}
-                        <span className="font-mono font-black text-blue-900">{selectedStudentForQr.nisn}</span>
+                        <span className="font-mono font-black text-blue-700">{selectedStudentForQr.nisn}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 font-bold">Kelas:</span>{' '}
@@ -702,32 +702,32 @@ export const DataSiswaView: React.FC = () => {
                   </div>
 
                   {/* High Res QR Code SVG */}
-                  <div className="bg-white p-1 rounded-lg border-2 border-blue-900 shadow-2xs flex flex-col items-center justify-center shrink-0">
+                  <div className="bg-white p-1 rounded-lg border-2 border-blue-600 shadow-2xs flex flex-col items-center justify-center shrink-0">
                     <QRCodeSVG
                       value={selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
                       size={52}
                       level="H"
-                      fgColor="#1e3a8a"
+                      fgColor="#2563eb"
                       bgColor="#ffffff"
                     />
-                    <span className="text-[6.5px] font-mono font-black text-blue-900 mt-0.5">SCAN ME</span>
+                    <span className="text-[6.5px] font-mono font-black text-blue-700 mt-0.5">SCAN ME</span>
                   </div>
                 </div>
 
                 {/* Footer Barcode */}
-                <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-blue-950 font-mono">
+                <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-slate-800 font-mono">
                   <div className="flex items-center space-x-1 font-bold text-red-700">
-                    <QrCode className="w-3.5 h-3.5 text-blue-900" />
+                    <QrCode className="w-3.5 h-3.5 text-blue-600" />
                     <span>QR-RFID-{selectedStudentForQr.nisn}</span>
                   </div>
-                  <span className="font-sans font-black text-[7.5px] text-blue-900 bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200">VALIDATED</span>
+                  <span className="font-sans font-black text-[7.5px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">VALIDATED</span>
                 </div>
               </div>
 
               {/* QR Code Payload Value */}
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center w-full space-y-1">
                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Payload Data Terenskripsi QR:</span>
-                <p className="font-mono text-xs font-black text-blue-900 select-all bg-white p-2 rounded-xl border border-slate-200">
+                <p className="font-mono text-xs font-black text-blue-700 select-all bg-white p-2 rounded-xl border border-slate-200">
                   {selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
                 </p>
               </div>
@@ -736,7 +736,7 @@ export const DataSiswaView: React.FC = () => {
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 w-full flex items-center justify-between text-left">
                 <div>
                   <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Lembaga / Sekolah</div>
-                  <div className="text-xs font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
+                  <div className="text-xs font-black text-blue-700">{settings.schoolName || 'SMP Negeri 1'}</div>
                   <div className="text-[10px] text-slate-500 font-medium">Kota: {settings.city || '-'}</div>
                 </div>
                 <div className="text-right border-l border-slate-200 pl-3 relative">
@@ -761,7 +761,7 @@ export const DataSiswaView: React.FC = () => {
                   </div>
 
                   <div className="text-xs font-black text-slate-900">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
-                  <div className="text-[10px] font-mono font-extrabold text-blue-900">NIP. {settings.principalNip || '19750812 199903 1 002'}</div>
+                  <div className="text-[10px] font-mono font-extrabold text-blue-700">NIP. {settings.principalNip || '19750812 199903 1 002'}</div>
                 </div>
               </div>
             </div>

@@ -890,27 +890,27 @@ export const KonfigurasiView: React.FC = () => {
                     <div className="space-y-4 bg-slate-100/80 p-5 rounded-2xl border border-slate-200/80">
                       <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wider px-1">
                         <span>📇 Pratinjau Desain Kartu RFID (CR80 Standard)</span>
-                        <span className="text-blue-900 font-black">Siap Cetak Fisik / PDF</span>
+                        <span className="text-blue-700 font-black">Siap Cetak Fisik / PDF</span>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center pt-1">
                         {/* TAMPILAN DEPAN / FRONT SIDE */}
-                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
-                          {/* Header Bar: Biru Tua */}
-                          <div className="bg-blue-900 text-white px-3 py-2 flex items-center justify-between">
+                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
+                          {/* Header Bar: Biru Royal */}
+                          <div className="bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 rounded-md bg-white border border-blue-300 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                              <div className="w-6 h-6 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
                                 {settings.schoolLogo ? (
                                   <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain" />
                                 ) : (
-                                  <School className="w-3.5 h-3.5 text-blue-900" />
+                                  <School className="w-3.5 h-3.5 text-blue-600" />
                                 )}
                               </div>
                               <div className="leading-tight text-left min-w-0">
                                 <div className="text-[10px] font-black uppercase tracking-wider text-white truncate max-w-[200px]">
                                   {settings.schoolName || 'SMP NEGERI 1'}
                                 </div>
-                                <div className="text-[7.5px] text-red-400 font-extrabold uppercase tracking-widest">
+                                <div className="text-[7.5px] text-amber-300 font-extrabold uppercase tracking-widest">
                                   KARTU PRESENSI DIGITAL RFID
                                 </div>
                               </div>
@@ -924,19 +924,19 @@ export const KonfigurasiView: React.FC = () => {
                           <div className="p-3 bg-white flex space-x-3 items-center my-auto text-left relative z-10">
                             {/* Photo Box & Chip Graphic */}
                             <div className="relative shrink-0">
-                              <div className="w-16 h-20 bg-slate-50 border-2 border-blue-900 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-sm relative group">
+                              <div className="w-16 h-20 bg-slate-50 border-2 border-blue-600 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-sm relative group">
                                 {studentPhoto ? (
                                   <img src={studentPhoto} alt={selectedCardForPrint.studentName} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="flex flex-col items-center justify-center p-1 text-center">
-                                    <User className="w-7 h-7 text-blue-900/40" />
+                                    <User className="w-7 h-7 text-blue-600/40" />
                                     <span className="text-[6.5px] font-bold text-red-600 mt-0.5">PAS FOTO</span>
                                   </div>
                                 )}
 
                                 {/* Hover / Quick Upload Pas Foto */}
-                                <label className="absolute inset-0 bg-blue-900/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[7.5px] font-bold">
-                                  <Upload className="w-3.5 h-3.5 text-red-400 mb-0.5" />
+                                <label className="absolute inset-0 bg-blue-600/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[7.5px] font-bold">
+                                  <Upload className="w-3.5 h-3.5 text-amber-300 mb-0.5" />
                                   <span>Ganti Foto</span>
                                   <input
                                     type="file"
@@ -957,12 +957,12 @@ export const KonfigurasiView: React.FC = () => {
                             <div className="space-y-1 min-w-0 flex-1">
                               <div>
                                 <div className="text-[7.5px] uppercase tracking-wider text-red-600 font-black">NAMA LENGKAP SISWA</div>
-                                <div className="text-xs font-black truncate text-blue-950 leading-tight">{selectedCardForPrint.studentName}</div>
+                                <div className="text-xs font-black truncate text-slate-900 leading-tight">{selectedCardForPrint.studentName}</div>
                               </div>
                               <div className="grid grid-cols-2 gap-1 text-[8.5px]">
                                 <div>
                                   <span className="text-slate-500 font-bold">NISN:</span>{' '}
-                                  <span className="font-mono font-black text-blue-900">{selectedCardForPrint.nisn || '-'}</span>
+                                  <span className="font-mono font-black text-blue-700">{selectedCardForPrint.nisn || '-'}</span>
                                 </div>
                                 <div>
                                   <span className="text-slate-500 font-bold">Kelas:</span>{' '}
@@ -971,40 +971,40 @@ export const KonfigurasiView: React.FC = () => {
                               </div>
                               <div>
                                 <div className="text-[7px] text-slate-500 font-mono uppercase font-bold">TAG SENSOR RFID</div>
-                                <div className="text-[8.5px] font-mono font-black text-white bg-blue-900 px-1.5 py-0.5 rounded border-l-2 border-red-600 inline-block shadow-2xs">
+                                <div className="text-[8.5px] font-mono font-black text-white bg-blue-600 px-1.5 py-0.5 rounded border-l-2 border-red-600 inline-block shadow-2xs">
                                   {studentData?.rfidTag || `RFID-${selectedCardForPrint.nisn}`}
                                 </div>
                               </div>
                             </div>
 
                             {/* Real QR Code Graphic on Card Front */}
-                            <div className="shrink-0 bg-white p-1 rounded-lg border border-blue-900 shadow-xs flex flex-col items-center justify-center">
+                            <div className="shrink-0 bg-white p-1 rounded-lg border border-blue-600 shadow-xs flex flex-col items-center justify-center">
                               <QRCodeSVG
                                 value={studentData?.rfidTag || selectedCardForPrint.nisn || 'STUDENT-RFID'}
                                 size={44}
                                 level="M"
-                                fgColor="#1e3a8a"
+                                fgColor="#2563eb"
                                 bgColor="#ffffff"
                               />
-                              <span className="text-[6.5px] font-mono font-black text-blue-900 mt-0.5">SCAN QR</span>
+                              <span className="text-[6.5px] font-mono font-black text-blue-700 mt-0.5">SCAN QR</span>
                             </div>
                           </div>
 
                           {/* Footer Barcode */}
-                          <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-blue-950 font-mono">
+                          <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-slate-800 font-mono">
                             <div className="flex items-center space-x-1.5 font-bold text-red-700">
-                              <QrCode className="w-3.5 h-3.5 text-blue-900" />
+                              <QrCode className="w-3.5 h-3.5 text-blue-600" />
                               <span className="font-mono font-black">QR-RFID-{selectedCardForPrint.nisn.slice(-6)}</span>
                             </div>
-                            <span className="font-sans font-black text-[8px] text-blue-900 bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200">TA {settings.academicYear || '2026/2027'}</span>
+                            <span className="font-sans font-black text-[8px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">TA {settings.academicYear || '2026/2027'}</span>
                           </div>
                         </div>
 
                         {/* TAMPILAN BELAKANG / BACK SIDE */}
-                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
-                          {/* Header Bar: Biru Tua */}
-                          <div className="bg-blue-900 text-white px-3 py-1.5 flex items-center justify-between">
-                            <div className="text-[8.5px] font-black uppercase tracking-wider text-red-400">
+                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
+                          {/* Header Bar: Biru Royal */}
+                          <div className="bg-blue-600 text-white px-3 py-1.5 flex items-center justify-between">
+                            <div className="text-[8.5px] font-black uppercase tracking-wider text-amber-300">
                               KETENTUAN PENGGUNAAN KARTU PRESENSI
                             </div>
                             <div className="text-[7.5px] text-white font-mono font-bold">CR80 RFID & QR</div>
@@ -1029,7 +1029,7 @@ export const KonfigurasiView: React.FC = () => {
                                   value={`PRESENSI:${selectedCardForPrint.nisn}:${studentData?.rfidTag || selectedCardForPrint.nisn}`}
                                   size={40}
                                   level="M"
-                                  fgColor="#0f172a"
+                                  fgColor="#2563eb"
                                   bgColor="#ffffff"
                                 />
                                 <span className="text-[6px] font-mono font-bold text-slate-500 mt-0.5">VERIFIED</span>
@@ -1038,7 +1038,7 @@ export const KonfigurasiView: React.FC = () => {
 
                             <div className="flex justify-between items-end border-t border-slate-200 pt-1.5 text-[8px] text-slate-600">
                               <div>
-                                <div className="font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
+                                <div className="font-black text-blue-700">{settings.schoolName || 'SMP Negeri 1'}</div>
                                 <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID & QR</div>
                               </div>
                               <div className="text-center min-w-[110px] relative">
