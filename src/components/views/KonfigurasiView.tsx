@@ -215,6 +215,36 @@ export const KonfigurasiView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleSignatureFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, principalSignature: base64 }));
+        showNotice('✅ Tanda Tangan Kepala Sekolah berhasil diunggah!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStampFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, schoolStamp: base64 }));
+        showNotice('✅ Cap / Stempel Sekolah berhasil diunggah!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings(formData);
@@ -1011,10 +1041,29 @@ export const KonfigurasiView: React.FC = () => {
                                 <div className="font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
                                 <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID & QR</div>
                               </div>
-                              <div className="text-center min-w-[100px]">
-                                <div className="text-[6.5px] text-slate-500 font-bold">Mengetahui,</div>
-                                <div className="text-[6.5px] text-slate-600 font-extrabold">Kepala Sekolah</div>
-                                <div className="font-extrabold text-blue-950 text-[7.5px] mt-1 border-b border-slate-400 pb-0.5 leading-tight">
+                              <div className="text-center min-w-[110px] relative">
+                                <div className="text-[6px] text-slate-500 font-bold">Mengetahui,</div>
+                                <div className="text-[6.5px] text-slate-700 font-extrabold leading-none">Kepala Sekolah</div>
+
+                                {/* Visual Container Signature + Stamp */}
+                                <div className="h-7 my-0.5 relative flex items-center justify-center">
+                                  {settings.schoolStamp && (
+                                    <img
+                                      src={settings.schoolStamp}
+                                      alt="Cap Sekolah"
+                                      className="absolute left-1/2 top-1/2 -translate-x-3/4 -translate-y-1/2 h-8 w-8 object-contain opacity-85 pointer-events-none"
+                                    />
+                                  )}
+                                  {settings.principalSignature && (
+                                    <img
+                                      src={settings.principalSignature}
+                                      alt="TTD Kepsek"
+                                      className="relative z-10 h-6 max-w-[80px] object-contain pointer-events-none"
+                                    />
+                                  )}
+                                </div>
+
+                                <div className="font-extrabold text-blue-950 text-[7.5px] border-b border-slate-400 pb-0.5 leading-tight">
                                   {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                                 </div>
                                 <div className="text-[6px] font-mono text-slate-500 font-bold mt-0.5">
@@ -1545,6 +1594,118 @@ export const KonfigurasiView: React.FC = () => {
                       >
                         Buku Edukasi
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* TANDA TANGAN KEPALA SEKOLAH */}
+              <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span>Tanda Tangan Kepala Sekolah (TTD)</span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-24 h-16 rounded-2xl border-2 border-blue-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
+                    {formData.principalSignature ? (
+                      <img
+                        src={formData.principalSignature}
+                        alt="TTD Kepsek"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold text-center">Belum ada TTD</span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={formData.principalSignature || ''}
+                        onChange={(e) => setFormData({ ...formData, principalSignature: e.target.value })}
+                        placeholder="https://... / Data URL Gambar TTD PNG"
+                        className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
+                      />
+                      <label className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center justify-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-blue-200" />
+                        <span>Upload File TTD</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleSignatureFileUpload}
+                        />
+                      </label>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Format disarankan: PNG Transparan (Background bening).</span>
+                      {formData.principalSignature && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, principalSignature: '' })}
+                          className="text-red-600 font-bold hover:underline cursor-pointer"
+                        >
+                          Hapus TTD
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CAP / STEMPEL RESMI SEKOLAH */}
+              <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Award className="w-4 h-4 text-red-600" />
+                  <span>Cap / Stempel Resmi Sekolah</span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl border-2 border-red-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
+                    {formData.schoolStamp ? (
+                      <img
+                        src={formData.schoolStamp}
+                        alt="Cap Sekolah"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold text-center">Belum ada Cap</span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={formData.schoolStamp || ''}
+                        onChange={(e) => setFormData({ ...formData, schoolStamp: e.target.value })}
+                        placeholder="https://... / Data URL Gambar Cap PNG"
+                        className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
+                      />
+                      <label className="bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center justify-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-red-200" />
+                        <span>Upload File Cap</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleStampFileUpload}
+                        />
+                      </label>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Cap akan dicetak menimpa tanda tangan pada kartu fisik.</span>
+                      {formData.schoolStamp && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, schoolStamp: '' })}
+                          className="text-red-600 font-bold hover:underline cursor-pointer"
+                        >
+                          Hapus Cap
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

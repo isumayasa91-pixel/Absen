@@ -184,6 +184,8 @@ export interface SystemSetting {
   principalName: string;
   principalNip: string;
   schoolLogo: string;
+  principalSignature?: string;
+  schoolStamp?: string;
   enableClassAttendance: boolean;
   enableOnlineAttendance: boolean;
   autoViolationPoints: boolean;

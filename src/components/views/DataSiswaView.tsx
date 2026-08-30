@@ -739,8 +739,27 @@ export const DataSiswaView: React.FC = () => {
                   <div className="text-xs font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
                   <div className="text-[10px] text-slate-500 font-medium">Kota: {settings.city || '-'}</div>
                 </div>
-                <div className="text-right border-l border-slate-200 pl-3">
-                  <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Mengetahui Kepala Sekolah</div>
+                <div className="text-right border-l border-slate-200 pl-3 relative">
+                  <div className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">Mengetahui Kepala Sekolah</div>
+                  
+                  {/* Visual Signature & Stamp Display */}
+                  <div className="h-8 my-0.5 relative flex items-center justify-end">
+                    {settings.schoolStamp && (
+                      <img
+                        src={settings.schoolStamp}
+                        alt="Cap Sekolah"
+                        className="absolute right-6 top-1/2 -translate-y-1/2 h-9 w-9 object-contain opacity-85 pointer-events-none"
+                      />
+                    )}
+                    {settings.principalSignature && (
+                      <img
+                        src={settings.principalSignature}
+                        alt="TTD Kepsek"
+                        className="relative z-10 h-7 max-w-[90px] object-contain pointer-events-none"
+                      />
+                    )}
+                  </div>
+
                   <div className="text-xs font-black text-slate-900">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
                   <div className="text-[10px] font-mono font-extrabold text-blue-900">NIP. {settings.principalNip || '19750812 199903 1 002'}</div>
                 </div>
