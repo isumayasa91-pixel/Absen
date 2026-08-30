@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AttendanceStatus } from '../../types';
 import { Radio, ScanBarcode, Edit, Plus, Save, Clock, CheckCircle2, UserCheck, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
+import { RfidScanModal } from '../RfidScanModal';
 
 export const MonitorLiveView: React.FC = () => {
   const {
@@ -14,6 +15,7 @@ export const MonitorLiveView: React.FC = () => {
 
   const [selectedStudentForTap, setSelectedStudentForTap] = useState(students[0]?.id || '');
   const [tapNotice, setTapNotice] = useState<{ success: boolean; msg: string } | null>(null);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   // Manual input modal
   const [showManualModal, setShowManualModal] = useState(false);
@@ -70,14 +72,24 @@ export const MonitorLiveView: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Ubah Status Manual */}
-        <button
-          onClick={() => setShowManualModal(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 flex items-center space-x-2 transition-all cursor-pointer"
-        >
-          <Edit className="w-4 h-4" />
-          <span>Kelola / Input Presensi Baru</span>
-        </button>
+        {/* Action Controls */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsScanModalOpen(true)}
+            className="bg-blue-900 hover:bg-blue-950 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer"
+          >
+            <ScanBarcode className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>Buka Terminal Scan RFID Fullscreen</span>
+          </button>
+
+          <button
+            onClick={() => setShowManualModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 flex items-center space-x-2 transition-all cursor-pointer"
+          >
+            <Edit className="w-4 h-4" />
+            <span>Kelola / Input Presensi Baru</span>
+          </button>
+        </div>
       </div>
 
       {tapNotice && (
@@ -359,6 +371,8 @@ export const MonitorLiveView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <RfidScanModal isOpen={isScanModalOpen} onClose={() => setIsScanModalOpen(false)} />
     </div>
   );
 };

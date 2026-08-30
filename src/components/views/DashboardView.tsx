@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
+import { RfidScanModal } from '../RfidScanModal';
 import {
   Users,
   UserCheck,
@@ -18,6 +19,7 @@ import {
   CheckCircle2,
   ClockAlert,
   FileSpreadsheet,
+  ScanBarcode,
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
@@ -28,6 +30,8 @@ export const DashboardView: React.FC = () => {
     setActiveTab,
     announcements,
   } = useApp();
+
+  const [isRfidModalOpen, setIsRfidModalOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -115,11 +119,18 @@ export const DashboardView: React.FC = () => {
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => setIsRfidModalOpen(true)}
+              className="bg-blue-900 hover:bg-blue-950 active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer border border-blue-700"
+            >
+              <ScanBarcode className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span>Scan Kartu RFID</span>
+            </button>
+            <button
               onClick={() => setActiveTab('monitor-live')}
               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-900/20 flex items-center space-x-2 transition-all cursor-pointer border border-emerald-400/30"
             >
               <Radio className="w-4 h-4 animate-pulse" />
-              <span>Simulasi TAP RFID</span>
+              <span>Monitor Live</span>
             </button>
             <button
               onClick={() => setActiveTab('izin-sakit')}
@@ -378,6 +389,8 @@ export const DashboardView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <RfidScanModal isOpen={isRfidModalOpen} onClose={() => setIsRfidModalOpen(false)} />
     </div>
   );
 };

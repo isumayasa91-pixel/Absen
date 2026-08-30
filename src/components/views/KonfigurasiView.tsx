@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../../context/AppContext';
 import {
   Settings,
@@ -926,13 +927,25 @@ export const KonfigurasiView: React.FC = () => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Real QR Code Graphic on Card Front */}
+                            <div className="shrink-0 bg-white p-1 rounded-lg border border-blue-900 shadow-xs flex flex-col items-center justify-center">
+                              <QRCodeSVG
+                                value={studentData?.rfidTag || selectedCardForPrint.nisn || 'STUDENT-RFID'}
+                                size={44}
+                                level="M"
+                                fgColor="#1e3a8a"
+                                bgColor="#ffffff"
+                              />
+                              <span className="text-[6.5px] font-mono font-black text-blue-900 mt-0.5">SCAN QR</span>
+                            </div>
                           </div>
 
                           {/* Footer Barcode */}
-                          <div className="bg-slate-50 border-t border-slate-200 px-3 py-1.5 flex items-center justify-between text-[8px] text-blue-950 font-mono">
-                            <div className="flex items-center space-x-1 font-bold text-red-700">
+                          <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-blue-950 font-mono">
+                            <div className="flex items-center space-x-1.5 font-bold text-red-700">
                               <QrCode className="w-3.5 h-3.5 text-blue-900" />
-                              <span>TAP-RFID-{selectedCardForPrint.nisn.slice(-6)}</span>
+                              <span className="font-mono font-black">QR-RFID-{selectedCardForPrint.nisn.slice(-6)}</span>
                             </div>
                             <span className="font-sans font-black text-[8px] text-blue-900 bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200">TA {settings.academicYear || '2026/2027'}</span>
                           </div>
@@ -945,7 +958,7 @@ export const KonfigurasiView: React.FC = () => {
                             <div className="text-[8.5px] font-black uppercase tracking-wider text-red-400">
                               KETENTUAN PENGGUNAAN KARTU PRESENSI
                             </div>
-                            <div className="text-[7.5px] text-white font-mono font-bold">CR80 RFID</div>
+                            <div className="text-[7.5px] text-white font-mono font-bold">CR80 RFID & QR</div>
                           </div>
 
                           {/* Accent Bar: Kombinasi Merah */}
@@ -953,21 +966,35 @@ export const KonfigurasiView: React.FC = () => {
 
                           {/* Body Content: Latar Belakang Putih */}
                           <div className="p-3 text-[8px] space-y-2 flex-1 flex flex-col justify-between bg-white">
-                            <ol className="text-[8px] text-slate-700 space-y-1 list-decimal pl-3.5 leading-tight font-medium">
-                              <li>Kartu ini wajib dibawa setiap hari untuk tap presensi masuk & pulang.</li>
-                              <li>Dilarang merusak, memotong, atau melipat area chip sensor RFID.</li>
-                              <li>Kartu tidak dapat dipindahtangankan kepada siswa lain.</li>
-                              <li>Jika menemukan kartu ini, mohon kembalikan ke bagian piket sekolah.</li>
-                            </ol>
+                            <div className="flex items-start justify-between space-x-2">
+                              <ol className="text-[7.5px] text-slate-700 space-y-1 list-decimal pl-3.5 leading-tight font-medium flex-1">
+                                <li>Kartu ini wajib dibawa setiap hari untuk tap presensi masuk & pulang.</li>
+                                <li>Dilarang merusak, memotong, atau melipat area chip sensor RFID / QR.</li>
+                                <li>Kartu tidak dapat dipindahtangankan kepada siswa lain.</li>
+                                <li>Jika menemukan kartu ini, mohon kembalikan ke bagian piket sekolah.</li>
+                              </ol>
+
+                              {/* QR Code on Card Back */}
+                              <div className="shrink-0 bg-white p-1 rounded-lg border border-slate-300 shadow-2xs flex flex-col items-center justify-center">
+                                <QRCodeSVG
+                                  value={`PRESENSI:${selectedCardForPrint.nisn}:${studentData?.rfidTag || selectedCardForPrint.nisn}`}
+                                  size={40}
+                                  level="M"
+                                  fgColor="#0f172a"
+                                  bgColor="#ffffff"
+                                />
+                                <span className="text-[6px] font-mono font-bold text-slate-500 mt-0.5">VERIFIED</span>
+                              </div>
+                            </div>
 
                             <div className="flex justify-between items-end border-t border-slate-200 pt-1.5 text-[8px] text-slate-600">
                               <div>
                                 <div className="font-black text-blue-900">{settings.schoolName || 'SMP Negeri 1'}</div>
-                                <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID</div>
+                                <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID & QR</div>
                               </div>
                               <div className="text-center">
                                 <div className="text-[7px] text-slate-500 font-bold">Mengetahui,</div>
-                                <div className="font-bold text-blue-950 text-[8px] mt-2 border-b-2 border-red-600 pb-0.5">Kepala Sekolah</div>
+                                <div className="font-bold text-blue-950 text-[8px] mt-1.5 border-b-2 border-red-600 pb-0.5">Kepala Sekolah</div>
                               </div>
                             </div>
                           </div>

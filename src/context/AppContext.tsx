@@ -406,9 +406,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const tapRFIDOrScan = (studentId: string, method: 'RFID' | 'FaceID' | 'QR') => {
-    const std = students.find((s) => s.id === studentId || s.rfidTag === studentId || s.nisn === studentId);
+    const query = (studentId || '').trim();
+    const cleanDigits = query.replace(/[^0-9]/g, '');
+
+    const std = students.find((s) => {
+      const sId = s.id.toLowerCase();
+      const sNisn = (s.nisn || '').toLowerCase();
+      const sRfid = (s.rfidTag || '').toLowerCase();
+      const sName = s.fullName.toLowerCase();
+      const q = query.toLowerCase();
+
+      return (
+        sId === q ||
+        sNisn === q ||
+        sRfid === q ||
+        sName === q ||
+        (cleanDigits.length >= 4 && sNisn === cleanDigits) ||
+        (q.startsWith('tap-rfid-') && q.includes(sNisn.slice(-6))) ||
+        (sRfid && q.includes(sRfid))
+      );
+    });
+
     if (!std) {
-      return { success: false, message: 'Kartu RFID / Siswa tidak ditemukan!' };
+      return { success: false, message: `Kartu RFID / Kode [${query}] tidak terdaftar di sistem!`, student: null, record: null, type: 'error' as const };
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -416,17 +436,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Check time vs settings (e.g. 07:15)
     const [h, m] = nowTime.split(':').map(Number);
-    const [endH, endM] = settings.timeInEnd.split(':').map(Number);
+    const [endH, endM] = (settings.timeInEnd || '07:15').split(':').map(Number);
     const isLate = h > endH || (h === endH && m > endM);
 
     const existing = attendanceRecords.find((r) => r.studentId === std.id && r.date === today);
 
     let updatedRecord: AttendanceRecord;
+    let scanType: 'masuk' | 'pulang' | 'terlambat' = 'masuk';
 
     if (!existing || existing.statusIn === 'Belum') {
       // Clock in
       const statusFinal = isLate ? 'Terlambat' : 'Hadir';
       const statusIn = isLate ? 'Terlambat' : 'Hadir';
+      scanType = isLate ? 'terlambat' : 'masuk';
 
       updatedRecord = {
         id: existing?.id || `att-tap-${Date.now()}`,
@@ -462,6 +484,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } else {
       // Clock out
+      scanType = 'pulang';
       updatedRecord = {
         ...existing,
         statusOut: 'Pulang',
@@ -472,8 +495,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addOrUpdateAttendance(updatedRecord);
     return {
       success: true,
-      message: `Presensi Berhasil: ${std.fullName} (${std.currentClass}) - ${updatedRecord.statusFinal} [${nowTime}]`,
+      message: scanType === 'pulang'
+        ? `PRESENSI PULANG: ${std.fullName} (${std.currentClass}) Pukul ${nowTime}`
+        : scanType === 'terlambat'
+        ? `PRESENSI TERLAMBAT: ${std.fullName} (${std.currentClass}) Pukul ${nowTime}`
+        : `PRESENSI MASUK: ${std.fullName} (${std.currentClass}) Pukul ${nowTime}`,
+      student: std,
       record: updatedRecord,
+      type: scanType,
     };
   };
 
