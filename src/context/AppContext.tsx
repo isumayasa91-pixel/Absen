@@ -483,7 +483,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addOrUpdateAttendance(record);
   };
 
-  const tapRFIDOrScan = (studentId: string, method: 'RFID' | 'FaceID' | 'QR') => {
+  const tapRFIDOrScan = (studentId: string, method: 'RFID' | 'FaceID' | 'QR', forcedMode?: 'auto' | 'masuk' | 'pulang') => {
     let query = (studentId || '').trim();
     if (query.includes(':')) {
       const parts = query.split(':');
@@ -526,7 +526,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let updatedRecord: AttendanceRecord;
     let scanType: 'masuk' | 'pulang' | 'terlambat' = 'masuk';
 
-    if (!existing || existing.statusIn === 'Belum') {
+    const mode = forcedMode || 'auto';
+    const isCheckIn = mode === 'masuk' || (mode === 'auto' && (!existing || existing.statusIn === 'Belum'));
+
+    if (isCheckIn) {
       const statusFinal = isLate ? 'Terlambat' : 'Hadir';
       const statusIn = isLate ? 'Terlambat' : 'Hadir';
       scanType = isLate ? 'terlambat' : 'masuk';
@@ -539,9 +542,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         date: today,
         statusFinal,
         statusIn,
-        statusOut: 'Belum',
+        statusOut: existing?.statusOut || 'Belum',
         timeIn: nowTime,
-        timeOut: '-',
+        timeOut: existing?.timeOut || '-',
         tapMethod: method,
       };
 
@@ -562,9 +565,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       scanType = 'pulang';
       updatedRecord = {
-        ...existing,
+        id: existing?.id || `att-tap-${Date.now()}`,
+        studentId: std.id,
+        studentName: std.fullName,
+        class: std.currentClass,
+        date: today,
+        statusFinal: existing?.statusFinal || 'Hadir',
+        statusIn: existing?.statusIn || 'Hadir', // assume was present if punching out
         statusOut: 'Pulang',
+        timeIn: existing?.timeIn || '-',
         timeOut: nowTime,
+        tapMethod: method,
       };
     }
 

@@ -28,6 +28,8 @@ import {
   X,
   ArrowRight,
   Smile,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 
 export const FaceIdView: React.FC = () => {
@@ -59,6 +61,7 @@ export const FaceIdView: React.FC = () => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [confidenceScore, setConfidenceScore] = useState<number>(0);
   const [cooldown, setCooldown] = useState(false);
+  const [faceScanDirectionMode, setFaceScanDirectionMode] = useState<'auto' | 'masuk' | 'pulang'>('auto');
 
   // Active View Tab: 'scanner' (Terminal Auto Gate) | 'enroll' (Seting Wajah Pertama) | 'directory' (Status Wajah Semua Siswa)
   const [activeTabMode, setActiveTabMode] = useState<'scanner' | 'enroll' | 'directory'>('scanner');
@@ -309,7 +312,7 @@ export const FaceIdView: React.FC = () => {
     const conf = customConfidence || (Math.floor(Math.random() * 8) + threshold); // 88% - 99%
     setConfidenceScore(conf);
 
-    const res = tapRFIDOrScan(studentToLog.id, 'FaceID');
+    const res = tapRFIDOrScan(studentToLog.id, 'FaceID', faceScanDirectionMode);
     const nowTime = new Date().toLocaleTimeString('id-ID');
 
     setLastScanResult({
@@ -816,6 +819,74 @@ export const FaceIdView: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Pilihan Menu Mode Scan (Presensi) */}
+            {activeTabMode === 'scanner' && (
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-purple-600" />
+                    <span className="font-extrabold text-xs text-slate-800">Pilihan Mode Scan Wajah</span>
+                  </div>
+                  <span className="bg-purple-100 text-purple-800 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-200">
+                    SCAN DIRECTION
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFaceScanDirectionMode('auto');
+                      showNotice('🔄 Mode Scan: Menyesuaikan Waktu / Otomatis');
+                    }}
+                    className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer ${
+                      faceScanDirectionMode === 'auto'
+                        ? 'bg-purple-50 text-purple-950 border-purple-300 ring-2 ring-purple-100 font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4 text-purple-600" />
+                    <div className="text-[11px] font-black">Otomatis / Waktu</div>
+                    <div className="text-[9px] text-slate-400 font-medium hidden sm:block">Menyesuaikan Jam Harian</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFaceScanDirectionMode('masuk');
+                      showNotice('📥 Mode Scan: Paksakan Masuk (Scan In)');
+                    }}
+                    className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer ${
+                      faceScanDirectionMode === 'masuk'
+                        ? 'bg-emerald-50 text-emerald-950 border-emerald-300 ring-2 ring-emerald-100 font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4 text-emerald-600" />
+                    <div className="text-[11px] font-black">Scan In (Masuk)</div>
+                    <div className="text-[9px] text-slate-400 font-medium hidden sm:block">Paksakan Jam Masuk</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFaceScanDirectionMode('pulang');
+                      showNotice('📤 Mode Scan: Paksakan Pulang (Scan Out)');
+                    }}
+                    className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center gap-1.5 transition-all cursor-pointer ${
+                      faceScanDirectionMode === 'pulang'
+                        ? 'bg-blue-50 text-blue-950 border-blue-300 ring-2 ring-blue-100 font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    <LogOut className="w-4 h-4 text-blue-600" />
+                    <div className="text-[11px] font-black">Scan Out (Pulang)</div>
+                    <div className="text-[9px] text-slate-400 font-medium hidden sm:block">Paksakan Jam Pulang</div>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Threshold Slider Bar */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
