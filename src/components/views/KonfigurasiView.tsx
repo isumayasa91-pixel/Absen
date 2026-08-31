@@ -952,10 +952,10 @@ export const KonfigurasiView: React.FC = () => {
               const studentPhoto = studentData?.photo;
 
               return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-                  <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-8">
-                    {/* Modal Header */}
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto print:p-0 print:bg-transparent">
+                  <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-8 print:p-0 print:border-none print:shadow-none print:my-0">
+                    {/* Modal Header (Hidden on Print) */}
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 no-print">
                       <div className="flex items-center space-x-2.5">
                         <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold shadow-xs">
                           <Printer className="w-5 h-5 text-blue-900" />
@@ -975,7 +975,7 @@ export const KonfigurasiView: React.FC = () => {
                     </div>
 
                     {/* Printable Card Preview Canvas */}
-                    <div className="space-y-4 bg-slate-100/80 p-5 rounded-2xl border border-slate-200/80 print-card-wrapper">
+                    <div className="space-y-4 bg-slate-100/80 p-5 rounded-2xl border border-slate-200/80 print-card-wrapper print:p-0 print:bg-transparent print:border-none">
                       <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wider px-1 gap-2 no-print">
                         <div className="flex items-center space-x-2">
                           <span>📇 Pratinjau Desain Kartu RFID</span>
@@ -1210,8 +1210,8 @@ export const KonfigurasiView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick Manual Upload & Hapus Pas Foto Section in Print Modal */}
-                    <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    {/* Quick Manual Upload & Hapus Pas Foto Section in Print Modal (Hidden on Print) */}
+                    <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs no-print">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-blue-900 shrink-0" />
                         <div>
@@ -1250,8 +1250,8 @@ export const KonfigurasiView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Status Banner */}
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    {/* Status Banner (Hidden on Print) */}
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs no-print">
                       <div className="flex items-center space-x-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                         <span className="font-bold text-emerald-900">
@@ -1274,8 +1274,8 @@ export const KonfigurasiView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Modal Footer Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                    {/* Modal Footer Controls (Hidden on Print) */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100 no-print">
                       <button
                         type="button"
                         onClick={() => {

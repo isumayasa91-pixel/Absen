@@ -657,10 +657,10 @@ export const DataSiswaView: React.FC = () => {
 
       {/* Modal Quick View QR Code & Kartu Pelajar Siswa */}
       {selectedStudentForQr && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-6">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-transparent">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-6 print:p-0 print:border-none print:shadow-none print:my-0">
+            {/* Header (Hidden on Print) */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 no-print">
               <div className="flex items-center space-x-2.5">
                 <div className="w-10 h-10 rounded-xl bg-blue-900 text-amber-400 flex items-center justify-center font-bold shadow-md shadow-blue-900/20">
                   <QrCode className="w-5 h-5" />
@@ -679,7 +679,7 @@ export const DataSiswaView: React.FC = () => {
             </div>
 
             {/* Visual Card 2-Side Representation */}
-            <div className="space-y-4 bg-slate-100/70 p-4 rounded-2xl border border-slate-200/80 print-card-wrapper">
+            <div className="space-y-4 bg-slate-100/70 p-4 rounded-2xl border border-slate-200/80 print-card-wrapper print:p-0 print:bg-transparent print:border-none">
               <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wider px-1 gap-2 no-print">
                 <div className="flex items-center space-x-2">
                   <span>📇 Desain Fisik Kartu RFID</span>
@@ -972,8 +972,8 @@ export const DataSiswaView: React.FC = () => {
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            {/* Modal Actions (Hidden on Print) */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 no-print">
               <button
                 type="button"
                 onClick={() => setSelectedStudentForQr(null)}
