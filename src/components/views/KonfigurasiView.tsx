@@ -22,6 +22,7 @@ import {
   X,
   RefreshCw,
   Image as ImageIcon,
+  ImageOff,
   UserCheck,
   Globe,
   Award,
@@ -147,9 +148,45 @@ export const KonfigurasiView: React.FC = () => {
     Array<{ fileName: string; studentId: string; previewUrl: string }>
   >([]);
 
+  // Manage & Delete Student Photos States
+  const [showManagePhotosModal, setShowManagePhotosModal] = useState(false);
+  const [photoSearchQuery, setPhotoSearchQuery] = useState('');
+  const [photoClassFilter, setPhotoClassFilter] = useState('Semua Kelas');
+  const [photoStatusFilter, setPhotoStatusFilter] = useState<'all' | 'with_photo' | 'without_photo'>('all');
+
   const showNotice = (msg: string) => {
     setCardNotice(msg);
     setTimeout(() => setCardNotice(null), 3500);
+  };
+
+  const handleDeleteStudentPhoto = (studentId: string, studentName?: string) => {
+    const targetStudent = students.find((s) => s.id === studentId || s.nisn === studentId);
+    const displayName = studentName || targetStudent?.fullName || 'siswa ini';
+    if (window.confirm(`Apakah Anda yakin ingin menghapus pas foto kartu peserta untuk "${displayName}"?`)) {
+      updateStudentPhoto(studentId, '');
+      showNotice(`🗑️ Pas foto kartu peserta "${displayName}" berhasil dihapus.`);
+    }
+  };
+
+  const handleClearAllStudentPhotos = () => {
+    const studentsWithPhotos = students.filter((s) => !!s.photo);
+    if (studentsWithPhotos.length === 0) {
+      alert('Tidak ada pas foto siswa yang tersimpan untuk dihapus.');
+      return;
+    }
+
+    if (
+      window.confirm(
+        `⚠️ KONFIRMASI HAPUS MASAL:\nApakah Anda yakin ingin menghapus SEMUA (${studentsWithPhotos.length}) pas foto kartu peserta siswa?\n\nFoto kartu yang dihapus akan kembali ke tampilan default (kosong).`
+      )
+    ) {
+      const clearMap: { [key: string]: string } = {};
+      studentsWithPhotos.forEach((s) => {
+        clearMap[s.id] = '';
+      });
+      updateMassStudentPhotos(clearMap);
+      showNotice(`🗑️ Berhasil menghapus ${studentsWithPhotos.length} pas foto kartu peserta secara masal!`);
+    }
   };
 
   const handleSinglePhotoUpload = (studentId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -569,6 +606,21 @@ export const KonfigurasiView: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowManagePhotosModal(true)}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
+                  title="Menu Kelola & Hapus Pas Foto Kartu Peserta"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <span>Hapus / Kelola Foto Kartu</span>
+                  {students.filter((s) => !!s.photo).length > 0 && (
+                    <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                      {students.filter((s) => !!s.photo).length}
+                    </span>
+                  )}
+                </button>
+
                 <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center justify-center space-x-1.5 cursor-pointer transition-all">
                   <Upload className="w-4 h-4 text-red-400" />
                   <span>Upload Masal Pas Foto</span>
@@ -931,33 +983,39 @@ export const KonfigurasiView: React.FC = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center pt-1">
                         {/* TAMPILAN DEPAN / FRONT SIDE */}
-                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
-                          {/* Header Bar: Biru Royal */}
-                          <div className="bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-6 h-6 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                        <div className="w-[315px] h-[198px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
+                          {/* Header Bar: Biru Royal dengan Alamat Sekolah */}
+                          <div className="bg-blue-600 text-white px-2.5 py-1.5 flex items-center justify-between">
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                              <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
                                 {settings.schoolLogo ? (
                                   <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain" />
                                 ) : (
-                                  <School className="w-3.5 h-3.5 text-blue-600" />
+                                  <School className="w-4 h-4 text-blue-600" />
                                 )}
                               </div>
-                              <div className="leading-tight text-left min-w-0">
-                                <div className="text-[10px] font-black uppercase tracking-wider text-white truncate max-w-[200px]">
+                              <div className="leading-tight text-left min-w-0 flex-1">
+                                <div className="text-[9.5px] font-black uppercase tracking-wider text-white truncate" title={settings.schoolName}>
                                   {settings.schoolName || 'SMP NEGERI 1'}
                                 </div>
-                                <div className="text-[7.5px] text-amber-300 font-extrabold uppercase tracking-widest">
+                                <div className="text-[6.5px] text-blue-100 font-medium truncate leading-tight" title={settings.schoolAddress}>
+                                  {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}{settings.city ? ` • ${settings.city}` : ''}
+                                </div>
+                                <div className="text-[6.5px] text-amber-300 font-extrabold uppercase tracking-wider">
                                   KARTU PRESENSI DIGITAL RFID
                                 </div>
                               </div>
                             </div>
+                            <span className="text-[7px] font-mono font-black bg-red-600 text-white px-1.5 py-0.5 rounded ml-1 shrink-0 shadow-2xs">
+                              RFID & QR
+                            </span>
                           </div>
 
                           {/* Accent Bar: Kombinasi Merah */}
                           <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
 
                           {/* Body Info Siswa: Latar Belakang Putih */}
-                          <div className="p-3 bg-white flex space-x-3 items-center my-auto text-left relative z-10">
+                          <div className="px-3 py-2 bg-white flex space-x-3 items-center my-auto text-left relative z-10">
                             {/* Photo Box & Chip Graphic */}
                             <div className="relative shrink-0">
                               <div className="w-16 h-20 bg-slate-50 border-2 border-blue-600 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-sm relative group">
@@ -970,17 +1028,33 @@ export const KonfigurasiView: React.FC = () => {
                                   </div>
                                 )}
 
-                                {/* Hover / Quick Upload Pas Foto */}
-                                <label className="absolute inset-0 bg-blue-600/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[7.5px] font-bold">
-                                  <Upload className="w-3.5 h-3.5 text-amber-300 mb-0.5" />
-                                  <span>Ganti Foto</span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
-                                  />
-                                </label>
+                                {/* Hover / Quick Upload or Hapus Pas Foto */}
+                                <div className="absolute inset-0 bg-blue-950/85 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-1 space-y-1 z-20">
+                                  <label className="bg-blue-600 hover:bg-blue-700 text-white rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center space-x-0.5 cursor-pointer w-full justify-center shadow-xs">
+                                    <Upload className="w-2.5 h-2.5 text-amber-300" />
+                                    <span>{studentPhoto ? 'Ganti' : 'Upload'}</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
+                                    />
+                                  </label>
+                                  {studentPhoto && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleDeleteStudentPhoto(selectedCardForPrint.studentId, selectedCardForPrint.studentName);
+                                      }}
+                                      className="bg-red-600 hover:bg-red-700 text-white rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center space-x-0.5 cursor-pointer w-full justify-center shadow-xs"
+                                      title="Hapus pas foto dari kartu ini"
+                                    >
+                                      <Trash2 className="w-2.5 h-2.5" />
+                                      <span>Hapus</span>
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Chip Sensor RFID Graphic */}
@@ -992,7 +1066,7 @@ export const KonfigurasiView: React.FC = () => {
                             {/* Text Info */}
                             <div className="space-y-1 min-w-0 flex-1">
                               <div>
-                                <div className="text-[7.5px] uppercase tracking-wider text-red-600 font-black">NAMA LENGKAP SISWA</div>
+                                <div className="text-[7px] uppercase tracking-wider text-red-600 font-black">NAMA LENGKAP SISWA</div>
                                 <div className="text-xs font-black truncate text-slate-900 leading-tight">{selectedCardForPrint.studentName}</div>
                               </div>
                               <div className="grid grid-cols-2 gap-1 text-[8.5px]">
@@ -1037,72 +1111,82 @@ export const KonfigurasiView: React.FC = () => {
                         </div>
 
                         {/* TAMPILAN BELAKANG / BACK SIDE */}
-                        <div className="w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
-                          {/* Header Bar: Biru Royal */}
-                          <div className="bg-blue-600 text-white px-3 py-1.5 flex items-center justify-between">
-                            <div className="text-[8.5px] font-black uppercase tracking-wider text-amber-300">
-                              KETENTUAN PENGGUNAAN KARTU PRESENSI
+                        <div className="w-[315px] h-[198px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
+                          {/* Header Bar: Biru Royal dengan Alamat */}
+                          <div className="bg-blue-600 text-white px-2.5 py-1 flex items-center justify-between">
+                            <div className="leading-tight min-w-0 flex-1">
+                              <div className="text-[8px] font-black uppercase tracking-wider text-amber-300">
+                                KETENTUAN PENGGUNAAN KARTU
+                              </div>
+                              <div className="text-[6px] text-blue-100 font-medium truncate" title={settings.schoolAddress}>
+                                {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}{settings.city ? ` • ${settings.city}` : ''}
+                              </div>
                             </div>
-                            <div className="text-[7.5px] text-white font-mono font-bold">CR80 RFID & QR</div>
+                            <div className="text-[7px] text-white font-mono font-bold bg-blue-700/80 px-1.5 py-0.5 rounded shrink-0">CR80 RFID</div>
                           </div>
 
                           {/* Accent Bar: Kombinasi Merah */}
                           <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
 
                           {/* Body Content: Latar Belakang Putih */}
-                          <div className="p-3 text-[8px] space-y-2 flex-1 flex flex-col justify-between bg-white">
+                          <div className="p-2.5 text-[8px] space-y-1.5 flex-1 flex flex-col justify-between bg-white overflow-hidden">
                             <div className="flex items-start justify-between space-x-2">
-                              <ol className="text-[7.5px] text-slate-700 space-y-1 list-decimal pl-3.5 leading-tight font-medium flex-1">
-                                <li>Kartu ini wajib dibawa setiap hari untuk tap presensi masuk & pulang.</li>
-                                <li>Dilarang merusak, memotong, atau melipat area chip sensor RFID / QR.</li>
-                                <li>Kartu tidak dapat dipindahtangankan kepada siswa lain.</li>
-                                <li>Jika menemukan kartu ini, mohon kembalikan ke bagian piket sekolah.</li>
+                              <ol className="text-[7px] text-slate-700 space-y-0.5 list-decimal pl-3.5 leading-tight font-medium flex-1">
+                                <li>Kartu ini wajib dibawa setiap hari untuk presensi.</li>
+                                <li>Dilarang merusak chip sensor RFID atau kode QR.</li>
+                                <li>Kartu tidak dapat dipindahtangankan ke orang lain.</li>
+                                <li>Jika menemukan kartu ini, serahkan ke piket sekolah.</li>
                               </ol>
 
                               {/* QR Code on Card Back */}
-                              <div className="shrink-0 bg-white p-1 rounded-lg border border-slate-300 shadow-2xs flex flex-col items-center justify-center">
+                              <div className="shrink-0 bg-white p-0.5 rounded-lg border border-slate-300 shadow-2xs flex flex-col items-center justify-center">
                                 <QRCodeSVG
                                   value={`PRESENSI:${selectedCardForPrint.nisn}:${studentData?.rfidTag || selectedCardForPrint.nisn}`}
-                                  size={40}
+                                  size={36}
                                   level="M"
                                   fgColor="#2563eb"
                                   bgColor="#ffffff"
                                 />
-                                <span className="text-[6px] font-mono font-bold text-slate-500 mt-0.5">VERIFIED</span>
+                                <span className="text-[5.5px] font-mono font-bold text-slate-500">VERIFIED</span>
                               </div>
                             </div>
 
-                            <div className="flex justify-between items-end border-t border-slate-200 pt-1.5 text-[8px] text-slate-600">
-                              <div>
-                                <div className="font-black text-blue-700">{settings.schoolName || 'SMP Negeri 1'}</div>
-                                <div className="text-[7px] text-red-600 font-bold">Sistem Presensi Digital RFID & QR</div>
+                            <div className="flex justify-between items-end border-t border-slate-200 pt-1 text-[8px] text-slate-600">
+                              <div className="max-w-[130px]">
+                                <div className="font-black text-blue-700 text-[8px] leading-tight truncate" title={settings.schoolName}>
+                                  {settings.schoolName || 'SMP Negeri 1'}
+                                </div>
+                                <div className="text-[6px] text-slate-500 font-medium leading-tight truncate" title={settings.schoolAddress}>
+                                  {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}
+                                </div>
+                                <div className="text-[6.5px] text-red-600 font-bold mt-0.5">Sistem Presensi RFID & QR</div>
                               </div>
-                              <div className="text-center min-w-[110px] relative">
-                                <div className="text-[6px] text-slate-500 font-bold">Mengetahui,</div>
-                                <div className="text-[6.5px] text-slate-700 font-extrabold leading-none">Kepala Sekolah</div>
+                              <div className="text-center min-w-[115px] max-w-[125px] relative">
+                                <div className="text-[6px] text-slate-500 font-bold leading-none">Mengetahui,</div>
+                                <div className="text-[6.5px] text-slate-700 font-extrabold leading-tight">Kepala Sekolah</div>
 
                                 {/* Visual Container Signature + Stamp */}
-                                <div className="h-7 my-0.5 relative flex items-center justify-center">
+                                <div className="h-6 my-0.5 relative flex items-center justify-center overflow-visible">
                                   {settings.schoolStamp && (
                                     <img
                                       src={settings.schoolStamp}
                                       alt="Cap Sekolah"
-                                      className="absolute left-1/2 top-1/2 -translate-x-3/4 -translate-y-1/2 h-8 w-8 object-contain opacity-85 pointer-events-none"
+                                      className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-6 w-6 object-contain opacity-80 pointer-events-none"
                                     />
                                   )}
                                   {settings.principalSignature && (
                                     <img
                                       src={settings.principalSignature}
                                       alt="TTD Kepsek"
-                                      className="relative z-10 h-6 max-w-[80px] object-contain pointer-events-none"
+                                      className="relative z-10 h-5 max-h-5 max-w-[80px] w-auto object-contain pointer-events-none"
                                     />
                                   )}
                                 </div>
 
-                                <div className="font-extrabold text-blue-950 text-[7.5px] border-b border-slate-400 pb-0.5 leading-tight">
+                                <div className="font-extrabold text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[120px] mx-auto" title={settings.principalName}>
                                   {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                                 </div>
-                                <div className="text-[6px] font-mono text-slate-500 font-bold mt-0.5">
+                                <div className="text-[6.5px] font-mono text-blue-900 font-extrabold mt-0.5 truncate max-w-[120px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
                                   NIP. {settings.principalNip || '19750812 199903 1 002'}
                                 </div>
                               </div>
@@ -1112,7 +1196,7 @@ export const KonfigurasiView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick Manual Upload Pas Foto Section in Print Modal */}
+                    {/* Quick Manual Upload & Hapus Pas Foto Section in Print Modal */}
                     <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-blue-900 shrink-0" />
@@ -1126,16 +1210,30 @@ export const KonfigurasiView: React.FC = () => {
                         </div>
                       </div>
 
-                      <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors shrink-0">
-                        <Upload className="w-3.5 h-3.5 text-red-400" />
-                        <span>Upload Pas Foto Manual Siswa Ini</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
-                        />
-                      </label>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        {studentPhoto && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteStudentPhoto(selectedCardForPrint.studentId, selectedCardForPrint.studentName)}
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors"
+                            title="Hapus pas foto kartu siswa ini"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Hapus Pas Foto</span>
+                          </button>
+                        )}
+
+                        <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                          <Upload className="w-3.5 h-3.5 text-red-400" />
+                          <span>{studentPhoto ? 'Ganti Pas Foto' : 'Upload Pas Foto'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleSinglePhotoUpload(selectedCardForPrint.studentId, e)}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     {/* Status Banner */}
@@ -1333,6 +1431,234 @@ export const KonfigurasiView: React.FC = () => {
                         <span>Simpan & Terapkan Semua Foto ({massPhotoItems.filter((i) => i.studentId).length})</span>
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL KELOLA & HAPUS PAS FOTO KARTU PESERTA */}
+            {showManagePhotosModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+                <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-8">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold shadow-xs">
+                        <Trash2 className="w-5 h-5 text-rose-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-800 text-base">Menu Kelola & Hapus Pas Foto Kartu Peserta</h3>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Hapus pas foto per-siswa atau masal untuk mengatur ulang foto kartu presensi RFID & QR
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowManagePhotosModal(false)}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Summary Stats & Danger Batch Action */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                      <div className="text-slate-400 font-bold uppercase text-[10px]">Total Siswa</div>
+                      <div className="text-lg font-black text-slate-800">{students.length} Siswa</div>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-xl border border-emerald-200 shadow-2xs">
+                      <div className="text-emerald-600 font-bold uppercase text-[10px]">Memiliki Pas Foto</div>
+                      <div className="text-lg font-black text-emerald-700">
+                        {students.filter((s) => !!s.photo).length} Siswa
+                      </div>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-xl border border-amber-200 shadow-2xs">
+                      <div className="text-amber-600 font-bold uppercase text-[10px]">Belum Ada Foto</div>
+                      <div className="text-lg font-black text-amber-700">
+                        {students.filter((s) => !s.photo).length} Siswa
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={handleClearAllStudentPhotos}
+                        disabled={students.filter((s) => !!s.photo).length === 0}
+                        className="w-full h-full min-h-[44px] bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs px-3 py-2 rounded-xl shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer transition-all"
+                        title="Hapus semua pas foto peserta sekaligus"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Hapus Semua Foto ({students.filter((s) => !!s.photo).length})</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Filters & Search */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Cari nama siswa / NISN..."
+                        value={photoSearchQuery}
+                        onChange={(e) => setPhotoSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <select
+                      value={photoClassFilter}
+                      onChange={(e) => setPhotoClassFilter(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    >
+                      <option value="Semua Kelas">Semua Kelas ({students.length})</option>
+                      {classes.map((c) => (
+                        <option key={c.id} value={c.className}>
+                          Kelas {c.className}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStatusFilter('all')}
+                        className={`flex-1 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
+                          photoStatusFilter === 'all'
+                            ? 'bg-white text-slate-900 shadow-2xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Semua
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStatusFilter('with_photo')}
+                        className={`flex-1 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
+                          photoStatusFilter === 'with_photo'
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Berfoto ({students.filter((s) => !!s.photo).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoStatusFilter('without_photo')}
+                        className={`flex-1 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
+                          photoStatusFilter === 'without_photo'
+                            ? 'bg-amber-600 text-white shadow-2xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Kosong ({students.filter((s) => !s.photo).length})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Student Photo Cards List */}
+                  {(() => {
+                    const filteredPhotoStudents = students.filter((std) => {
+                      const matchSearch =
+                        std.fullName.toLowerCase().includes(photoSearchQuery.toLowerCase()) ||
+                        std.nisn.includes(photoSearchQuery) ||
+                        std.currentClass.toLowerCase().includes(photoSearchQuery.toLowerCase());
+                      const matchClass = photoClassFilter === 'Semua Kelas' || std.currentClass === photoClassFilter;
+                      const matchStatus =
+                        photoStatusFilter === 'all' ||
+                        (photoStatusFilter === 'with_photo' && !!std.photo) ||
+                        (photoStatusFilter === 'without_photo' && !std.photo);
+                      return matchSearch && matchClass && matchStatus;
+                    });
+
+                    if (filteredPhotoStudents.length === 0) {
+                      return (
+                        <div className="py-12 text-center text-slate-400 space-y-2 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                          <User className="w-10 h-10 mx-auto text-slate-300" />
+                          <p className="text-xs font-bold">Tidak ada siswa yang sesuai dengan filter.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="max-h-[380px] overflow-y-auto pr-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {filteredPhotoStudents.map((std) => {
+                            const hasPhoto = !!std.photo;
+                            return (
+                              <div
+                                key={std.id}
+                                className={`p-3 rounded-2xl border flex items-center space-x-3 transition-all ${
+                                  hasPhoto ? 'bg-white border-slate-200 shadow-2xs' : 'bg-slate-50/80 border-slate-200'
+                                }`}
+                              >
+                                {/* Photo Box */}
+                                <div className="w-14 h-18 rounded-xl bg-slate-100 border-2 border-blue-900 overflow-hidden shrink-0 flex flex-col items-center justify-center shadow-2xs relative">
+                                  {hasPhoto ? (
+                                    <img src={std.photo} alt={std.fullName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="flex flex-col items-center justify-center p-1 text-center">
+                                      <User className="w-6 h-6 text-blue-900/30" />
+                                      <span className="text-[6px] font-bold text-slate-400 mt-0.5">KOSONG</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Details & Action Buttons */}
+                                <div className="min-w-0 flex-1 space-y-1 text-left">
+                                  <div className="font-extrabold text-slate-900 text-xs truncate" title={std.fullName}>
+                                    {std.fullName}
+                                  </div>
+                                  <div className="flex items-center space-x-1.5 text-[10px]">
+                                    <span className="font-bold text-red-600 bg-red-50 px-1.5 py-0.2 rounded border border-red-200">
+                                      {std.currentClass}
+                                    </span>
+                                    <span className="font-mono text-slate-500 font-medium">NISN: {std.nisn}</span>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1.5 pt-1">
+                                    <label className="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-extrabold px-2 py-1 rounded-lg cursor-pointer flex items-center space-x-1 transition-colors">
+                                      <Upload className="w-3 h-3 text-blue-600" />
+                                      <span>{hasPhoto ? 'Ganti' : 'Upload'}</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleSinglePhotoUpload(std.id, e)}
+                                      />
+                                    </label>
+
+                                    {hasPhoto && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteStudentPhoto(std.id, std.fullName)}
+                                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-extrabold px-2 py-1 rounded-lg cursor-pointer flex items-center space-x-1 transition-colors"
+                                        title="Hapus pas foto kartu siswa ini"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-rose-600" />
+                                        <span>Hapus</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowManagePhotosModal(false)}
+                      className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                    >
+                      Selesai / Tutup
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1950,6 +2276,466 @@ export const KonfigurasiView: React.FC = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* TAB CONTENT 8: HAPUS & RESET DATA */}
+      {activeConfigTab === 'reset-data' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-rose-900 via-red-900 to-rose-950 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="relative z-10 space-y-2">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-200 text-xs font-bold border border-rose-400/30">
+                <Trash2 className="w-4 h-4 text-rose-300" />
+                <span>Pembersihan Database & Hak Akses Administrator</span>
+              </div>
+              <h2 className="text-lg font-black tracking-tight">Manajemen Hapus & Reset Data System</h2>
+              <p className="text-xs text-rose-100/90 max-w-2xl leading-relaxed font-medium">
+                Gunakan menu ini untuk mengosongkan data secara spesifik per-modul atau melakukan Factory Reset total. Data yang telah dihapus akan secara permanen terhapus dari sistem cloud Firestore dan tidak akan tersimpan lagi.
+              </p>
+            </div>
+            <div className="absolute right-4 bottom-0 opacity-10 pointer-events-none">
+              <Trash2 className="w-48 h-48 text-white" />
+            </div>
+          </div>
+
+          {/* SECTION 1: HAPUS PER MODUL */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                <Sliders className="w-4.5 h-4.5 text-rose-600" />
+                <span>Hapus Data Berdasarkan Modul</span>
+              </h3>
+              <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-[11px] font-bold rounded-lg border border-rose-100">
+                Pembersihan Parsial
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 1. Data Siswa */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Data Peserta Didik (Siswa)</span>
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-extrabold rounded-md">
+                      {students.length} Siswa
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus seluruh profil siswa, NISN, foto, dan akun login siswa.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh data siswa? Data yang dihapus tidak dapat dikembalikan.')) {
+                      await clearAllStudents();
+                      showActionNotice('✅ Seluruh data siswa berhasil dihapus bersih dari sistem.');
+                    }
+                  }}
+                  disabled={students.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    students.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Data Siswa</span>
+                </button>
+              </div>
+
+              {/* 2. Data Guru */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Data Pendidik (Guru)</span>
+                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold rounded-md">
+                      {teachers.length} Guru
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus daftar guru, NIP, jabatan, dan kredensial login guru.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh data guru?')) {
+                      await clearAllTeachers();
+                      showActionNotice('✅ Seluruh data guru berhasil dihapus bersih dari sistem.');
+                    }
+                  }}
+                  disabled={teachers.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    teachers.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Data Guru</span>
+                </button>
+              </div>
+
+              {/* 3. Data Kelas */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Data Rombel (Kelas)</span>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-md">
+                      {classes.length} Kelas
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus nama-nama kelas, tingkat, dan penugasan wali kelas.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh daftar kelas?')) {
+                      await clearAllClasses();
+                      showActionNotice('✅ Seluruh data kelas berhasil dihapus bersih dari sistem.');
+                    }
+                  }}
+                  disabled={classes.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    classes.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Data Kelas</span>
+                </button>
+              </div>
+
+              {/* 4. Riwayat Presensi */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Riwayat Presensi</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-md">
+                      {attendanceRecords.length} Catatan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus seluruh log presensi harian, jam masuk/pulang, dan foto TAP.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin mengosongkan seluruh riwayat presensi?')) {
+                      await clearAllAttendance();
+                      showActionNotice('✅ Riwayat presensi berhasil dibersihkan.');
+                    }
+                  }}
+                  disabled={attendanceRecords.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    attendanceRecords.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Presensi</span>
+                </button>
+              </div>
+
+              {/* 5. Jurnal KBM Guru */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Jurnal KBM Guru</span>
+                    <span className="px-2 py-0.5 bg-violet-100 text-violet-800 text-[10px] font-extrabold rounded-md">
+                      {teacherJournals.length} Jurnal
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus catatan materi mengajar dan absensi per jam pelajaran.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh jurnal KBM guru?')) {
+                      await clearAllTeacherJournals();
+                      showActionNotice('✅ Seluruh jurnal KBM guru berhasil dihapus.');
+                    }
+                  }}
+                  disabled={teacherJournals.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    teacherJournals.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Jurnal Guru</span>
+                </button>
+              </div>
+
+              {/* 6. Surat Izin & Cuti */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Surat Izin & Sakit</span>
+                    <span className="px-2 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-extrabold rounded-md">
+                      {permissions.length} Pengajuan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus permohonan izin/sakit siswa dan pengajuan izin cuti guru.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh riwayat permohonan izin?')) {
+                      await clearAllPermissions();
+                      showActionNotice('✅ Data permohonan izin & sakit berhasil dibersihkan.');
+                    }
+                  }}
+                  disabled={permissions.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    permissions.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Surat Izin</span>
+                </button>
+              </div>
+
+              {/* 7. Catatan Pelanggaran */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Catatan Pelanggaran</span>
+                    <span className="px-2 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-extrabold rounded-md">
+                      {violationRecords.length} Catatan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus riwayat akumulasi poin kedisiplinan dan poin sanksi siswa.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh catatan pelanggaran?')) {
+                      await clearAllViolationRecords();
+                      showActionNotice('✅ Data catatan pelanggaran berhasil dibersihkan.');
+                    }
+                  }}
+                  disabled={violationRecords.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    violationRecords.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Pelanggaran</span>
+                </button>
+              </div>
+
+              {/* 8. Pengumuman */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Pengumuman Sekolah</span>
+                    <span className="px-2 py-0.5 bg-sky-100 text-sky-800 text-[10px] font-extrabold rounded-md">
+                      {announcements.length} Pengumuman
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus seluruh postingan pengumuman yang ditujukan ke siswa/guru.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh pengumuman?')) {
+                      await clearAllAnnouncements();
+                      showActionNotice('✅ Seluruh postingan pengumuman berhasil dihapus.');
+                    }
+                  }}
+                  disabled={announcements.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    announcements.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Pengumuman</span>
+                </button>
+              </div>
+
+              {/* 9. Pengajuan Kartu */}
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition-all space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-800">Pengajuan Kartu Siswa</span>
+                    <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-extrabold rounded-md">
+                      {cardRequests.length} Pengajuan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Menghapus antrean dan riwayat pengajuan cetak ulang kartu RFID siswa.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Yakin ingin menghapus seluruh riwayat pengajuan kartu?')) {
+                      await clearAllCardRequests();
+                      showActionNotice('✅ Riwayat pengajuan kartu siswa berhasil dibersihkan.');
+                    }
+                  }}
+                  disabled={cardRequests.length === 0}
+                  className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                    cardRequests.length > 0
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Pengajuan Kartu</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: DANGER ZONE & RESET TOTAL */}
+          <div className="bg-white rounded-2xl border border-rose-200 p-6 shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-rose-100 pb-3">
+              <h3 className="font-extrabold text-rose-900 text-sm flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-rose-600" />
+                <span>Danger Zone: Reset Total & Pemulihan Data Demo</span>
+              </h3>
+              <span className="px-2.5 py-1 bg-rose-100 text-rose-800 text-[11px] font-black rounded-lg">
+                Tindakan Berdampak Tinggi
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Reset Total System */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-50 border border-rose-200 space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <span className="font-black text-xs text-rose-950 uppercase tracking-wider block">
+                    1. Reset Total Seluruh Database (Factory Reset)
+                  </span>
+                  <p className="text-xs text-rose-900/80 leading-relaxed font-medium">
+                    Tindakan ini akan menghapus SELURUH koleksi data (Siswa, Guru, Kelas, Presensi, Jurnal, Izin, Dll) secara permanen dari Firestore database.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmResetText('');
+                    setShowFullResetModal(true);
+                  }}
+                  className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md shadow-rose-300 flex items-center justify-center space-x-2 cursor-pointer transition-all"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-200" />
+                  <span>Factory Reset (Hapus Seluruh Data System)</span>
+                </button>
+              </div>
+
+              {/* Pulihkan Data Demo Initial */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <span className="font-black text-xs text-indigo-950 uppercase tracking-wider block">
+                    2. Pulihkan / Isi Ulang Data Demo Initial
+                  </span>
+                  <p className="text-xs text-indigo-900/80 leading-relaxed font-medium">
+                    Mengisi ulang database aplikasi dengan data sampel awal (Siswa, Guru, Kelas, & Presensi) untuk keperluan testing atau uji coba ulang.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('Isi ulang database dengan sampel data demo initial?')) {
+                      await restoreDemoData();
+                      showActionNotice('✅ Data sampel demo initial berhasil dipulihkan!');
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-indigo-300 flex items-center justify-center space-x-2 cursor-pointer transition-all"
+                >
+                  <RefreshCw className="w-4 h-4 text-amber-300" />
+                  <span>Isi Ulang Data Sampel Demo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL KONFIRMASI FACTORY RESET */}
+      {showFullResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center space-x-3 border-b border-rose-100 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 text-sm">Konfirmasi Hapus Total System</h3>
+                <p className="text-[11px] text-rose-600 font-bold">PERINGATAN: Tindakan ini permanen!</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600">
+              <p className="font-medium leading-relaxed">
+                Ketik kata <strong className="text-rose-600 font-mono font-black">HAPUS</strong> di bawah ini untuk mengonfirmasi bahwa Anda yakin ingin mengosongkan seluruh isi database sistem:
+              </p>
+              <input
+                type="text"
+                value={confirmResetText}
+                onChange={(e) => setConfirmResetText(e.target.value.toUpperCase())}
+                placeholder="Ketik HAPUS di sini..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono font-black text-xs text-rose-700 text-center uppercase tracking-widest focus:ring-2 focus:ring-rose-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="pt-2 flex items-center justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFullResetModal(false);
+                  setConfirmResetText('');
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={confirmResetText !== 'HAPUS' || isResetting}
+                onClick={async () => {
+                  setIsResetting(true);
+                  await resetEntireSystemData();
+                  setIsResetting(false);
+                  setShowFullResetModal(false);
+                  setConfirmResetText('');
+                  showActionNotice('✅ Seluruh data database berhasil di-reset total.');
+                }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-1.5 transition-all cursor-pointer ${
+                  confirmResetText === 'HAPUS' && !isResetting
+                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isResetting ? 'Memproses Reset...' : 'Konfirmasi Hapus Permanen'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

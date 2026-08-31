@@ -32,6 +32,7 @@ export const DataSiswaView: React.FC = () => {
     importStudents,
     generateMassStudentAccounts,
     deleteStudent,
+    updateStudentPhoto,
     classes,
     settings,
   } = useApp();
@@ -42,6 +43,36 @@ export const DataSiswaView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('Semua Kelas');
   const [notification, setNotification] = useState('');
+
+  const handleUploadCardPhoto = (studentId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        updateStudentPhoto(studentId, base64);
+        if (selectedStudentForQr && selectedStudentForQr.id === studentId) {
+          setSelectedStudentForQr({ ...selectedStudentForQr, photo: base64 });
+        }
+        setNotification('✅ Pas foto kartu peserta berhasil diperbarui!');
+        setTimeout(() => setNotification(''), 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteCardPhoto = (studentId: string, studentName?: string) => {
+    if (window.confirm(`Hapus pas foto kartu peserta untuk "${studentName || 'siswa ini'}"?`)) {
+      updateStudentPhoto(studentId, '');
+      if (selectedStudentForQr && selectedStudentForQr.id === studentId) {
+        setSelectedStudentForQr({ ...selectedStudentForQr, photo: '' });
+      }
+      setNotification('🗑️ Pas foto kartu peserta berhasil dihapus!');
+      setTimeout(() => setNotification(''), 3000);
+    }
+  };
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -624,10 +655,10 @@ export const DataSiswaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Quick View QR Code Kartu Siswa */}
+      {/* Modal Quick View QR Code & Kartu Pelajar Siswa */}
       {selectedStudentForQr && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-6 animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-200 my-6">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2.5">
@@ -635,8 +666,8 @@ export const DataSiswaView: React.FC = () => {
                   <QrCode className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-900 text-base">Kartu QR Code & RFID Digital</h3>
-                  <p className="text-xs text-slate-500 font-medium">Digital Pass Presensi Siswa</p>
+                  <h3 className="font-black text-slate-900 text-base">Kartu Siswa RFID & QR Code</h3>
+                  <p className="text-xs text-slate-500 font-medium">Digital Pass Presensi & Identitas Resmi Siswa</p>
                 </div>
               </div>
               <button
@@ -647,121 +678,330 @@ export const DataSiswaView: React.FC = () => {
               </button>
             </div>
 
-            {/* Visual Card Representation */}
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="w-[320px] h-[200px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
-                {/* Header Bar */}
-                <div className="bg-blue-600 text-white px-3 py-1.5 flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5 min-w-0">
-                    <div className="w-5 h-5 rounded bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
-                      {settings.schoolLogo ? (
-                        <img src={settings.schoolLogo} alt="Logo" className="w-full h-full object-contain" />
+            {/* Visual Card 2-Side Representation */}
+            <div className="space-y-4 bg-slate-100/70 p-4 rounded-2xl border border-slate-200/80">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wider px-1">
+                <span>📇 Desain Fisik Kartu (CR80 Standard)</span>
+                <span className="text-blue-700 font-black">Depan & Belakang</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center">
+                {/* TAMPILAN DEPAN */}
+                <div className="w-[295px] sm:w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans">
+                  {/* Header Bar dengan Alamat Sekolah */}
+                  <div className="bg-blue-600 text-white px-2.5 py-1.5 flex items-center justify-between">
+                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                      <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-xs">
+                        {settings.schoolLogo ? (
+                          <img src={settings.schoolLogo} alt="Logo" className="w-full h-full object-contain" />
+                        ) : (
+                          <School className="w-4 h-4 text-blue-600" />
+                        )}
+                      </div>
+                      <div className="leading-tight text-left min-w-0 flex-1">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-white truncate block" title={settings.schoolName}>
+                          {settings.schoolName || 'SMP NEGERI 1'}
+                        </span>
+                        <span className="text-[6.5px] text-blue-100 font-medium truncate block leading-tight" title={settings.schoolAddress}>
+                          {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}{settings.city ? ` • ${settings.city}` : ''}
+                        </span>
+                        <span className="text-[6.5px] text-amber-300 font-extrabold uppercase tracking-wider block">
+                          KARTU PRESENSI DIGITAL RFID
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[7px] font-mono font-black bg-red-600 text-white px-1.5 py-0.5 rounded ml-1 shrink-0 shadow-2xs">
+                      RFID & QR
+                    </span>
+                  </div>
+
+                  <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
+
+                  {/* Body */}
+                  <div className="px-2.5 py-2 flex items-center justify-between space-x-2.5 bg-white flex-1">
+                    <div className="w-16 h-20 rounded-xl bg-slate-100 border-2 border-blue-600 overflow-hidden shrink-0 flex flex-col items-center justify-center relative shadow-xs group">
+                      {selectedStudentForQr.photo ? (
+                        <img src={selectedStudentForQr.photo} alt={selectedStudentForQr.fullName} className="w-full h-full object-cover" />
                       ) : (
-                        <School className="w-3.5 h-3.5 text-blue-600" />
+                        <div className="flex flex-col items-center justify-center p-1 text-center">
+                          <User className="w-7 h-7 text-blue-600/40" />
+                          <span className="text-[6px] font-bold text-red-600 mt-0.5">PAS FOTO</span>
+                        </div>
                       )}
+                      
+                      {/* Hover Actions: Upload / Hapus */}
+                      <div className="absolute inset-0 bg-blue-950/85 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-1 space-y-1 z-20">
+                        <label className="bg-blue-600 hover:bg-blue-700 text-white rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center space-x-0.5 cursor-pointer w-full justify-center shadow-xs">
+                          <Upload className="w-2.5 h-2.5 text-amber-300" />
+                          <span>{selectedStudentForQr.photo ? 'Ganti' : 'Upload'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleUploadCardPhoto(selectedStudentForQr.id, e)}
+                          />
+                        </label>
+                        {selectedStudentForQr.photo && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleDeleteCardPhoto(selectedStudentForQr.id, selectedStudentForQr.fullName);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center space-x-0.5 cursor-pointer w-full justify-center shadow-xs"
+                            title="Hapus pas foto kartu"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                            <span>Hapus</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="absolute -top-1 -right-1 w-3.5 h-2.5 bg-gradient-to-br from-amber-400 to-yellow-300 rounded border border-amber-600 pointer-events-none" />
                     </div>
-                    <div className="leading-tight truncate">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 truncate block">
-                        {settings.schoolName || 'KARTU PRESENSI SISWA'}
-                      </span>
-                      <span className="text-[7px] text-blue-100 font-bold block">
-                        SISTEM PRESENSI DIGITAL RFID & QR
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[7.5px] font-mono font-bold bg-red-600 text-white px-1.5 py-0.5 rounded shrink-0">
-                    RFID & QR
-                  </span>
-                </div>
 
-                <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
-
-                {/* Body */}
-                <div className="p-3 flex items-center justify-between space-x-3 bg-white flex-1">
-                  <div className="w-16 h-20 rounded-lg bg-slate-100 border border-slate-300 overflow-hidden shrink-0 flex flex-col items-center justify-center">
-                    {selectedStudentForQr.photo ? (
-                      <img src={selectedStudentForQr.photo} alt={selectedStudentForQr.fullName} className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-8 h-8 text-blue-600/40" />
-                    )}
-                  </div>
-
-                  <div className="space-y-1 min-w-0 flex-1 text-left">
-                    <div className="text-[7px] uppercase tracking-wider text-red-600 font-black">NAMA SISWA</div>
-                    <div className="text-xs font-black truncate text-slate-900 leading-tight">{selectedStudentForQr.fullName}</div>
-                    <div className="grid grid-cols-2 gap-1 text-[8.5px]">
+                    <div className="space-y-1 min-w-0 flex-1 text-left">
                       <div>
-                        <span className="text-slate-500 font-bold">NISN:</span>{' '}
-                        <span className="font-mono font-black text-blue-700">{selectedStudentForQr.nisn}</span>
+                        <div className="text-[6.5px] uppercase tracking-wider text-red-600 font-black">NAMA SISWA</div>
+                        <div className="text-[11.5px] font-black truncate text-slate-900 leading-tight">{selectedStudentForQr.fullName}</div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-[8px]">
+                        <div>
+                          <span className="text-slate-500 font-bold">NISN:</span>{' '}
+                          <span className="font-mono font-black text-blue-700">{selectedStudentForQr.nisn}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 font-bold">Kelas:</span>{' '}
+                          <span className="font-extrabold text-red-600 bg-red-50 px-1 py-0.2 rounded border border-red-200">{selectedStudentForQr.currentClass}</span>
+                        </div>
                       </div>
                       <div>
-                        <span className="text-slate-500 font-bold">Kelas:</span>{' '}
-                        <span className="font-extrabold text-red-600 bg-red-50 px-1 py-0.2 rounded border border-red-200">{selectedStudentForQr.currentClass}</span>
+                        <div className="text-[6.5px] text-slate-500 font-mono font-bold uppercase">TAG RFID</div>
+                        <div className="text-[8px] font-mono font-black text-white bg-blue-600 px-1.5 py-0.5 rounded border-l-2 border-red-600 inline-block shadow-2xs">
+                          {selectedStudentForQr.rfidTag || `RFID-${selectedStudentForQr.nisn}`}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* High Res QR Code SVG */}
+                    <div className="bg-white p-1 rounded-lg border border-blue-600 shadow-xs flex flex-col items-center justify-center shrink-0">
+                      <QRCodeSVG
+                        value={selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
+                        size={44}
+                        level="M"
+                        fgColor="#2563eb"
+                        bgColor="#ffffff"
+                      />
+                      <span className="text-[6px] font-mono font-black text-blue-700 mt-0.5">SCAN QR</span>
                     </div>
                   </div>
 
-                  {/* High Res QR Code SVG */}
-                  <div className="bg-white p-1 rounded-lg border-2 border-blue-600 shadow-2xs flex flex-col items-center justify-center shrink-0">
-                    <QRCodeSVG
-                      value={selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
-                      size={52}
-                      level="H"
-                      fgColor="#2563eb"
-                      bgColor="#ffffff"
-                    />
-                    <span className="text-[6.5px] font-mono font-black text-blue-700 mt-0.5">SCAN ME</span>
+                  {/* Footer Barcode */}
+                  <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[7.5px] text-slate-800 font-mono">
+                    <div className="flex items-center space-x-1 font-bold text-red-700">
+                      <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                      <span>QR-RFID-{selectedStudentForQr.nisn.slice(-6)}</span>
+                    </div>
+                    <span className="font-sans font-black text-[7.5px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">TA {settings.academicYear || '2026/2027'}</span>
                   </div>
                 </div>
 
-                {/* Footer Barcode */}
-                <div className="bg-slate-50 border-t border-slate-200 px-3 py-1 flex items-center justify-between text-[8px] text-slate-800 font-mono">
-                  <div className="flex items-center space-x-1 font-bold text-red-700">
-                    <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                    <span>QR-RFID-{selectedStudentForQr.nisn}</span>
+                {/* TAMPILAN BELAKANG */}
+                <div className="w-[295px] sm:w-[310px] h-[195px] bg-white text-slate-900 rounded-2xl p-0 shadow-xl border-2 border-blue-600 relative overflow-hidden flex flex-col justify-between shrink-0 text-left font-sans">
+                  {/* Header Bar dengan Alamat Sekolah */}
+                  <div className="bg-blue-600 text-white px-2.5 py-1 flex items-center justify-between">
+                    <div className="leading-tight min-w-0 flex-1">
+                      <div className="text-[8px] font-black uppercase tracking-wider text-amber-300">
+                        KETENTUAN PENGGUNAAN KARTU
+                      </div>
+                      <div className="text-[6px] text-blue-100 font-medium truncate" title={settings.schoolAddress}>
+                        {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}{settings.city ? ` • ${settings.city}` : ''}
+                      </div>
+                    </div>
+                    <div className="text-[7px] text-white font-mono font-bold bg-blue-700/80 px-1.5 py-0.5 rounded shrink-0">CR80 RFID</div>
                   </div>
-                  <span className="font-sans font-black text-[7.5px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">VALIDATED</span>
+
+                  <div className="h-1 w-full bg-gradient-to-r from-red-600 via-rose-500 to-red-600" />
+
+                  {/* Body Content */}
+                  <div className="p-2.5 text-[8px] space-y-1.5 flex-1 flex flex-col justify-between bg-white overflow-hidden">
+                    <div className="flex items-start justify-between space-x-2">
+                      <ol className="text-[7px] text-slate-700 space-y-0.5 list-decimal pl-3.5 leading-tight font-medium flex-1">
+                        <li>Kartu wajib dibawa setiap hari untuk presensi.</li>
+                        <li>Dilarang merusak chip RFID atau kode QR.</li>
+                        <li>Kartu tidak dapat dipindahtangankan.</li>
+                        <li>Jika hilang, segera lapor ke piket sekolah.</li>
+                      </ol>
+
+                      <div className="shrink-0 bg-white p-0.5 rounded-lg border border-slate-300 shadow-2xs flex flex-col items-center justify-center">
+                        <QRCodeSVG
+                          value={`PRESENSI:${selectedStudentForQr.nisn}:${selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}`}
+                          size={36}
+                          level="M"
+                          fgColor="#2563eb"
+                          bgColor="#ffffff"
+                        />
+                        <span className="text-[5.5px] font-mono font-bold text-slate-500">VERIFIED</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-end border-t border-slate-200 pt-1 text-[8px] text-slate-600">
+                      <div className="max-w-[130px]">
+                        <div className="font-black text-blue-700 text-[8px] leading-tight truncate" title={settings.schoolName}>
+                          {settings.schoolName || 'SMP Negeri 1'}
+                        </div>
+                        <div className="text-[6px] text-slate-500 font-medium leading-tight truncate" title={settings.schoolAddress}>
+                          {settings.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'}
+                        </div>
+                        <div className="text-[6.5px] text-red-600 font-bold mt-0.5">Sistem Presensi RFID & QR</div>
+                      </div>
+                      <div className="text-center min-w-[115px] max-w-[125px] relative">
+                        <div className="text-[6px] text-slate-500 font-bold leading-none">Mengetahui,</div>
+                        <div className="text-[6.5px] text-slate-700 font-extrabold leading-tight">Kepala Sekolah</div>
+
+                        {/* Visual Container Signature + Stamp */}
+                        <div className="h-6 my-0.5 relative flex items-center justify-center overflow-visible">
+                          {settings.schoolStamp && (
+                            <img
+                              src={settings.schoolStamp}
+                              alt="Cap Sekolah"
+                              className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-6 w-6 object-contain opacity-80 pointer-events-none"
+                            />
+                          )}
+                          {settings.principalSignature && (
+                            <img
+                              src={settings.principalSignature}
+                              alt="TTD Kepsek"
+                              className="relative z-10 h-5 max-h-5 max-w-[80px] w-auto object-contain pointer-events-none"
+                            />
+                          )}
+                        </div>
+
+                        <div className="font-extrabold text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[120px] mx-auto" title={settings.principalName}>
+                          {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
+                        </div>
+                        <div className="text-[6.5px] font-mono text-blue-900 font-extrabold mt-0.5 truncate max-w-[120px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
+                          NIP. {settings.principalNip || '19750812 199903 1 002'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pas Foto Kartu Siswa Management Bar */}
+            <div className="bg-blue-50/80 border border-blue-200 p-3 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-blue-900 shrink-0" />
+                <div>
+                  <span className="font-bold text-blue-950">Pas Foto Kartu: </span>
+                  {selectedStudentForQr.photo ? (
+                    <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">✅ Foto Tersedia</span>
+                  ) : (
+                    <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded border border-red-300">⚠️ Belum Ada Foto</span>
+                  )}
                 </div>
               </div>
 
-              {/* QR Code Payload Value */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-center w-full space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Payload Data Terenskripsi QR:</span>
-                <p className="font-mono text-xs font-black text-blue-700 select-all bg-white p-2 rounded-xl border border-slate-200">
+              <div className="flex items-center space-x-2 shrink-0">
+                {selectedStudentForQr.photo && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCardPhoto(selectedStudentForQr.id, selectedStudentForQr.fullName)}
+                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors"
+                    title="Hapus pas foto kartu siswa ini"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Hapus Pas Foto</span>
+                  </button>
+                )}
+
+                <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                  <Upload className="w-3.5 h-3.5 text-red-400" />
+                  <span>{selectedStudentForQr.photo ? 'Ganti Pas Foto' : 'Upload Pas Foto'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleUploadCardPhoto(selectedStudentForQr.id, e)}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Quick Photo Control Bar in Modal */}
+            <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-blue-900 shrink-0" />
+                <div>
+                  <span className="font-bold text-blue-950">Pas Foto Kartu: </span>
+                  {selectedStudentForQr.photo ? (
+                    <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                      ✅ Foto Terpasang
+                    </span>
+                  ) : (
+                    <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded border border-red-300">
+                      ⚠️ Belum Ada Pas Foto
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                {selectedStudentForQr.photo && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCardPhoto(selectedStudentForQr.id, selectedStudentForQr.fullName)}
+                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors"
+                    title="Hapus pas foto kartu siswa ini"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Hapus Pas Foto</span>
+                  </button>
+                )}
+
+                <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                  <Upload className="w-3.5 h-3.5 text-red-400" />
+                  <span>{selectedStudentForQr.photo ? 'Ganti Pas Foto' : 'Upload Pas Foto'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleUploadCardPhoto(selectedStudentForQr.id, e)}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* QR Code Payload Value & Pengesahan Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Payload Data Kartu:</span>
+                <p className="font-mono text-xs font-black text-blue-700 select-all bg-white p-2 rounded-xl border border-slate-200 truncate">
                   {selectedStudentForQr.rfidTag || selectedStudentForQr.nisn}
                 </p>
+                <p className="text-[10px] text-slate-500 font-medium">Alamat: {settings.schoolAddress || '-'}</p>
               </div>
 
               {/* Data Pengesahan Kepsek */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 w-full flex items-center justify-between text-left">
-                <div>
-                  <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Lembaga / Sekolah</div>
-                  <div className="text-xs font-black text-blue-700">{settings.schoolName || 'SMP Negeri 1'}</div>
-                  <div className="text-[10px] text-slate-500 font-medium">Kota: {settings.city || '-'}</div>
-                </div>
-                <div className="text-right border-l border-slate-200 pl-3 relative">
-                  <div className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">Mengetahui Kepala Sekolah</div>
-                  
-                  {/* Visual Signature & Stamp Display */}
-                  <div className="h-8 my-0.5 relative flex items-center justify-end">
-                    {settings.schoolStamp && (
-                      <img
-                        src={settings.schoolStamp}
-                        alt="Cap Sekolah"
-                        className="absolute right-6 top-1/2 -translate-y-1/2 h-9 w-9 object-contain opacity-85 pointer-events-none"
-                      />
-                    )}
-                    {settings.principalSignature && (
-                      <img
-                        src={settings.principalSignature}
-                        alt="TTD Kepsek"
-                        className="relative z-10 h-7 max-w-[90px] object-contain pointer-events-none"
-                      />
-                    )}
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left flex items-center justify-between">
+                <div className="min-w-0 flex-1 pr-2">
+                  <div className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">Kepala Sekolah</div>
+                  <div className="text-xs font-black text-slate-900 truncate" title={settings.principalName}>
+                    {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                   </div>
-
-                  <div className="text-xs font-black text-slate-900">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
-                  <div className="text-[10px] font-mono font-extrabold text-blue-700">NIP. {settings.principalNip || '19750812 199903 1 002'}</div>
+                  <div className="text-[10px] font-mono font-extrabold text-blue-700 truncate mt-0.5">
+                    NIP. {settings.principalNip || '19750812 199903 1 002'}
+                  </div>
+                </div>
+                <div className="h-8 w-16 relative shrink-0 flex items-center justify-center">
+                  {settings.schoolStamp && (
+                    <img src={settings.schoolStamp} alt="Cap" className="absolute h-8 w-8 opacity-80" />
+                  )}
+                  {settings.principalSignature && (
+                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-7 max-w-full object-contain" />
+                  )}
                 </div>
               </div>
             </div>
@@ -783,7 +1023,7 @@ export const DataSiswaView: React.FC = () => {
                 className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-1.5 cursor-pointer transition-all"
               >
                 <Printer className="w-4 h-4 text-amber-400" />
-                <span>Cetak / Print QR Kartu</span>
+                <span>Cetak / Print Kartu (PDF)</span>
               </button>
             </div>
           </div>
