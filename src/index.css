@@ -1,1 +1,79 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .crisp-card {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, toolbars, buttons, and helper banners */
+  nav, header, aside, .no-print, button, input, select, .no-print-area {
+    display: none !important;
+  }
+
+  /* Reset modal containers so only the card renders in print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    backdrop-filter: none !important;
+  }
+
+  .print-card-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .print-card-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6mm !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-exact-card {
+    width: 90mm !important;
+    height: 53mm !important;
+    min-width: 90mm !important;
+    min-height: 53mm !important;
+    max-width: 90mm !important;
+    max-height: 53mm !important;
+    box-shadow: none !important;
+    border: 1.2px solid #1e3a8a !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    border-radius: 3.5mm !important;
+    overflow: hidden !important;
+  }
+}
