@@ -35,6 +35,8 @@ export interface Student {
   rfidTag?: string;
   qrCode?: string;
   photo?: string;
+  isFaceRegistered?: boolean;
+  faceRegisteredAt?: string;
   status: 'Aktif' | 'Alumni' | 'Pindah';
 }
 
@@ -197,4 +199,48 @@ export interface SystemSetting {
   schoolLat: number;
   schoolLng: number;
   geofenceRadius: number; // in meters
+}
+
+export interface ComputerCourseSession {
+  id: string;
+  sessionCode: string;
+  topic: string;
+  targetClass?: string; // Target kelas peserta les (misal: "X IPA 1", "Semua Kelas", "VII-A")
+  instructor: string;
+  labRoom: string;
+  date: string;
+  timeStart: string;
+  timeEnd: string;
+  maxCapacity: number;
+  status: 'Terjadwal' | 'Sedang Berlangsung' | 'Selesai';
+  description?: string;
+}
+
+export interface ComputerCourseAttendance {
+  id: string;
+  sessionId: string;
+  sessionTopic: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  nisn: string;
+  date: string;
+  timeIn: string;
+  tapMethod: 'RFID' | 'FaceID' | 'QR' | 'Manual';
+  pcNumber: string;
+  status: 'Hadir' | 'Izin' | 'Sakit' | 'Alpa';
+  taskScore?: number;
+  taskNotes?: string;
+}
+
+export interface ComputerCourseMember {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  nisn: string;
+  batch: string;
+  preferredPc: string;
+  registeredDate: string;
+  status: 'Aktif' | 'Nonaktif';
 }

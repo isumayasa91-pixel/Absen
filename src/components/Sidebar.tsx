@@ -30,6 +30,8 @@ import {
   Map,
   Settings,
   ChevronRight,
+  Laptop,
+  Monitor,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -71,6 +73,7 @@ export const Sidebar: React.FC = () => {
       title: 'MENU PRESENSI',
       items: [
         { key: 'monitor-live', label: 'Monitor Live', icon: Radio, color: 'text-rose-600 bg-rose-50 border border-rose-200' },
+        { key: 'faceid', label: 'FaceID Scanner', icon: ScanFace, color: 'text-purple-600 bg-purple-50' },
         { key: 'terlambat', label: 'Terlambat', icon: ClockAlert, color: 'text-amber-600 bg-amber-50' },
         { key: 'alpa', label: 'Alpa', icon: UserX, color: 'text-rose-600 bg-rose-50' },
         { key: 'rekap-laporan', label: 'Rekap Laporan', icon: FileSpreadsheet, color: 'text-emerald-600 bg-emerald-50' },
@@ -84,6 +87,15 @@ export const Sidebar: React.FC = () => {
         },
         { key: 'izin-keluar', label: 'Izin Keluar', icon: LeaveIcon, color: 'text-orange-600 bg-orange-50' },
         { key: 'rekap-semester', label: 'Rekap Semester', icon: GraduationCap, color: 'text-indigo-600 bg-indigo-50' },
+      ],
+    },
+    {
+      title: 'MENU LES KOMPUTER',
+      items: [
+        { key: 'les-komputer', label: 'Absen Les Komputer', icon: Laptop, color: 'text-violet-600 bg-violet-50 font-bold border border-violet-200' },
+        { key: 'faceid-les', label: 'Face ID Lab Komputer', icon: ScanFace, color: 'text-pink-600 bg-pink-50' },
+        { key: 'sesi-les', label: 'Jadwal & Modul Les', icon: Monitor, color: 'text-cyan-600 bg-cyan-50' },
+        { key: 'rekap-les', label: 'Rekap & Nilai Les', icon: FileSpreadsheet, color: 'text-emerald-600 bg-emerald-50' },
       ],
     },
     {
@@ -108,7 +120,7 @@ export const Sidebar: React.FC = () => {
         { key: 'aturan-jam', label: 'Aturan Jam', icon: Clock, color: 'text-blue-600 bg-blue-50' },
         { key: 'kalender-libur', label: 'Kalender Libur', icon: Calendar, color: 'text-indigo-600 bg-indigo-50' },
         { key: 'pengajuan-kartu', label: 'Pengajuan Kartu', icon: CreditCard, color: 'text-emerald-600 bg-emerald-50' },
-        { key: 'faceid', label: 'FaceID', icon: ScanFace, color: 'text-violet-600 bg-violet-50' },
+        { key: 'faceid-config', label: 'Aturan FaceID', icon: ScanFace, color: 'text-violet-600 bg-violet-50' },
         { key: 'lokasi-siswa', label: 'Lokasi Siswa', icon: MapPin, color: 'text-rose-600 bg-rose-50' },
         { key: 'lokasi-sekolah', label: 'Lokasi Sekolah', icon: Map, color: 'text-cyan-600 bg-cyan-50' },
         { key: 'setting', label: 'Setting System', icon: Settings, color: 'text-slate-700 bg-slate-100' },

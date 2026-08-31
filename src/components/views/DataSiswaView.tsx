@@ -866,32 +866,32 @@ export const DataSiswaView: React.FC = () => {
                         </div>
                         <div className="text-[6.5px] text-red-600 font-bold mt-0.5">Sistem Presensi RFID & QR Digital</div>
                       </div>
-                      <div className="text-center min-w-[115px] max-w-[130px] relative">
+                      <div className="text-center min-w-[125px] max-w-[140px] relative">
                         <div className="text-[6px] text-slate-500 font-bold leading-none">Mengetahui,</div>
                         <div className="text-[6.5px] text-slate-800 font-black leading-tight">Kepala Sekolah</div>
 
-                        {/* Visual Container Signature + Stamp */}
-                        <div className="h-6 my-0.5 relative flex items-center justify-center overflow-visible">
+                        {/* Visual Container Signature + Stamp (Enlarged & Proportional) */}
+                        <div className="h-9 my-0.5 relative flex items-center justify-center overflow-visible">
                           {settings.schoolStamp && (
                             <img
                               src={settings.schoolStamp}
                               alt="Cap Sekolah"
-                              className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-6 w-6 object-contain opacity-85 pointer-events-none crisp-card"
+                              className="absolute left-1/2 top-1/2 -translate-x-[58%] -translate-y-1/2 h-9 w-9 object-contain opacity-90 pointer-events-none crisp-card"
                             />
                           )}
                           {settings.principalSignature && (
                             <img
                               src={settings.principalSignature}
                               alt="TTD Kepsek"
-                              className="relative z-10 h-5 max-h-5 max-w-[80px] w-auto object-contain pointer-events-none crisp-card"
+                              className="relative z-10 h-7.5 max-h-7.5 max-w-[100px] w-auto object-contain pointer-events-none crisp-card"
                             />
                           )}
                         </div>
 
-                        <div className="font-black text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[125px] mx-auto" title={settings.principalName}>
+                        <div className="font-black text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[130px] mx-auto" title={settings.principalName}>
                           {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                         </div>
-                        <div className="text-[6.5px] font-mono text-blue-950 font-black mt-0.5 truncate max-w-[125px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
+                        <div className="text-[6.5px] font-mono text-blue-950 font-black mt-0.5 truncate max-w-[130px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
                           NIP. {settings.principalNip || '19750812 199903 1 002'}
                         </div>
                       </div>
@@ -961,12 +961,12 @@ export const DataSiswaView: React.FC = () => {
                     NIP. {settings.principalNip || '19750812 199903 1 002'}
                   </div>
                 </div>
-                <div className="h-8 w-16 relative shrink-0 flex items-center justify-center">
+                <div className="h-10 w-24 relative shrink-0 flex items-center justify-center">
                   {settings.schoolStamp && (
-                    <img src={settings.schoolStamp} alt="Cap" className="absolute h-8 w-8 opacity-80" />
+                    <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-10 w-10 opacity-85 object-contain" />
                   )}
                   {settings.principalSignature && (
-                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-7 max-w-full object-contain" />
+                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-8.5 max-w-full object-contain" />
                   )}
                 </div>
               </div>

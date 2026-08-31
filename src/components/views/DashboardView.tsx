@@ -20,6 +20,7 @@ import {
   ClockAlert,
   FileSpreadsheet,
   ScanBarcode,
+  Laptop,
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
@@ -118,6 +119,13 @@ export const DashboardView: React.FC = () => {
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setActiveTab('les-komputer')}
+              className="bg-violet-600 hover:bg-violet-700 active:scale-95 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-md shadow-violet-900/20 flex items-center space-x-1.5 transition-all cursor-pointer border border-violet-400/30"
+            >
+              <Laptop className="w-4 h-4 text-cyan-200" />
+              <span>Absen Les Komputer</span>
+            </button>
             <button
               onClick={() => setIsRfidModalOpen(true)}
               className="bg-blue-900 hover:bg-blue-950 active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer border border-blue-700"

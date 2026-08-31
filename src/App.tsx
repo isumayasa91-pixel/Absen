@@ -23,6 +23,8 @@ import { RekapSemesterView } from './components/views/RekapSemesterView';
 import { PerpustakaanView } from './components/views/PerpustakaanView';
 import { PelanggaranView } from './components/views/PelanggaranView';
 import { KonfigurasiView } from './components/views/KonfigurasiView';
+import { FaceIdView } from './components/views/FaceIdView';
+import { LesKomputerView } from './components/views/LesKomputerView';
 
 const MainContent: React.FC = () => {
   const { activeTab, currentUser } = useApp();
@@ -47,6 +49,10 @@ const MainContent: React.FC = () => {
         return <ManajemenUserView />;
       case 'monitor-live':
         return <MonitorLiveView />;
+      case 'faceid':
+      case 'scan-face':
+      case 'faceid-scanner':
+        return <FaceIdView />;
       case 'terlambat':
         return <TerlambatView />;
       case 'alpa':
@@ -59,6 +65,13 @@ const MainContent: React.FC = () => {
         return <IzinKeluarView />;
       case 'rekap-semester':
         return <RekapSemesterView />;
+      case 'les-komputer':
+      case 'faceid-les':
+      case 'sesi-les':
+      case 'rekap-les':
+      case 'absen-les-komputer':
+      case 'les':
+        return <LesKomputerView />;
       case 'perpustakaan':
       case 'perpus-harian':
       case 'tap-perpus':
@@ -72,7 +85,7 @@ const MainContent: React.FC = () => {
       case 'aturan-jam':
       case 'kalender-libur':
       case 'pengajuan-kartu':
-      case 'faceid':
+      case 'faceid-config':
       case 'lokasi-siswa':
       case 'lokasi-sekolah':
       case 'setting':

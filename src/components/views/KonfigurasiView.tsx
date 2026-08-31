@@ -42,6 +42,7 @@ import {
 export const KonfigurasiView: React.FC = () => {
   const {
     activeTab: globalActiveTab,
+    setActiveTab,
     settings,
     updateSettings,
     students,
@@ -74,7 +75,7 @@ export const KonfigurasiView: React.FC = () => {
   const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' | 'reset-data' => {
     if (tab === 'kalender-libur') return 'libur';
     if (tab === 'pengajuan-kartu') return 'kartu';
-    if (tab === 'faceid') return 'faceid';
+    if (tab === 'faceid' || tab === 'faceid-config') return 'faceid';
     if (tab === 'lokasi-siswa') return 'lokasi-siswa';
     if (tab === 'lokasi-sekolah') return 'lokasi-sekolah';
     if (tab === 'setting' || tab === 'konfigurasi') return 'system';
@@ -88,7 +89,7 @@ export const KonfigurasiView: React.FC = () => {
 
   useEffect(() => {
     if ([
-      'aturan-jam', 'kalender-libur', 'pengajuan-kartu', 'faceid', 'lokasi-siswa', 'lokasi-sekolah', 'setting', 'konfigurasi', 'reset-data', 'hapus-data'
+      'aturan-jam', 'kalender-libur', 'pengajuan-kartu', 'faceid', 'faceid-config', 'lokasi-siswa', 'lokasi-sekolah', 'setting', 'konfigurasi', 'reset-data', 'hapus-data'
     ].includes(globalActiveTab)) {
       setActiveConfigTab(getSubTabFromActiveTab(globalActiveTab));
     }
@@ -1175,32 +1176,32 @@ export const KonfigurasiView: React.FC = () => {
                                 </div>
                                 <div className="text-[6.5px] text-red-600 font-bold mt-0.5">Sistem Presensi RFID & QR Digital</div>
                               </div>
-                              <div className="text-center min-w-[115px] max-w-[130px] relative">
+                              <div className="text-center min-w-[125px] max-w-[140px] relative">
                                 <div className="text-[6px] text-slate-500 font-bold leading-none">Mengetahui,</div>
                                 <div className="text-[6.5px] text-slate-800 font-black leading-tight">Kepala Sekolah</div>
 
-                                {/* Visual Container Signature + Stamp */}
-                                <div className="h-6 my-0.5 relative flex items-center justify-center overflow-visible">
+                                {/* Visual Container Signature + Stamp (Enlarged & Proportional) */}
+                                <div className="h-9 my-0.5 relative flex items-center justify-center overflow-visible">
                                   {settings.schoolStamp && (
                                     <img
                                       src={settings.schoolStamp}
                                       alt="Cap Sekolah"
-                                      className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-6 w-6 object-contain opacity-85 pointer-events-none crisp-card"
+                                      className="absolute left-1/2 top-1/2 -translate-x-[58%] -translate-y-1/2 h-9 w-9 object-contain opacity-90 pointer-events-none crisp-card"
                                     />
                                   )}
                                   {settings.principalSignature && (
                                     <img
                                       src={settings.principalSignature}
                                       alt="TTD Kepsek"
-                                      className="relative z-10 h-5 max-h-5 max-w-[80px] w-auto object-contain pointer-events-none crisp-card"
+                                      className="relative z-10 h-7.5 max-h-7.5 max-w-[100px] w-auto object-contain pointer-events-none crisp-card"
                                     />
                                   )}
                                 </div>
 
-                                <div className="font-black text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[125px] mx-auto" title={settings.principalName}>
+                                <div className="font-black text-blue-950 text-[7px] border-b border-slate-400 pb-0.5 leading-tight truncate max-w-[130px] mx-auto" title={settings.principalName}>
                                   {settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                                 </div>
-                                <div className="text-[6.5px] font-mono text-blue-950 font-black mt-0.5 truncate max-w-[125px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
+                                <div className="text-[6.5px] font-mono text-blue-950 font-black mt-0.5 truncate max-w-[130px] mx-auto bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
                                   NIP. {settings.principalNip || '19750812 199903 1 002'}
                                 </div>
                               </div>
@@ -1705,9 +1706,19 @@ export const KonfigurasiView: React.FC = () => {
               <span className="text-[11px] text-slate-500 font-medium">Rekomendasi: 85% untuk menghindari false-positive.</span>
             </div>
 
-            <div className="p-4 bg-sky-50 border border-sky-200 rounded-xl space-y-1">
+            <div className="p-4 bg-sky-50 border border-sky-200 rounded-xl space-y-2">
               <h4 className="font-bold text-xs text-sky-900">Status Modul FaceID Scanner Gate: ACTIVE</h4>
               <p className="text-[11px] text-sky-700">Kamera gerbang sekolah terhubung secara real-time ke web camera AI Studio preview.</p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('faceid')}
+                  className="bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <ScanFace className="w-4 h-4 text-purple-200" />
+                  <span>Buka Terminal Scan Face ID Langsung</span>
+                </button>
+              </div>
             </div>
           </div>
 

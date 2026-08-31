@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { LogOut, Bell, ShieldCheck, Key, Clock, School, UserCheck, ScanBarcode } from 'lucide-react';
+import { LogOut, Bell, ShieldCheck, Key, Clock, School, UserCheck, ScanBarcode, ScanFace } from 'lucide-react';
 import { RfidScanModal } from './RfidScanModal';
 
 export const Header: React.FC = () => {
-  const { currentUser, logout, settings, academicYears } = useApp();
+  const { currentUser, logout, settings, academicYears, setActiveTab } = useApp();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRfidModalOpen, setIsRfidModalOpen] = useState(false);
 
@@ -47,11 +47,22 @@ export const Header: React.FC = () => {
 
           {/* Right Controls & User Info */}
           <div className="flex items-center space-x-3 self-end sm:self-auto">
+            {/* Quick Face ID Scan Button */}
+            <button
+              id="btn-scan-faceid-header"
+              onClick={() => setActiveTab('faceid')}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:scale-95 text-white border border-purple-600 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-900/20 cursor-pointer"
+              title="Terminal Scanner Face ID Presensi"
+            >
+              <ScanFace className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>Scan Face ID</span>
+            </button>
+
             {/* Quick RFID Scan Button */}
             <button
               id="btn-scan-rfid-header"
               onClick={() => setIsRfidModalOpen(true)}
-              className="flex items-center space-x-1.5 bg-blue-900 hover:bg-blue-950 active:scale-95 text-white border border-blue-900 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-900/20 cursor-pointer"
+              className="hidden sm:flex items-center space-x-1.5 bg-blue-900 hover:bg-blue-950 active:scale-95 text-white border border-blue-900 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-900/20 cursor-pointer"
               title="Terminal Scan Kartu RFID"
             >
               <ScanBarcode className="w-4 h-4 text-amber-400 animate-pulse" />

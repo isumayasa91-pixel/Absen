@@ -17,6 +17,9 @@ import {
   HolidayEvent,
   CardRequest,
   SystemSetting,
+  ComputerCourseSession,
+  ComputerCourseAttendance,
+  ComputerCourseMember,
 } from '../types';
 import {
   initialSystemSettings,
@@ -36,6 +39,9 @@ import {
   initialLibraryTAPs,
   initialHolidays,
   initialCardRequests,
+  initialComputerSessions,
+  initialComputerAttendances,
+  initialComputerMembers,
 } from '../data/mockData';
 import {
   listenSingleDoc,
@@ -146,6 +152,25 @@ interface AppContextType {
   deleteCardRequest: (id: string) => void;
   clearAllCardRequests: () => void;
 
+  computerSessions: ComputerCourseSession[];
+  addComputerSession: (data: Omit<ComputerCourseSession, 'id'>) => void;
+  updateComputerSession: (id: string, data: Partial<ComputerCourseSession>) => void;
+  deleteComputerSession: (id: string) => void;
+  clearAllComputerSessions: () => void;
+
+  computerAttendances: ComputerCourseAttendance[];
+  addComputerAttendance: (data: Omit<ComputerCourseAttendance, 'id'>) => void;
+  updateComputerAttendance: (id: string, data: Partial<ComputerCourseAttendance>) => void;
+  deleteComputerAttendance: (id: string) => void;
+  clearAllComputerAttendances: () => void;
+  tapComputerCourse: (studentId: string, sessionId: string, pcNumber?: string, method?: 'RFID' | 'FaceID' | 'QR' | 'Manual') => { success: boolean; message: string; record?: ComputerCourseAttendance };
+
+  computerMembers: ComputerCourseMember[];
+  addComputerMember: (studentId: string, batch: string, preferredPc?: string) => void;
+  deleteComputerMember: (id: string) => void;
+
+  saveCollectionItem: (collectionName: string, item: any) => Promise<void>;
+  showNotice: (msg: string) => void;
   resetEntireSystemData: () => Promise<void>;
   restoreDemoData: () => Promise<void>;
 }
@@ -190,6 +215,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [violationRecords, setViolationRecords] = useState<ViolationRecord[]>(initialViolationRecords);
   const [holidays, setHolidays] = useState<HolidayEvent[]>(initialHolidays);
   const [cardRequests, setCardRequests] = useState<CardRequest[]>(initialCardRequests);
+  const [computerSessions, setComputerSessions] = useState<ComputerCourseSession[]>(initialComputerSessions);
+  const [computerAttendances, setComputerAttendances] = useState<ComputerCourseAttendance[]>(initialComputerAttendances);
+  const [computerMembers, setComputerMembers] = useState<ComputerCourseMember[]>(initialComputerMembers);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showNotice = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 3500);
+  };
 
   // Local storage backup for current user session
   useEffect(() => saveToStorage('currentUser', currentUser), [currentUser]);
@@ -212,6 +248,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubVio = listenCollection('violationRecords', initialViolationRecords, setViolationRecords);
     const unsubHol = listenCollection('holidays', initialHolidays, setHolidays);
     const unsubReq = listenCollection('cardRequests', initialCardRequests, setCardRequests);
+    const unsubCompSessions = listenCollection('computerSessions', initialComputerSessions, setComputerSessions);
+    const unsubCompAtt = listenCollection('computerAttendances', initialComputerAttendances, setComputerAttendances);
+    const unsubCompMembers = listenCollection('computerMembers', initialComputerMembers, setComputerMembers);
 
     return () => {
       unsubSettings();
@@ -230,6 +269,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubVio();
       unsubHol();
       unsubReq();
+      unsubCompSessions();
+      unsubCompAtt();
+      unsubCompMembers();
     };
   }, []);
 
@@ -733,6 +775,148 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCardRequests([]);
   };
 
+  // Computer Course Methods
+  const addComputerSession = (data: Omit<ComputerCourseSession, 'id'>) => {
+    const newSession: ComputerCourseSession = {
+      ...data,
+      id: `cs-${Date.now()}`,
+    };
+    saveCollectionItem('computerSessions', newSession);
+  };
+
+  const updateComputerSession = (id: string, data: Partial<ComputerCourseSession>) => {
+    const target = computerSessions.find((s) => s.id === id);
+    if (target) {
+      const updated = { ...target, ...data };
+      saveCollectionItem('computerSessions', updated);
+    }
+  };
+
+  const deleteComputerSession = (id: string) => deleteCollectionItem('computerSessions', id);
+  const clearAllComputerSessions = async () => {
+    await clearEntireCollectionInFirestore('computerSessions');
+    setComputerSessions([]);
+  };
+
+  const addComputerAttendance = (data: Omit<ComputerCourseAttendance, 'id'>) => {
+    const newAtt: ComputerCourseAttendance = {
+      ...data,
+      id: `ca-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    };
+    saveCollectionItem('computerAttendances', newAtt);
+  };
+
+  const updateComputerAttendance = (id: string, data: Partial<ComputerCourseAttendance>) => {
+    const target = computerAttendances.find((a) => a.id === id);
+    if (target) {
+      const updated = { ...target, ...data };
+      saveCollectionItem('computerAttendances', updated);
+    }
+  };
+
+  const deleteComputerAttendance = (id: string) => deleteCollectionItem('computerAttendances', id);
+  const clearAllComputerAttendances = async () => {
+    await clearEntireCollectionInFirestore('computerAttendances');
+    setComputerAttendances([]);
+  };
+
+  const addComputerMember = (studentId: string, batch: string, preferredPc: string = 'PC-01') => {
+    const std = students.find((s) => s.id === studentId);
+    if (!std) return;
+    const existing = computerMembers.find((m) => m.studentId === studentId);
+    if (existing) {
+      const updated: ComputerCourseMember = {
+        ...existing,
+        batch,
+        preferredPc,
+        status: 'Aktif',
+      };
+      saveCollectionItem('computerMembers', updated);
+      return;
+    }
+    const newMember: ComputerCourseMember = {
+      id: `cm-${Date.now()}`,
+      studentId: std.id,
+      studentName: std.fullName,
+      class: std.currentClass,
+      nisn: std.nisn,
+      batch,
+      preferredPc,
+      registeredDate: new Date().toISOString().split('T')[0],
+      status: 'Aktif',
+    };
+    saveCollectionItem('computerMembers', newMember);
+  };
+
+  const deleteComputerMember = (id: string) => deleteCollectionItem('computerMembers', id);
+
+  const tapComputerCourse = (
+    studentId: string,
+    sessionId: string,
+    pcNumber?: string,
+    method: 'RFID' | 'FaceID' | 'QR' | 'Manual' = 'RFID'
+  ) => {
+    const std = students.find((s) => s.id === studentId);
+    const session = computerSessions.find((s) => s.id === sessionId);
+
+    if (!std) {
+      return { success: false, message: 'Data siswa tidak ditemukan dalam sistem!' };
+    }
+    if (!session) {
+      return { success: false, message: 'Sesi les komputer tidak ditemukan!' };
+    }
+
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+    const today = now.toISOString().split('T')[0];
+
+    // Check if PC is already occupied or auto assign
+    const member = computerMembers.find((m) => m.studentId === studentId);
+    const assignedPc = pcNumber || member?.preferredPc || `PC-${String(Math.floor(Math.random() * 32) + 1).padStart(2, '0')}`;
+
+    // Check if already checked in for this session
+    const existing = computerAttendances.find((a) => a.sessionId === sessionId && a.studentId === studentId);
+    if (existing) {
+      const updated: ComputerCourseAttendance = {
+        ...existing,
+        status: 'Hadir',
+        timeIn: existing.timeIn === '-' ? timeStr : existing.timeIn,
+        tapMethod: method,
+        pcNumber: pcNumber || existing.pcNumber || assignedPc,
+      };
+      saveCollectionItem('computerAttendances', updated);
+      return {
+        success: true,
+        message: `Presensi ${std.fullName} berhasil diperbarui di ${updated.pcNumber}!`,
+        record: updated,
+      };
+    }
+
+    const newRecord: ComputerCourseAttendance = {
+      id: `ca-${Date.now()}`,
+      sessionId: session.id,
+      sessionTopic: session.topic,
+      studentId: std.id,
+      studentName: std.fullName,
+      class: std.currentClass,
+      nisn: std.nisn,
+      date: session.date || today,
+      timeIn: timeStr,
+      tapMethod: method,
+      pcNumber: assignedPc,
+      status: 'Hadir',
+      taskScore: 85,
+      taskNotes: 'Hadir tepat waktu mengikuti praktikum.',
+    };
+
+    saveCollectionItem('computerAttendances', newRecord);
+    return {
+      success: true,
+      message: `Presensi Les Komputer BERHASIL: ${std.fullName} (${assignedPc})`,
+      record: newRecord,
+    };
+  };
+
   const resetEntireSystemData = async () => {
     await clearEntireCollectionInFirestore('students');
     await clearEntireCollectionInFirestore('teachers');
@@ -746,6 +930,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await clearEntireCollectionInFirestore('cardRequests');
     await clearEntireCollectionInFirestore('libraryTAPs');
     await clearEntireCollectionInFirestore('academicYears');
+    await clearEntireCollectionInFirestore('computerSessions');
+    await clearEntireCollectionInFirestore('computerAttendances');
+    await clearEntireCollectionInFirestore('computerMembers');
     setStudents([]);
     setTeachers([]);
     setClasses([]);
@@ -758,6 +945,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCardRequests([]);
     setLibraryTAPs([]);
     setAcademicYears([]);
+    setComputerSessions([]);
+    setComputerAttendances([]);
+    setComputerMembers([]);
   };
 
   const restoreDemoData = async () => {
@@ -772,6 +962,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await saveCollectionItemsBatch('announcements', initialAnnouncements);
     await saveCollectionItemsBatch('cardRequests', initialCardRequests);
     await saveCollectionItemsBatch('academicYears', initialAcademicYears);
+    await saveCollectionItemsBatch('computerSessions', initialComputerSessions);
+    await saveCollectionItemsBatch('computerAttendances', initialComputerAttendances);
+    await saveCollectionItemsBatch('computerMembers', initialComputerMembers);
   };
 
   return (
@@ -849,11 +1042,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCardRequestStatus,
         deleteCardRequest,
         clearAllCardRequests,
+        computerSessions,
+        addComputerSession,
+        updateComputerSession,
+        deleteComputerSession,
+        clearAllComputerSessions,
+        computerAttendances,
+        addComputerAttendance,
+        updateComputerAttendance,
+        deleteComputerAttendance,
+        clearAllComputerAttendances,
+        tapComputerCourse,
+        computerMembers,
+        addComputerMember,
+        deleteComputerMember,
+        saveCollectionItem,
+        showNotice,
         resetEntireSystemData,
         restoreDemoData,
       }}
     >
       {children}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-[9999] bg-slate-900/95 text-white px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center gap-3 text-sm font-semibold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </AppContext.Provider>
   );
 };

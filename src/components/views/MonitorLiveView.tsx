@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AttendanceStatus } from '../../types';
-import { Radio, ScanBarcode, Edit, Plus, Save, Clock, CheckCircle2, UserCheck, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
+import { Radio, ScanBarcode, Edit, Plus, Save, Clock, CheckCircle2, UserCheck, AlertCircle, Sparkles, Trash2, ScanFace } from 'lucide-react';
 import { RfidScanModal } from '../RfidScanModal';
 
 export const MonitorLiveView: React.FC = () => {
@@ -11,6 +11,7 @@ export const MonitorLiveView: React.FC = () => {
     deleteAttendanceRecord,
     tapRFIDOrScan,
     manualInputAttendance,
+    setActiveTab,
   } = useApp();
 
   const [selectedStudentForTap, setSelectedStudentForTap] = useState(students[0]?.id || '');
@@ -73,13 +74,21 @@ export const MonitorLiveView: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setActiveTab('faceid')}
+            className="bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer"
+          >
+            <ScanFace className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>Buka Scanner Face ID</span>
+          </button>
+
           <button
             onClick={() => setIsScanModalOpen(true)}
             className="bg-blue-900 hover:bg-blue-950 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer"
           >
             <ScanBarcode className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span>Buka Terminal Scan RFID Fullscreen</span>
+            <span>Terminal Scan RFID Fullscreen</span>
           </button>
 
           <button
