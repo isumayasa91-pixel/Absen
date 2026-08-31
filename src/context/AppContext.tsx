@@ -37,6 +37,15 @@ import {
   initialHolidays,
   initialCardRequests,
 } from '../data/mockData';
+import {
+  listenSingleDoc,
+  listenCollection,
+  syncSingleDoc,
+  saveCollectionItem,
+  saveCollectionItemsBatch,
+  deleteCollectionItem,
+  clearCollectionBatch,
+} from '../lib/firestoreSync';
 
 interface AppContextType {
   currentUser: UserAccount | null;
@@ -152,41 +161,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadFromStorage('currentUser', initialUsers[0]));
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
-  const [settings, setSettings] = useState<SystemSetting>(() => loadFromStorage('settings', initialSystemSettings));
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>(() => loadFromStorage('academicYears', initialAcademicYears));
-  const [classes, setClasses] = useState<ClassData[]>(() => loadFromStorage('classes', initialClasses));
-  const [students, setStudents] = useState<Student[]>(() => loadFromStorage('students', initialStudents));
-  const [teachers, setTeachers] = useState<Teacher[]>(() => loadFromStorage('teachers', initialTeachers));
-  const [users, setUsers] = useState<UserAccount[]>(() => loadFromStorage('users', initialUsers));
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => loadFromStorage('announcements', initialAnnouncements));
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('attendanceRecords', initialAttendanceRecords));
-  const [permissions, setPermissions] = useState<PermissionSubmission[]>(() => loadFromStorage('permissions', initialPermissions));
-  const [leavePermissions, setLeavePermissions] = useState<LeavePermission[]>(() => loadFromStorage('leavePermissions', initialLeavePermissions));
-  const [teacherJournals, setTeacherJournals] = useState<TeacherJournal[]>(() => loadFromStorage('teacherJournals', initialTeacherJournals));
-  const [libraryTAPs, setLibraryTAPs] = useState<LibraryTAP[]>(() => loadFromStorage('libraryTAPs', initialLibraryTAPs));
-  const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>(() => loadFromStorage('libraryBooks', initialLibraryBooks));
-  const [disciplineRules] = useState<DisciplineRule[]>(() => loadFromStorage('disciplineRules', initialDisciplineRules));
-  const [violationRecords, setViolationRecords] = useState<ViolationRecord[]>(() => loadFromStorage('violationRecords', initialViolationRecords));
-  const [holidays, setHolidays] = useState<HolidayEvent[]>(() => loadFromStorage('holidays', initialHolidays));
-  const [cardRequests, setCardRequests] = useState<CardRequest[]>(() => loadFromStorage('cardRequests', initialCardRequests));
+  const [settings, setSettings] = useState<SystemSetting>(initialSystemSettings);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>(initialAcademicYears);
+  const [classes, setClasses] = useState<ClassData[]>(initialClasses);
+  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
+  const [users, setUsers] = useState<UserAccount[]>(initialUsers);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
+  const [permissions, setPermissions] = useState<PermissionSubmission[]>(initialPermissions);
+  const [leavePermissions, setLeavePermissions] = useState<LeavePermission[]>(initialLeavePermissions);
+  const [teacherJournals, setTeacherJournals] = useState<TeacherJournal[]>(initialTeacherJournals);
+  const [libraryTAPs, setLibraryTAPs] = useState<LibraryTAP[]>(initialLibraryTAPs);
+  const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>(initialLibraryBooks);
+  const [disciplineRules] = useState<DisciplineRule[]>(initialDisciplineRules);
+  const [violationRecords, setViolationRecords] = useState<ViolationRecord[]>(initialViolationRecords);
+  const [holidays, setHolidays] = useState<HolidayEvent[]>(initialHolidays);
+  const [cardRequests, setCardRequests] = useState<CardRequest[]>(initialCardRequests);
 
+  // Local storage backup for current user session
   useEffect(() => saveToStorage('currentUser', currentUser), [currentUser]);
-  useEffect(() => saveToStorage('settings', settings), [settings]);
-  useEffect(() => saveToStorage('academicYears', academicYears), [academicYears]);
-  useEffect(() => saveToStorage('classes', classes), [classes]);
-  useEffect(() => saveToStorage('students', students), [students]);
-  useEffect(() => saveToStorage('teachers', teachers), [teachers]);
-  useEffect(() => saveToStorage('users', users), [users]);
-  useEffect(() => saveToStorage('announcements', announcements), [announcements]);
-  useEffect(() => saveToStorage('attendanceRecords', attendanceRecords), [attendanceRecords]);
-  useEffect(() => saveToStorage('permissions', permissions), [permissions]);
-  useEffect(() => saveToStorage('leavePermissions', leavePermissions), [leavePermissions]);
-  useEffect(() => saveToStorage('teacherJournals', teacherJournals), [teacherJournals]);
-  useEffect(() => saveToStorage('libraryTAPs', libraryTAPs), [libraryTAPs]);
-  useEffect(() => saveToStorage('libraryBooks', libraryBooks), [libraryBooks]);
-  useEffect(() => saveToStorage('violationRecords', violationRecords), [violationRecords]);
-  useEffect(() => saveToStorage('holidays', holidays), [holidays]);
-  useEffect(() => saveToStorage('cardRequests', cardRequests), [cardRequests]);
+
+  // Firestore Real-Time Subscriptions across all devices
+  useEffect(() => {
+    const unsubSettings = listenSingleDoc('settings', 'global', initialSystemSettings, setSettings);
+    const unsubYears = listenCollection('academicYears', initialAcademicYears, setAcademicYears);
+    const unsubClasses = listenCollection('classes', initialClasses, setClasses);
+    const unsubStudents = listenCollection('students', initialStudents, setStudents);
+    const unsubTeachers = listenCollection('teachers', initialTeachers, setTeachers);
+    const unsubUsers = listenCollection('users', initialUsers, setUsers);
+    const unsubAnn = listenCollection('announcements', initialAnnouncements, setAnnouncements);
+    const unsubAtt = listenCollection('attendanceRecords', initialAttendanceRecords, setAttendanceRecords);
+    const unsubPerm = listenCollection('permissions', initialPermissions, setPermissions);
+    const unsubLeave = listenCollection('leavePermissions', initialLeavePermissions, setLeavePermissions);
+    const unsubJrn = listenCollection('teacherJournals', initialTeacherJournals, setTeacherJournals);
+    const unsubLibTaps = listenCollection('libraryTAPs', initialLibraryTAPs, setLibraryTAPs);
+    const unsubLibBooks = listenCollection('libraryBooks', initialLibraryBooks, setLibraryBooks);
+    const unsubVio = listenCollection('violationRecords', initialViolationRecords, setViolationRecords);
+    const unsubHol = listenCollection('holidays', initialHolidays, setHolidays);
+    const unsubReq = listenCollection('cardRequests', initialCardRequests, setCardRequests);
+
+    return () => {
+      unsubSettings();
+      unsubYears();
+      unsubClasses();
+      unsubStudents();
+      unsubTeachers();
+      unsubUsers();
+      unsubAnn();
+      unsubAtt();
+      unsubPerm();
+      unsubLeave();
+      unsubJrn();
+      unsubLibTaps();
+      unsubLibBooks();
+      unsubVio();
+      unsubHol();
+      unsubReq();
+    };
+  }, []);
 
   const login = (user: UserAccount) => setCurrentUser(user);
   const logout = () => {
@@ -195,13 +228,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSettings = (newSettings: Partial<SystemSetting>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
+    syncSingleDoc('settings', 'global', updated);
   };
 
   const addAcademicYear = (yearName: string, semester: 'Ganjil' | 'Genap', isActive: boolean) => {
     let updated = academicYears;
     if (isActive) {
-      updated = updated.map((y) => ({ ...y, isActive: false }));
+      updated = updated.map((y) => {
+        if (y.isActive) {
+          const deactivated = { ...y, isActive: false };
+          saveCollectionItem('academicYears', deactivated);
+          return deactivated;
+        }
+        return y;
+      });
     }
     const newYear: AcademicYear = {
       id: `ay-${Date.now()}`,
@@ -209,7 +251,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       semester,
       isActive,
     };
-    setAcademicYears([...updated, newYear]);
+    saveCollectionItem('academicYears', newYear);
   };
 
   const addClass = (className: string, homeroomTeacher: string, academicYear: string) => {
@@ -220,7 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       academicYear,
       studentCount: 0,
     };
-    setClasses((prev) => [...prev, newClass]);
+    saveCollectionItem('classes', newClass);
   };
 
   const importClasses = (classList: Partial<ClassData>[]) => {
@@ -231,7 +273,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       academicYear: c.academicYear || '2026/2027',
       studentCount: 30,
     }));
-    setClasses((prev) => [...prev, ...formatted]);
+    saveCollectionItemsBatch('classes', formatted);
   };
 
   const addStudent = (fullName: string, currentClass: string, nisn: string, gender: 'L' | 'P') => {
@@ -245,7 +287,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       qrCode: `QR-${nisn}`,
       status: 'Aktif',
     };
-    setStudents((prev) => [...prev, newStudent]);
+    saveCollectionItem('students', newStudent);
   };
 
   const importStudents = (studentList: Partial<Student>[]) => {
@@ -258,28 +300,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rfidTag: `RFID-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'Aktif',
     }));
-    setStudents((prev) => [...prev, ...formatted]);
+    saveCollectionItemsBatch('students', formatted);
   };
 
   const updateStudentPhoto = (studentId: string, photo: string) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === studentId || s.nisn === studentId ? { ...s, photo } : s))
-    );
+    const target = students.find((s) => s.id === studentId || s.nisn === studentId);
+    if (target) {
+      saveCollectionItem('students', { ...target, photo });
+    }
   };
 
   const updateMassStudentPhotos = (photosMap: { [key: string]: string }) => {
-    setStudents((prev) =>
-      prev.map((s) => {
-        const keyId = s.id;
-        const keyNisn = s.nisn;
-        const keyName = s.fullName.toLowerCase().trim();
-        const found = photosMap[keyId] || photosMap[keyNisn] || photosMap[keyName];
-        if (found) {
-          return { ...s, photo: found };
-        }
-        return s;
-      })
-    );
+    const updatedBatch: Student[] = [];
+    students.forEach((s) => {
+      const found = photosMap[s.id] || photosMap[s.nisn] || photosMap[s.fullName.toLowerCase().trim()];
+      if (found) {
+        updatedBatch.push({ ...s, photo: found });
+      }
+    });
+    if (updatedBatch.length > 0) {
+      saveCollectionItemsBatch('students', updatedBatch);
+    }
   };
 
   const generateMassStudentAccounts = () => {
@@ -292,12 +333,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Aktif' as const,
       email: `${std.nisn}@siswa.sch.id`,
     }));
-    // merge unique
-    setUsers((prev) => {
-      const existingNames = new Set(prev.map((u) => u.username));
-      const filtered = newUsers.filter((u) => !existingNames.has(u.username));
-      return [...prev, ...filtered];
-    });
+    saveCollectionItemsBatch('users', newUsers);
   };
 
   const addTeacher = (fullNameWithTitle: string, nip: string, position: any, phone?: string) => {
@@ -308,7 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       position,
       phone: phone || '081234567890',
     };
-    setTeachers((prev) => [...prev, newTeacher]);
+    saveCollectionItem('teachers', newTeacher);
   };
 
   const importTeachers = (teacherList: Partial<Teacher>[]) => {
@@ -319,7 +355,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       position: t.position || 'Guru Mapel',
       phone: t.phone || '08123456789',
     }));
-    setTeachers((prev) => [...prev, ...formatted]);
+    saveCollectionItemsBatch('teachers', formatted);
   };
 
   const generateMassTeacherAccounts = () => {
@@ -332,11 +368,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Aktif' as const,
       email: `${tch.nip}@guru.sch.id`,
     }));
-    setUsers((prev) => {
-      const existing = new Set(prev.map((u) => u.username));
-      const filtered = newUsers.filter((u) => !existing.has(u.username));
-      return [...prev, ...filtered];
-    });
+    saveCollectionItemsBatch('users', newUsers);
   };
 
   const addUser = (username: string, name: string, role: 'admin' | 'guru' | 'siswa', accessLevel: string) => {
@@ -348,7 +380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       accessLevel,
       status: 'Aktif',
     };
-    setUsers((prev) => [...prev, newUser]);
+    saveCollectionItem('users', newUser);
   };
 
   const addAnnouncement = (title: string, content: string, targetClass: string) => {
@@ -360,19 +392,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       author: currentUser?.name || 'Administrator',
     };
-    setAnnouncements((prev) => [newAnn, ...prev]);
+    saveCollectionItem('announcements', newAnn);
   };
 
   const addOrUpdateAttendance = (record: AttendanceRecord) => {
-    setAttendanceRecords((prev) => {
-      const idx = prev.findIndex((r) => r.studentId === record.studentId && r.date === record.date);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = record;
-        return copy;
-      }
-      return [record, ...prev];
-    });
+    saveCollectionItem('attendanceRecords', record);
   };
 
   const manualInputAttendance = (data: {
@@ -439,7 +463,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const today = new Date().toISOString().split('T')[0];
     const nowTime = new Date().toTimeString().split(' ')[0]; // HH:MM:SS
 
-    // Check time vs settings (e.g. 07:15)
     const [h, m] = nowTime.split(':').map(Number);
     const [endH, endM] = (settings.timeInEnd || '07:15').split(':').map(Number);
     const isLate = h > endH || (h === endH && m > endM);
@@ -450,7 +473,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let scanType: 'masuk' | 'pulang' | 'terlambat' = 'masuk';
 
     if (!existing || existing.statusIn === 'Belum') {
-      // Clock in
       const statusFinal = isLate ? 'Terlambat' : 'Hadir';
       const statusIn = isLate ? 'Terlambat' : 'Hadir';
       scanType = isLate ? 'terlambat' : 'masuk';
@@ -469,26 +491,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         tapMethod: method,
       };
 
-      // Auto add violation points if configured
       if (isLate && settings.autoViolationPoints) {
-        setViolationRecords((prev) => [
-          {
-            id: `v-auto-${Date.now()}`,
-            studentId: std.id,
-            studentName: std.fullName,
-            class: std.currentClass,
-            ruleId: 'rule-1',
-            ruleName: 'Terlambat Masuk Sekolah (< 15 menit)',
-            points: 5,
-            date: today,
-            sanction: 'Poin Otomatis Sistem Presensi',
-            reporter: 'Sistem RFID Auto-Point',
-          },
-          ...prev,
-        ]);
+        saveCollectionItem('violationRecords', {
+          id: `v-auto-${Date.now()}`,
+          studentId: std.id,
+          studentName: std.fullName,
+          class: std.currentClass,
+          ruleId: 'rule-1',
+          ruleName: 'Terlambat Masuk Sekolah (< 15 menit)',
+          points: 5,
+          date: today,
+          sanction: 'Poin Otomatis Sistem Presensi',
+          reporter: 'Sistem RFID Auto-Point',
+        });
       }
     } else {
-      // Clock out
       scanType = 'pulang';
       updatedRecord = {
         ...existing,
@@ -517,9 +534,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `perm-${Date.now()}`,
       submittedAt: new Date().toLocaleString('id-ID'),
     };
-    setPermissions((prev) => [newPerm, ...prev]);
+    saveCollectionItem('permissions', newPerm);
 
-    // If auto approved or approved, update attendance record as well
     if (data.statusApproval === 'Disetujui') {
       const std = students.find((s) => s.id === data.studentId);
       if (std) {
@@ -542,34 +558,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updatePermissionStatus = (id: string, status: 'Disetujui' | 'Ditolak') => {
-    setPermissions((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          const updated = { ...p, statusApproval: status };
-          if (status === 'Disetujui') {
-            const std = students.find((s) => s.id === p.studentId);
-            if (std) {
-              addOrUpdateAttendance({
-                id: `att-perm-${Date.now()}`,
-                studentId: std.id,
-                studentName: std.fullName,
-                class: std.currentClass,
-                date: p.startDate,
-                statusFinal: p.type,
-                statusIn: 'Belum',
-                statusOut: 'Belum',
-                timeIn: '-',
-                timeOut: '-',
-                tapMethod: 'Manual',
-                notes: p.reason,
-              });
-            }
-          }
-          return updated;
+    const target = permissions.find((p) => p.id === id);
+    if (target) {
+      saveCollectionItem('permissions', { ...target, statusApproval: status });
+      if (status === 'Disetujui') {
+        const std = students.find((s) => s.id === target.studentId);
+        if (std) {
+          addOrUpdateAttendance({
+            id: `att-perm-${Date.now()}`,
+            studentId: std.id,
+            studentName: std.fullName,
+            class: std.currentClass,
+            date: target.startDate,
+            statusFinal: target.type,
+            statusIn: 'Belum',
+            statusOut: 'Belum',
+            timeIn: '-',
+            timeOut: '-',
+            tapMethod: 'Manual',
+            notes: target.reason,
+          });
         }
-        return p;
-      })
-    );
+      }
+    }
   };
 
   const addLeavePermission = (data: Omit<LeavePermission, 'id'>) => {
@@ -577,7 +588,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...data,
       id: `leave-${Date.now()}`,
     };
-    setLeavePermissions((prev) => [newLeave, ...prev]);
+    saveCollectionItem('leavePermissions', newLeave);
   };
 
   const addTeacherJournal = (data: Omit<TeacherJournal, 'id'>) => {
@@ -585,7 +596,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...data,
       id: `jrn-${Date.now()}`,
     };
-    setTeacherJournals((prev) => [newJrn, ...prev]);
+    saveCollectionItem('teacherJournals', newJrn);
   };
 
   const addLibraryTAP = (
@@ -610,7 +621,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       barcodeBook,
       bookTitle,
     };
-    setLibraryTAPs((prev) => [newTap, ...prev]);
+    saveCollectionItem('libraryTAPs', newTap);
   };
 
   const addViolationRecord = (data: Omit<ViolationRecord, 'id'>) => {
@@ -618,7 +629,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...data,
       id: `v-${Date.now()}`,
     };
-    setViolationRecords((prev) => [newV, ...prev]);
+    saveCollectionItem('violationRecords', newV);
   };
 
   const addHoliday = (date: string, title: string, type: 'Nasional' | 'Sekolah' | 'Cuti') => {
@@ -628,43 +639,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       title,
       type,
     };
-    setHolidays((prev) => [...prev, newH]);
+    saveCollectionItem('holidays', newH);
   };
 
   // Delete Functions
-  const deleteAcademicYear = (id: string) => setAcademicYears((prev) => prev.filter((item) => item.id !== id));
-  const deleteClass = (id: string) => setClasses((prev) => prev.filter((item) => item.id !== id));
-  const clearAllClasses = () => setClasses([]);
-  const deleteStudent = (id: string) => setStudents((prev) => prev.filter((item) => item.id !== id));
-  const deleteTeacher = (id: string) => setTeachers((prev) => prev.filter((item) => item.id !== id));
-  const deleteUser = (id: string) => setUsers((prev) => prev.filter((item) => item.id !== id));
-  const deleteAnnouncement = (id: string) => setAnnouncements((prev) => prev.filter((item) => item.id !== id));
-  const deleteAttendanceRecord = (id: string) => setAttendanceRecords((prev) => prev.filter((item) => item.id !== id));
-  const deletePermission = (id: string) => setPermissions((prev) => prev.filter((item) => item.id !== id));
-  const deleteLeavePermission = (id: string) => setLeavePermissions((prev) => prev.filter((item) => item.id !== id));
-  const deleteTeacherJournal = (id: string) => setTeacherJournals((prev) => prev.filter((item) => item.id !== id));
-  const deleteLibraryTAP = (id: string) => setLibraryTAPs((prev) => prev.filter((item) => item.id !== id));
-  const deleteLibraryBook = (id: string) => setLibraryBooks((prev) => prev.filter((item) => item.id !== id));
-  const deleteViolationRecord = (id: string) => setViolationRecords((prev) => prev.filter((item) => item.id !== id));
-  const deleteHoliday = (id: string) => setHolidays((prev) => prev.filter((item) => item.id !== id));
+  const deleteAcademicYear = (id: string) => deleteCollectionItem('academicYears', id);
+  const deleteClass = (id: string) => deleteCollectionItem('classes', id);
+  const clearAllClasses = () => clearCollectionBatch('classes', classes);
+  const deleteStudent = (id: string) => deleteCollectionItem('students', id);
+  const deleteTeacher = (id: string) => deleteCollectionItem('teachers', id);
+  const deleteUser = (id: string) => deleteCollectionItem('users', id);
+  const deleteAnnouncement = (id: string) => deleteCollectionItem('announcements', id);
+  const deleteAttendanceRecord = (id: string) => deleteCollectionItem('attendanceRecords', id);
+  const deletePermission = (id: string) => deleteCollectionItem('permissions', id);
+  const deleteLeavePermission = (id: string) => deleteCollectionItem('leavePermissions', id);
+  const deleteTeacherJournal = (id: string) => deleteCollectionItem('teacherJournals', id);
+  const deleteLibraryTAP = (id: string) => deleteCollectionItem('libraryTAPs', id);
+  const deleteLibraryBook = (id: string) => deleteCollectionItem('libraryBooks', id);
+  const deleteViolationRecord = (id: string) => deleteCollectionItem('violationRecords', id);
+  const deleteHoliday = (id: string) => deleteCollectionItem('holidays', id);
 
   const addCardRequest = (data: Omit<CardRequest, 'id'>) => {
     const newReq: CardRequest = {
       id: `cr-${Date.now()}`,
       ...data,
     };
-    setCardRequests((prev) => [newReq, ...prev]);
+    saveCollectionItem('cardRequests', newReq);
   };
 
   const updateCardRequestStatus = (id: string, status: CardRequest['status']) => {
-    setCardRequests((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
-    );
+    const target = cardRequests.find((cr) => cr.id === id);
+    if (target) {
+      saveCollectionItem('cardRequests', { ...target, status });
+    }
   };
 
-  const deleteCardRequest = (id: string) => {
-    setCardRequests((prev) => prev.filter((item) => item.id !== id));
-  };
+  const deleteCardRequest = (id: string) => deleteCollectionItem('cardRequests', id);
 
   return (
     <AppContext.Provider

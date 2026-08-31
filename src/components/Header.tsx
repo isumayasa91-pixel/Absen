@@ -34,9 +34,9 @@ export const Header: React.FC = () => {
                 <h1 className="font-extrabold text-slate-900 text-base lg:text-lg leading-tight tracking-tight">
                   {settings.appNameBranding || 'Presensi Digital Pro'}
                 </h1>
-                <span className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 border border-emerald-200 shadow-2xs">
+                <span className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 border border-emerald-200 shadow-2xs" title="Tersimpan & Tersinkronisasi Otomatis di Cloud Firestore">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Live
+                  Cloud Synced
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium truncate max-w-xs sm:max-w-md">

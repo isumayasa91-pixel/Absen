@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "settings": {
+      "title": "Settings",
+      "description": "System settings and configuration",
+      "type": "object",
+      "properties": {
+        "schoolName": { "type": "string" },
+        "city": { "type": "string font" },
+        "principalName": { "type": "string" },
+        "principalNip": { "type": "string" },
+        "schoolLogo": { "type": "string" },
+        "principalSignature": { "type": "string" },
+        "schoolStamp": { "type": "string font" }
+      }
+    },
+    "academicYears": {
+      "title": "Academic Years",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "yearName": { "type": "string" },
+        "semester": { "type": "string" },
+        "isActive": { "type": "boolean" }
+      }
+    },
+    "classes": {
+      "title": "Classes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "className": { "type": "string" },
+        "homeroomTeacher": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "studentCount": { "type": "number" }
+      }
+    },
+    "students": {
+      "title": "Students",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "currentClass": { "type": "string" },
+        "nisn": { "type": "string" },
+        "gender": { "type": "string" },
+        "rfidTag": { "type": "string" },
+        "photo": { "type": "string" }
+      }
+    },
+    "teachers": {
+      "title": "Teachers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullNameWithTitle": { "type": "string" },
+        "nip": { "type": "string" },
+        "position": { "type": "string" },
+        "phone": { "type": "string" },
+        "rfidTag": { "type": "string" }
+      }
+    },
+    "users": {
+      "title": "Users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "accessLevel": { "type": "string" }
+      }
+    },
+    "attendanceRecords": {
+      "title": "Attendance Records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string font" },
+        "date": { "type": "string" },
+        "statusFinal": { "type": "string" },
+        "timeIn": { "type": "string" },
+        "timeOut": { "type": "string" }
+      }
+    }
+  }
+}
