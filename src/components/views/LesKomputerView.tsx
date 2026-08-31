@@ -118,6 +118,14 @@ export const LesKomputerView: React.FC = () => {
   const [memberBatch, setMemberBatch] = useState<string>('Kelompok A - Web & Coding');
   const [memberPreferredPc, setMemberPreferredPc] = useState<string>('PC-01');
 
+  // Manual Attendance Modal State
+  const [isManualAttendanceModalOpen, setIsManualAttendanceModalOpen] = useState<boolean>(false);
+  const [manualStudentId, setManualStudentId] = useState<string>(students[0]?.id || '');
+  const [manualStatus, setManualStatus] = useState<'Hadir' | 'Izin' | 'Sakit' | 'Alpa'>('Hadir');
+  const [manualPcNumber, setManualPcNumber] = useState<string>('PC-01');
+  const [manualTaskScore, setManualTaskScore] = useState<number>(85);
+  const [manualTaskNotes, setManualTaskNotes] = useState<string>('Presensi manual oleh Guru / Instruktur.');
+
   // Filter state for Rekap
   const [filterSessionRekap, setFilterSessionRekap] = useState<string>('ALL');
   const [filterClassRekap, setFilterClassRekap] = useState<string>('ALL');
@@ -448,6 +456,56 @@ export const LesKomputerView: React.FC = () => {
     showNotice(`Berhasil mencatat kehadiran ${count} siswa peserta les komputer!`);
   };
 
+  // Handler: Add Manual Attendance
+  const handleAddManualAttendance = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentSession) {
+      showNotice('Pilih atau buat sesi les komputer terlebih dahulu!');
+      return;
+    }
+    if (!manualStudentId) {
+      showNotice('Pilih siswa terlebih dahulu!');
+      return;
+    }
+
+    const std = students.find((s) => s.id === manualStudentId);
+    if (!std) return;
+
+    // Check if attendance already exists for this student in this session
+    const existing = computerAttendances.find(
+      (a) => a.sessionId === currentSession.id && a.studentId === manualStudentId
+    );
+
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+
+    const attendanceData = {
+      sessionId: currentSession.id,
+      sessionTopic: currentSession.topic,
+      studentId: std.id,
+      studentName: std.fullName,
+      class: std.currentClass,
+      nisn: std.nisn,
+      date: currentSession.date || now.toISOString().split('T')[0],
+      timeIn: existing ? existing.timeIn : timeStr,
+      tapMethod: 'Manual' as const,
+      pcNumber: manualStatus === 'Hadir' ? manualPcNumber : '-',
+      status: manualStatus,
+      taskScore: manualStatus === 'Hadir' ? manualTaskScore : undefined,
+      taskNotes: manualTaskNotes,
+    };
+
+    if (existing) {
+      updateComputerAttendance(existing.id, attendanceData);
+      showNotice(`Presensi manual untuk ${std.fullName} berhasil diperbarui!`);
+    } else {
+      addComputerAttendance(attendanceData);
+      showNotice(`Presensi manual untuk ${std.fullName} berhasil ditambahkan!`);
+    }
+
+    setIsManualAttendanceModalOpen(false);
+  };
+
   // Handler: Add New Session
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
@@ -730,13 +788,22 @@ export const LesKomputerView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <button
                   onClick={handleCheckInAllMembers}
                   className="flex-1 py-1.5 px-3 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl text-xs font-bold transition-all border border-violet-200 cursor-pointer flex items-center justify-center gap-1"
                 >
                   <CheckSquare className="w-3.5 h-3.5" />
-                  <span>Absen Semua Peserta</span>
+                  <span>Absen Semua</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsManualAttendanceModalOpen(true);
+                  }}
+                  className="flex-1 py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition-all border border-emerald-200 cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Absen Manual</span>
                 </button>
               </div>
             </div>
@@ -2499,6 +2566,152 @@ export const LesKomputerView: React.FC = () => {
                 <span>Cetak Lembar</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: INPUT PRESENSI MANUAL LES KOMPUTER */}
+      {isManualAttendanceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-slate-800">Input Presensi Manual Les Komputer</h3>
+              </div>
+              <button
+                onClick={() => setIsManualAttendanceModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddManualAttendance} className="space-y-4">
+              <div>
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider block mb-1">
+                  Sesi Aktif:
+                </span>
+                <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs font-bold text-indigo-950">
+                  [{currentSession?.sessionCode}] {currentSession?.topic} ({currentSession?.date})
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">Pilih Siswa</label>
+                <select
+                  value={manualStudentId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setManualStudentId(id);
+                    const m = computerMembers.find((member) => member.studentId === id);
+                    if (m?.preferredPc) {
+                      setManualPcNumber(m.preferredPc);
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold cursor-pointer"
+                >
+                  <option value="">-- Pilih Siswa --</option>
+                  {students.map((s) => {
+                    const isMember = computerMembers.some((m) => m.studentId === s.id);
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {s.fullName} ({s.currentClass}) {isMember ? '★ Peserta Les' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-600 block mb-1">Status Kehadiran</label>
+                  <select
+                    value={manualStatus}
+                    onChange={(e) => setManualStatus(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold cursor-pointer"
+                  >
+                    <option value="Hadir">Hadir</option>
+                    <option value="Izin">Izin</option>
+                    <option value="Sakit">Sakit</option>
+                    <option value="Alpa">Alpa</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-600 block mb-1">
+                    Terminal PC {manualStatus !== 'Hadir' && <span className="text-slate-400 font-medium">(Opsional)</span>}
+                  </label>
+                  <select
+                    disabled={manualStatus !== 'Hadir'}
+                    value={manualStatus === 'Hadir' ? manualPcNumber : '-'}
+                    onChange={(e) => setManualPcNumber(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    {manualStatus !== 'Hadir' ? (
+                      <option value="-">Tanpa PC (Tidak Hadir)</option>
+                    ) : (
+                      labPcList.map((pc) => (
+                        <option key={pc} value={pc}>
+                          {pc}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {manualStatus === 'Hadir' && (
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    <Award className="w-4 h-4 text-emerald-600" />
+                    <span>Penilaian Tugas Praktikum (Opsional)</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-1">
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1">Nilai Tugas</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={manualTaskScore}
+                        onChange={(e) => setManualTaskScore(Number(e.target.value))}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1">Catatan Tugas</label>
+                      <input
+                        type="text"
+                        value={manualTaskNotes}
+                        onChange={(e) => setManualTaskNotes(e.target.value)}
+                        placeholder="Catatan aktivitas atau tugas..."
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsManualAttendanceModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-200/50 transition-all cursor-pointer"
+                >
+                  Simpan Presensi
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
