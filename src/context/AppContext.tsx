@@ -45,6 +45,7 @@ import {
   saveCollectionItemsBatch,
   deleteCollectionItem,
   clearCollectionBatch,
+  clearEntireCollectionInFirestore,
 } from '../lib/firestoreSync';
 
 interface AppContextType {
@@ -74,12 +75,14 @@ interface AppContextType {
   updateMassStudentPhotos: (photosMap: { [key: string]: string }) => void;
   generateMassStudentAccounts: () => void;
   deleteStudent: (id: string) => void;
+  clearAllStudents: () => void;
 
   teachers: Teacher[];
   addTeacher: (fullNameWithTitle: string, nip: string, position: any, phone?: string) => void;
   importTeachers: (teacherList: Partial<Teacher>[]) => void;
   generateMassTeacherAccounts: () => void;
   deleteTeacher: (id: string) => void;
+  clearAllTeachers: () => void;
 
   users: UserAccount[];
   addUser: (username: string, name: string, role: 'admin' | 'guru' | 'siswa', accessLevel: string) => void;
@@ -88,10 +91,12 @@ interface AppContextType {
   announcements: Announcement[];
   addAnnouncement: (title: string, content: string, targetClass: string) => void;
   deleteAnnouncement: (id: string) => void;
+  clearAllAnnouncements: () => void;
 
   attendanceRecords: AttendanceRecord[];
   addOrUpdateAttendance: (record: AttendanceRecord) => void;
   deleteAttendanceRecord: (id: string) => void;
+  clearAllAttendance: () => void;
   manualInputAttendance: (data: {
     studentId: string;
     date: string;
@@ -108,6 +113,7 @@ interface AppContextType {
   addPermission: (data: Omit<PermissionSubmission, 'id' | 'submittedAt'>) => void;
   updatePermissionStatus: (id: string, status: 'Disetujui' | 'Ditolak') => void;
   deletePermission: (id: string) => void;
+  clearAllPermissions: () => void;
 
   leavePermissions: LeavePermission[];
   addLeavePermission: (data: Omit<LeavePermission, 'id'>) => void;
@@ -116,6 +122,7 @@ interface AppContextType {
   teacherJournals: TeacherJournal[];
   addTeacherJournal: (data: Omit<TeacherJournal, 'id'>) => void;
   deleteTeacherJournal: (id: string) => void;
+  clearAllTeacherJournals: () => void;
 
   libraryTAPs: LibraryTAP[];
   addLibraryTAP: (studentId: string, type: 'Masuk Perpus' | 'Pinjam Buku' | 'Pengembalian Buku', barcodeBook?: string, bookTitle?: string) => void;
@@ -127,6 +134,7 @@ interface AppContextType {
   violationRecords: ViolationRecord[];
   addViolationRecord: (data: Omit<ViolationRecord, 'id'>) => void;
   deleteViolationRecord: (id: string) => void;
+  clearAllViolationRecords: () => void;
 
   holidays: HolidayEvent[];
   addHoliday: (date: string, title: string, type: 'Nasional' | 'Sekolah' | 'Cuti') => void;
@@ -136,6 +144,10 @@ interface AppContextType {
   addCardRequest: (data: Omit<CardRequest, 'id'>) => void;
   updateCardRequestStatus: (id: string, status: CardRequest['status']) => void;
   deleteCardRequest: (id: string) => void;
+  clearAllCardRequests: () => void;
+
+  resetEntireSystemData: () => Promise<void>;
+  restoreDemoData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -642,21 +654,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveCollectionItem('holidays', newH);
   };
 
-  // Delete Functions
+  // Delete & Clear Functions
   const deleteAcademicYear = (id: string) => deleteCollectionItem('academicYears', id);
   const deleteClass = (id: string) => deleteCollectionItem('classes', id);
-  const clearAllClasses = () => clearCollectionBatch('classes', classes);
+  const clearAllClasses = async () => {
+    await clearEntireCollectionInFirestore('classes');
+    setClasses([]);
+  };
+
   const deleteStudent = (id: string) => deleteCollectionItem('students', id);
+  const clearAllStudents = async () => {
+    await clearEntireCollectionInFirestore('students');
+    setStudents([]);
+  };
+
   const deleteTeacher = (id: string) => deleteCollectionItem('teachers', id);
+  const clearAllTeachers = async () => {
+    await clearEntireCollectionInFirestore('teachers');
+    setTeachers([]);
+  };
+
   const deleteUser = (id: string) => deleteCollectionItem('users', id);
   const deleteAnnouncement = (id: string) => deleteCollectionItem('announcements', id);
+  const clearAllAnnouncements = async () => {
+    await clearEntireCollectionInFirestore('announcements');
+    setAnnouncements([]);
+  };
+
   const deleteAttendanceRecord = (id: string) => deleteCollectionItem('attendanceRecords', id);
+  const clearAllAttendance = async () => {
+    await clearEntireCollectionInFirestore('attendanceRecords');
+    setAttendanceRecords([]);
+  };
+
   const deletePermission = (id: string) => deleteCollectionItem('permissions', id);
+  const clearAllPermissions = async () => {
+    await clearEntireCollectionInFirestore('permissions');
+    await clearEntireCollectionInFirestore('leavePermissions');
+    setPermissions([]);
+    setLeavePermissions([]);
+  };
+
   const deleteLeavePermission = (id: string) => deleteCollectionItem('leavePermissions', id);
   const deleteTeacherJournal = (id: string) => deleteCollectionItem('teacherJournals', id);
+  const clearAllTeacherJournals = async () => {
+    await clearEntireCollectionInFirestore('teacherJournals');
+    setTeacherJournals([]);
+  };
+
   const deleteLibraryTAP = (id: string) => deleteCollectionItem('libraryTAPs', id);
   const deleteLibraryBook = (id: string) => deleteCollectionItem('libraryBooks', id);
   const deleteViolationRecord = (id: string) => deleteCollectionItem('violationRecords', id);
+  const clearAllViolationRecords = async () => {
+    await clearEntireCollectionInFirestore('violationRecords');
+    setViolationRecords([]);
+  };
+
   const deleteHoliday = (id: string) => deleteCollectionItem('holidays', id);
 
   const addCardRequest = (data: Omit<CardRequest, 'id'>) => {
@@ -675,6 +728,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteCardRequest = (id: string) => deleteCollectionItem('cardRequests', id);
+  const clearAllCardRequests = async () => {
+    await clearEntireCollectionInFirestore('cardRequests');
+    setCardRequests([]);
+  };
+
+  const resetEntireSystemData = async () => {
+    await clearEntireCollectionInFirestore('students');
+    await clearEntireCollectionInFirestore('teachers');
+    await clearEntireCollectionInFirestore('classes');
+    await clearEntireCollectionInFirestore('attendanceRecords');
+    await clearEntireCollectionInFirestore('teacherJournals');
+    await clearEntireCollectionInFirestore('permissions');
+    await clearEntireCollectionInFirestore('leavePermissions');
+    await clearEntireCollectionInFirestore('violationRecords');
+    await clearEntireCollectionInFirestore('announcements');
+    await clearEntireCollectionInFirestore('cardRequests');
+    await clearEntireCollectionInFirestore('libraryTAPs');
+    await clearEntireCollectionInFirestore('academicYears');
+    setStudents([]);
+    setTeachers([]);
+    setClasses([]);
+    setAttendanceRecords([]);
+    setTeacherJournals([]);
+    setPermissions([]);
+    setLeavePermissions([]);
+    setViolationRecords([]);
+    setAnnouncements([]);
+    setCardRequests([]);
+    setLibraryTAPs([]);
+    setAcademicYears([]);
+  };
+
+  const restoreDemoData = async () => {
+    await saveCollectionItemsBatch('students', initialStudents);
+    await saveCollectionItemsBatch('teachers', initialTeachers);
+    await saveCollectionItemsBatch('classes', initialClasses);
+    await saveCollectionItemsBatch('attendanceRecords', initialAttendanceRecords);
+    await saveCollectionItemsBatch('teacherJournals', initialTeacherJournals);
+    await saveCollectionItemsBatch('permissions', initialPermissions);
+    await saveCollectionItemsBatch('leavePermissions', initialLeavePermissions);
+    await saveCollectionItemsBatch('violationRecords', initialViolationRecords);
+    await saveCollectionItemsBatch('announcements', initialAnnouncements);
+    await saveCollectionItemsBatch('cardRequests', initialCardRequests);
+    await saveCollectionItemsBatch('academicYears', initialAcademicYears);
+  };
 
   return (
     <AppContext.Provider
@@ -701,32 +799,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateMassStudentPhotos,
         generateMassStudentAccounts,
         deleteStudent,
+        clearAllStudents,
         teachers,
         addTeacher,
         importTeachers,
         generateMassTeacherAccounts,
         deleteTeacher,
+        clearAllTeachers,
         users,
         addUser,
         deleteUser,
         announcements,
         addAnnouncement,
         deleteAnnouncement,
+        clearAllAnnouncements,
         attendanceRecords,
         addOrUpdateAttendance,
         deleteAttendanceRecord,
+        clearAllAttendance,
         manualInputAttendance,
         tapRFIDOrScan,
         permissions,
         addPermission,
         updatePermissionStatus,
         deletePermission,
+        clearAllPermissions,
         leavePermissions,
         addLeavePermission,
         deleteLeavePermission,
         teacherJournals,
         addTeacherJournal,
         deleteTeacherJournal,
+        clearAllTeacherJournals,
         libraryTAPs,
         addLibraryTAP,
         deleteLibraryTAP,
@@ -736,6 +840,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         violationRecords,
         addViolationRecord,
         deleteViolationRecord,
+        clearAllViolationRecords,
         holidays,
         addHoliday,
         deleteHoliday,
@@ -743,6 +848,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addCardRequest,
         updateCardRequestStatus,
         deleteCardRequest,
+        clearAllCardRequests,
+        resetEntireSystemData,
+        restoreDemoData,
       }}
     >
       {children}

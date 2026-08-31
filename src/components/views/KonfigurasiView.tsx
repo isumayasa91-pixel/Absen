@@ -44,36 +44,65 @@ export const KonfigurasiView: React.FC = () => {
     settings,
     updateSettings,
     students,
+    teachers,
     classes,
+    attendanceRecords,
+    teacherJournals,
+    permissions,
+    violationRecords,
+    announcements,
     cardRequests,
     addCardRequest,
     updateCardRequestStatus,
     deleteCardRequest,
     updateStudentPhoto,
     updateMassStudentPhotos,
+    clearAllStudents,
+    clearAllTeachers,
+    clearAllClasses,
+    clearAllAttendance,
+    clearAllTeacherJournals,
+    clearAllPermissions,
+    clearAllViolationRecords,
+    clearAllAnnouncements,
+    clearAllCardRequests,
+    resetEntireSystemData,
+    restoreDemoData,
   } = useApp();
 
-  const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' => {
+  const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' | 'reset-data' => {
     if (tab === 'kalender-libur') return 'libur';
     if (tab === 'pengajuan-kartu') return 'kartu';
     if (tab === 'faceid') return 'faceid';
     if (tab === 'lokasi-siswa') return 'lokasi-siswa';
     if (tab === 'lokasi-sekolah') return 'lokasi-sekolah';
     if (tab === 'setting' || tab === 'konfigurasi') return 'system';
+    if (tab === 'reset-data' || tab === 'hapus-data') return 'reset-data';
     return 'jam';
   };
 
   const [activeConfigTab, setActiveConfigTab] = useState<
-    'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system'
+    'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' | 'reset-data'
   >(() => getSubTabFromActiveTab(globalActiveTab));
 
   useEffect(() => {
     if ([
-      'aturan-jam', 'kalender-libur', 'pengajuan-kartu', 'faceid', 'lokasi-siswa', 'lokasi-sekolah', 'setting', 'konfigurasi'
+      'aturan-jam', 'kalender-libur', 'pengajuan-kartu', 'faceid', 'lokasi-siswa', 'lokasi-sekolah', 'setting', 'konfigurasi', 'reset-data', 'hapus-data'
     ].includes(globalActiveTab)) {
       setActiveConfigTab(getSubTabFromActiveTab(globalActiveTab));
     }
   }, [globalActiveTab]);
+
+  // Reset System states
+  const [showFullResetModal, setShowFullResetModal] = useState(false);
+  const [confirmResetText, setConfirmResetText] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  const showActionNotice = (msg: string) => {
+    setActionNotice(msg);
+    setTimeout(() => setActionNotice(null), 4000);
+  };
 
   // Form states for systemSettings
   const [formData, setFormData] = useState({ ...settings });
@@ -286,6 +315,12 @@ export const KonfigurasiView: React.FC = () => {
           </div>
         </div>
 
+        {actionNotice && (
+          <div className="px-3.5 py-2 bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs rounded-xl flex items-center space-x-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-rose-600" />
+            <span>{actionNotice}</span>
+          </div>
+        )}
         {saveNotice && (
           <div className="px-3.5 py-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs rounded-xl flex items-center space-x-2 animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -304,6 +339,7 @@ export const KonfigurasiView: React.FC = () => {
           { id: 'lokasi-siswa', label: 'Lokasi Siswa', icon: Navigation },
           { id: 'lokasi-sekolah', label: 'Lokasi Sekolah', icon: MapPin },
           { id: 'system', label: 'Setting System', icon: Sliders },
+          { id: 'reset-data', label: 'Hapus & Reset Data', icon: Trash2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeConfigTab === tab.id;

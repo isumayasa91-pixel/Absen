@@ -3,6 +3,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  getDoc,
+  getDocs,
   onSnapshot,
   writeBatch,
 } from 'firebase/firestore';
@@ -60,6 +62,7 @@ export const saveCollectionItemsBatch = async <T extends { id: string }>(
   items: T[]
 ) => {
   try {
+    if (items.length === 0) return;
     const batch = writeBatch(db);
     items.forEach((item) => {
       const ref = doc(db, colName, item.id);
@@ -82,12 +85,13 @@ export const deleteCollectionItem = (colName: string, itemId: string) => {
   }
 };
 
-// Delete all items in a collection batch
+// Delete all items in a collection batch given array
 export const clearCollectionBatch = async <T extends { id: string }>(
   colName: string,
   items: T[]
 ) => {
   try {
+    if (items.length === 0) return;
     const batch = writeBatch(db);
     items.forEach((item) => {
       const ref = doc(db, colName, item.id);
@@ -99,7 +103,58 @@ export const clearCollectionBatch = async <T extends { id: string }>(
   }
 };
 
-// Listen to collection changes with seed initial data fallback
+// Clear entire collection directly from Firestore
+export const clearEntireCollectionInFirestore = async (colName: string) => {
+  try {
+    const colRef = collection(db, colName);
+    const snapshot = await getDocs(colRef);
+    if (snapshot.empty) return;
+
+    const docs = snapshot.docs;
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = writeBatch(db);
+      const chunk = docs.slice(i, i + 400);
+      chunk.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error(`Error clearing entire collection ${colName}:`, err);
+  }
+};
+
+// Single check for system seed initialization
+let metaChecked = false;
+let isMetaInitialized = false;
+
+const checkMetaInitialized = async (): Promise<boolean> => {
+  if (metaChecked) return isMetaInitialized;
+  try {
+    const metaRef = doc(db, '_meta', 'system');
+    const snap = await getDoc(metaRef);
+    if (snap.exists()) {
+      isMetaInitialized = true;
+    }
+    metaChecked = true;
+    return isMetaInitialized;
+  } catch (e) {
+    return false;
+  }
+};
+
+const markMetaInitialized = async () => {
+  try {
+    const metaRef = doc(db, '_meta', 'system');
+    await setDoc(metaRef, { initialized: true, seededAt: new Date().toISOString() }, { merge: true });
+    isMetaInitialized = true;
+    metaChecked = true;
+  } catch (e) {
+    console.error('Error marking meta system initialized:', e);
+  }
+};
+
+// Listen to collection changes with initial seed fallback ONLY on fresh app setup
 export const listenCollection = <T extends { id: string }>(
   colName: string,
   initialFallback: T[],
@@ -108,11 +163,23 @@ export const listenCollection = <T extends { id: string }>(
   const colRef = collection(db, colName);
   return onSnapshot(
     colRef,
-    (snapshot) => {
-      if (snapshot.empty && initialFallback.length > 0) {
-        saveCollectionItemsBatch(colName, initialFallback);
-        onUpdate(initialFallback);
+    async (snapshot) => {
+      if (snapshot.empty) {
+        const initialized = await checkMetaInitialized();
+        if (!initialized && initialFallback.length > 0) {
+          // First time launching app on fresh empty DB -> seed initial data ONCE
+          await saveCollectionItemsBatch(colName, initialFallback);
+          await markMetaInitialized();
+          onUpdate(initialFallback);
+        } else {
+          // Data was deleted or dataset is empty -> STAY EMPTY!
+          onUpdate([]);
+        }
       } else {
+        // We have documents in Firestore -> mark system initialized so future empty states won't re-seed
+        if (!isMetaInitialized) {
+          markMetaInitialized();
+        }
         const list: T[] = [];
         snapshot.forEach((docSnap) => {
           list.push({ id: docSnap.id, ...docSnap.data() } as T);
@@ -126,7 +193,7 @@ export const listenCollection = <T extends { id: string }>(
   );
 };
 
-// Listen to single document changes with seed initial data fallback
+// Listen to single document changes
 export const listenSingleDoc = <T extends Record<string, any>>(
   colName: string,
   docId: string,
@@ -149,3 +216,4 @@ export const listenSingleDoc = <T extends Record<string, any>>(
     }
   );
 };
+
