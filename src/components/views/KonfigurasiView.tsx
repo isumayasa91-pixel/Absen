@@ -109,10 +109,36 @@ export const KonfigurasiView: React.FC = () => {
   // Form states for systemSettings
   const [formData, setFormData] = useState({ ...settings });
   const [saveNotice, setSaveNotice] = useState(false);
+  const [configGpsLoading, setConfigGpsLoading] = useState(false);
 
   useEffect(() => {
     setFormData({ ...settings });
   }, [settings]);
+
+  const handleDetectConfigGPS = () => {
+    if (!navigator.geolocation) {
+      showActionNotice('⚠️ Browser tidak mendukung deteksi lokasi.');
+      return;
+    }
+    setConfigGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData((prev) => ({
+          ...prev,
+          schoolLat: Number(position.coords.latitude.toFixed(6)),
+          schoolLng: Number(position.coords.longitude.toFixed(6)),
+        }));
+        setConfigGpsLoading(false);
+        showActionNotice('✅ Berhasil mendeteksi lokasi GPS Anda saat ini!');
+      },
+      (error) => {
+        console.error('Config GPS Error:', error);
+        setConfigGpsLoading(false);
+        showActionNotice('❌ Gagal mengakses GPS. Pastikan izin lokasi aktif.');
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   // Kalender Libur List
   const [holidays, setHolidays] = useState([
@@ -1787,6 +1813,27 @@ export const KonfigurasiView: React.FC = () => {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-emerald-700"
               />
             </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+                Dapatkan Koordinat Sekolah Secara Instan
+              </span>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Posisikan diri Anda di depan gerbang atau lobi sekolah, lalu ketuk tombol di samping untuk otomatis mengambil koordinat GPS Anda saat ini.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDetectConfigGPS}
+              disabled={configGpsLoading}
+              className="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 font-black text-xs px-4 py-2.5 rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-3xs shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-amber-600 ${configGpsLoading ? 'animate-spin' : ''}`} />
+              <span>{configGpsLoading ? 'Mengunci Lokasi...' : '📍 Ambil GPS Saya Saat Ini'}</span>
+            </button>
           </div>
 
           <div className="pt-4 border-t border-slate-100 flex justify-end">

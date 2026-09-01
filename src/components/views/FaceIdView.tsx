@@ -41,6 +41,7 @@ export const FaceIdView: React.FC = () => {
     settings,
     saveCollectionItem,
     showNotice,
+    updateSettings,
   } = useApp();
 
   // Geolocation (GPS) States & Configs
@@ -51,6 +52,18 @@ export const FaceIdView: React.FC = () => {
   const schoolLat = settings?.schoolLat || -6.2088;
   const schoolLng = settings?.schoolLng || 106.8456;
   const geofenceRadius = settings?.geofenceRadius || 150; // default 150m
+
+  // Coordinate Editing States
+  const [isEditingCoords, setIsEditingCoords] = useState(false);
+  const [tempSchoolLat, setTempSchoolLat] = useState<string>(schoolLat.toString());
+  const [tempSchoolLng, setTempSchoolLng] = useState<string>(schoolLng.toString());
+  const [tempGeofenceRadius, setTempGeofenceRadius] = useState<number>(geofenceRadius);
+
+  useEffect(() => {
+    setTempSchoolLat(schoolLat.toString());
+    setTempSchoolLng(schoolLng.toString());
+    setTempGeofenceRadius(geofenceRadius);
+  }, [schoolLat, schoolLng, geofenceRadius]);
 
   const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; // Radius of Earth in meters
@@ -93,6 +106,36 @@ export const FaceIdView: React.FC = () => {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  };
+
+  const handleSaveCoords = () => {
+    const latNum = parseFloat(tempSchoolLat);
+    const lngNum = parseFloat(tempSchoolLng);
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      showNotice('❌ Format koordinat Latitude atau Longitude tidak valid!');
+      return;
+    }
+    if (tempGeofenceRadius <= 0) {
+      showNotice('❌ Radius toleransi harus lebih besar dari 0 meter!');
+      return;
+    }
+    updateSettings({
+      schoolLat: latNum,
+      schoolLng: lngNum,
+      geofenceRadius: tempGeofenceRadius,
+    });
+    setIsEditingCoords(false);
+    showNotice('✅ Berhasil memperbarui koordinat & geofence lokasi sekolah!');
+  };
+
+  const useCurrentLocationAsSchool = () => {
+    if (!gpsCoords) {
+      showNotice('⚠️ Silakan klik "Refresh GPS" terlebih dahulu untuk mengunci lokasi Anda saat ini!');
+      return;
+    }
+    setTempSchoolLat(gpsCoords.lat.toString());
+    setTempSchoolLng(gpsCoords.lng.toString());
+    showNotice('📍 Berhasil menaruh koordinat Anda saat ini sebagai koordinat sekolah!');
   };
 
   useEffect(() => {
@@ -972,12 +1015,45 @@ export const FaceIdView: React.FC = () => {
                     onChange={(e) => setSelectedDeviceId(e.target.value)}
                     className="bg-slate-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 w-full focus:outline-none focus:ring-1 focus:ring-purple-400"
                   >
+                    <option value="">-- Pilih Kamera Otomatis / Default --</option>
                     {devices.map((d, i) => (
                       <option key={d.deviceId || i} value={d.deviceId}>
                         {d.label || `Kamera ${i + 1}`}
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Quick Toggle: Kamera Depan / Belakang */}
+                <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDeviceId('');
+                      setFacingMode('user');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer flex items-center space-x-1 ${
+                      facingMode === 'user' && !selectedDeviceId
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span>🤳 Depan</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDeviceId('');
+                      setFacingMode('environment');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all cursor-pointer flex items-center space-x-1 ${
+                      facingMode === 'environment' && !selectedDeviceId
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span>📷 Belakang</span>
+                  </button>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -1052,17 +1128,111 @@ export const FaceIdView: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={fetchGPS}
-                  disabled={gpsLoading}
-                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-extrabold text-xs px-3 py-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs shrink-0"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 text-purple-600 ${gpsLoading ? 'animate-spin' : ''}`} />
-                  <span>Refresh GPS</span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingCoords(!isEditingCoords)}
+                    className="bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-extrabold text-xs px-3 py-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-purple-600" />
+                    <span>{isEditingCoords ? 'Tutup Pengaturan' : 'Atur Koordinat'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={fetchGPS}
+                    disabled={gpsLoading}
+                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-extrabold text-xs px-3 py-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs shrink-0"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-purple-600 ${gpsLoading ? 'animate-spin' : ''}`} />
+                    <span>Refresh GPS</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            {isEditingCoords && (
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-purple-600" />
+                    Atur Koordinat Sekolah & Geofence
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                    Sistem Geofencing Mandiri
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-slate-600 uppercase">Latitude Sekolah</label>
+                    <input
+                      type="text"
+                      value={tempSchoolLat}
+                      onChange={(e) => setTempSchoolLat(e.target.value)}
+                      className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-mono font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      placeholder="-6.2088"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-slate-600 uppercase">Longitude Sekolah</label>
+                    <input
+                      type="text"
+                      value={tempSchoolLng}
+                      onChange={(e) => setTempSchoolLng(e.target.value)}
+                      className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-mono font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      placeholder="106.8456"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-slate-600 uppercase">Radius Toleransi (Meter)</label>
+                    <input
+                      type="number"
+                      value={tempGeofenceRadius}
+                      onChange={(e) => setTempGeofenceRadius(Number(e.target.value))}
+                      className="w-full bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      placeholder="150"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={useCurrentLocationAsSchool}
+                    disabled={!gpsCoords}
+                    className={`text-xs font-black px-3 py-2 rounded-xl border flex items-center justify-center space-x-1.5 transition-all shadow-3xs cursor-pointer ${
+                      gpsCoords
+                        ? 'bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800'
+                        : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                    <span>📍 Gunakan Lokasi GPS Saya Saat Ini</span>
+                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingCoords(false)}
+                      className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveCoords}
+                      className="bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-black text-xs px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow-md transition-all cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Simpan Koordinat</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Pilihan Menu Mode Scan (Presensi) */}
             {activeTabMode === 'scanner' && (
