@@ -51,7 +51,8 @@ export const Sidebar: React.FC = () => {
     'rekap-perpus',
     'tata-tertib',
     'pelanggaran',
-    'pengajuan-kartu'
+    'pengajuan-kartu',
+    'lokasi-siswa'
   ];
 
   const teacherKeys = [

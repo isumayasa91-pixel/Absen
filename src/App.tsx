@@ -26,6 +26,7 @@ import { KonfigurasiView } from './components/views/KonfigurasiView';
 import { FaceIdView } from './components/views/FaceIdView';
 import { LesKomputerView } from './components/views/LesKomputerView';
 import { DownloadLoginView } from './components/views/DownloadLoginView';
+import { LokasiSiswaView } from './components/views/LokasiSiswaView';
 
 const MainContent: React.FC = () => {
   const { activeTab, currentUser } = useApp();
@@ -82,12 +83,13 @@ const MainContent: React.FC = () => {
       case 'tata-tertib':
       case 'rekap-pelanggaran':
         return <PelanggaranView />;
+      case 'lokasi-siswa':
+        return <LokasiSiswaView />;
       case 'konfigurasi':
       case 'aturan-jam':
       case 'kalender-libur':
       case 'pengajuan-kartu':
       case 'faceid-config':
-      case 'lokasi-siswa':
       case 'lokasi-sekolah':
       case 'setting':
         return <KonfigurasiView />;
