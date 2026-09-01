@@ -30,6 +30,7 @@ import {
   Smile,
   LogIn,
   LogOut,
+  MapPin,
 } from 'lucide-react';
 
 export const FaceIdView: React.FC = () => {
@@ -41,6 +42,62 @@ export const FaceIdView: React.FC = () => {
     saveCollectionItem,
     showNotice,
   } = useApp();
+
+  // Geolocation (GPS) States & Configs
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState<boolean>(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  const schoolLat = settings?.schoolLat || -6.2088;
+  const schoolLng = settings?.schoolLng || 106.8456;
+  const geofenceRadius = settings?.geofenceRadius || 150; // default 150m
+
+  const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Radius of Earth in meters
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return Math.round(R * c);
+  };
+
+  const fetchGPS = () => {
+    if (!navigator.geolocation) {
+      setGpsError('Browser tidak mendukung deteksi lokasi.');
+      return;
+    }
+    setGpsLoading(true);
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGpsCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setGpsLoading(false);
+      },
+      (error) => {
+        console.error('GPS Geolocation Error:', error);
+        let errorMsg = 'Gagal mengakses GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = 'Akses GPS ditolak. Izinkan lokasi di browser.';
+        }
+        setGpsError(errorMsg);
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  useEffect(() => {
+    fetchGPS();
+  }, []);
 
   // Video & Stream State
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -319,6 +376,74 @@ export const FaceIdView: React.FC = () => {
   // Process Face Attendance
   const processFaceAttendance = (studentToLog: Student, customConfidence?: number) => {
     if (cooldown) return;
+
+    // GPS/Geofencing Check
+    const currentDistance = gpsCoords
+      ? getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng)
+      : -1;
+    const isInside = currentDistance !== -1 && currentDistance <= geofenceRadius;
+
+    if (!gpsCoords) {
+      setIsScanning(true);
+      setCooldown(true);
+
+      const snapshot = captureSnapshot();
+      setConfidenceScore(85);
+      const nowTime = new Date().toLocaleTimeString('id-ID');
+
+      setLastScanResult({
+        student: studentToLog,
+        message: 'Gagal! GPS belum aktif/tidak diizinkan. Silakan aktifkan GPS dan izinkan akses lokasi.',
+        success: false,
+        type: 'error',
+        time: nowTime,
+        confidence: 85,
+        capturedSnapshot: snapshot,
+      });
+
+      playSoundEffect('error');
+      speakVoice('Presensi ditolak. Lokasi GPS tidak terdeteksi.');
+
+      setTimeout(() => {
+        setIsScanning(false);
+      }, 1200);
+
+      setTimeout(() => {
+        setCooldown(false);
+      }, 3500);
+      return;
+    }
+
+    if (!isInside) {
+      setIsScanning(true);
+      setCooldown(true);
+
+      const snapshot = captureSnapshot();
+      setConfidenceScore(85);
+      const nowTime = new Date().toLocaleTimeString('id-ID');
+
+      setLastScanResult({
+        student: studentToLog,
+        message: `Gagal! Anda berada di luar area sekolah (${currentDistance}m). Presensi wajah ditolak.`,
+        success: false,
+        type: 'error',
+        time: nowTime,
+        confidence: 85,
+        capturedSnapshot: snapshot,
+      });
+
+      playSoundEffect('error');
+      speakVoice('Presensi ditolak. Anda berada di luar area sekolah.');
+
+      setTimeout(() => {
+        setIsScanning(false);
+      }, 1200);
+
+      setTimeout(() => {
+        setCooldown(false);
+      }, 3500);
+      return;
+    }
 
     setIsScanning(true);
     setCooldown(true);
@@ -832,6 +957,73 @@ export const FaceIdView: React.FC = () => {
                     AKTIF
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* GPS Geofencing Status Card */}
+            <div className={`p-4 rounded-2xl border transition-all shadow-xs ${
+              gpsCoords 
+                ? getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng) <= geofenceRadius
+                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                  : 'bg-rose-50/90 border-rose-200 text-rose-950'
+                : 'bg-amber-50/90 border-amber-200 text-amber-950'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start space-x-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    gpsCoords 
+                      ? getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng) <= geofenceRadius
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-rose-100 text-rose-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    <MapPin className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-xs tracking-tight">VERIFIKASI RADIUS GEOLOKASI (GPS)</h4>
+                    {gpsLoading ? (
+                      <div className="flex items-center space-x-1.5 text-slate-500 font-medium text-[11px] mt-0.5">
+                        <RefreshCw className="w-3 h-3 animate-spin text-purple-600" />
+                        <span>Mengunci posisi satelit GPS...</span>
+                      </div>
+                    ) : gpsCoords ? (
+                      <div className="space-y-0.5 mt-0.5 text-[11px]">
+                        <p className="font-medium text-slate-600">
+                          Jarak Anda ke sekolah: <span className="font-extrabold text-slate-900">{getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng)} meter</span>
+                          {` (Maksimal radius toleransi: ${geofenceRadius} meter)`}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border uppercase ${
+                            getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng) <= geofenceRadius
+                              ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                              : 'bg-rose-100 border-rose-300 text-rose-800'
+                          }`}>
+                            {getDistanceInMeters(gpsCoords.lat, gpsCoords.lng, schoolLat, schoolLng) <= geofenceRadius
+                              ? '🟢 Di Dalam Radius Sekolah'
+                              : '🔴 Di Luar Radius Sekolah'}
+                          </span>
+                          <span className="text-slate-400 font-mono text-[9px]">
+                            ({gpsCoords.lat.toFixed(5)}, {gpsCoords.lng.toFixed(5)})
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-rose-600 font-bold mt-0.5">
+                        {gpsError || 'Gagal mendeteksi lokasi GPS Anda. Mohon izinkan lokasi di browser.'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={fetchGPS}
+                  disabled={gpsLoading}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-extrabold text-xs px-3 py-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs shrink-0"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-purple-600 ${gpsLoading ? 'animate-spin' : ''}`} />
+                  <span>Refresh GPS</span>
+                </button>
               </div>
             </div>
 
