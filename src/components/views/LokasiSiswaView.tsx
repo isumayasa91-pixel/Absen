@@ -13,6 +13,7 @@ import {
   Sliders,
   ShieldCheck,
   Activity,
+  Trash2,
   Send,
   Info
 } from 'lucide-react';
@@ -509,7 +510,22 @@ export const LokasiSiswaView: React.FC = () => {
                 </div>
 
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                  <span className="text-xs font-black text-slate-700 block">Riwayat Verifikasi Saya:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-700 block">Riwayat Verifikasi Saya:</span>
+                    {logs.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Kosongkan riwayat verifikasi lokasi?')) {
+                            setLogs([]);
+                          }
+                        }}
+                        className="text-[10px] font-bold text-rose-600 hover:underline flex items-center space-x-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Kosongkan</span>
+                      </button>
+                    )}
+                  </div>
                   {logs.length === 0 ? (
                     <span className="text-[11px] text-slate-400 block italic">Belum ada verifikasi terkirim hari ini.</span>
                   ) : (

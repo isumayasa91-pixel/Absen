@@ -9,6 +9,7 @@ export const MonitorLiveView: React.FC = () => {
     students,
     attendanceRecords,
     deleteAttendanceRecord,
+    clearAllAttendance,
     tapRFIDOrScan,
     manualInputAttendance,
     setActiveTab,
@@ -172,12 +173,28 @@ export const MonitorLiveView: React.FC = () => {
 
         {/* Live Stream Table / Feed */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
             <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
               <Clock className="w-4 h-4 text-indigo-600" />
               <span>Log Presensi Hari Ini ({todayRecords.length} Siswa Terdaftar)</span>
             </h3>
-            <span className="text-xs font-bold text-slate-500">{todayStr}</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-slate-500">{todayStr}</span>
+              {attendanceRecords.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm(`⚠️ Apakah Anda yakin ingin mengosongkan SELURUH (${attendanceRecords.length}) riwayat log presensi?`)) {
+                      clearAllAttendance();
+                    }
+                  }}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center space-x-1 cursor-pointer transition-colors"
+                  title="Hapus / Kosongkan Seluruh Log Presensi"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Log</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-200">

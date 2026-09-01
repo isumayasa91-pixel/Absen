@@ -189,6 +189,9 @@ export const listenCollection = <T extends { id: string }>(
     },
     (err) => {
       console.error(`Error listening to collection ${colName}:`, err);
+      if (err.code === 'resource-exhausted' || err.message?.includes('Quota')) {
+        window.dispatchEvent(new CustomEvent('firestore-quota-exceeded', { detail: err }));
+      }
     }
   );
 };
@@ -213,6 +216,9 @@ export const listenSingleDoc = <T extends Record<string, any>>(
     },
     (err) => {
       console.error(`Error listening to doc ${colName}/${docId}:`, err);
+      if (err.code === 'resource-exhausted' || err.message?.includes('Quota')) {
+        window.dispatchEvent(new CustomEvent('firestore-quota-exceeded', { detail: err }));
+      }
     }
   );
 };

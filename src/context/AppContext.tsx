@@ -133,6 +133,7 @@ interface AppContextType {
   libraryTAPs: LibraryTAP[];
   addLibraryTAP: (studentId: string, type: 'Masuk Perpus' | 'Pinjam Buku' | 'Pengembalian Buku', barcodeBook?: string, bookTitle?: string) => void;
   deleteLibraryTAP: (id: string) => void;
+  clearAllLibraryTAPs: () => void;
   libraryBooks: LibraryBook[];
   deleteLibraryBook: (id: string) => void;
 
@@ -173,6 +174,7 @@ interface AppContextType {
   showNotice: (msg: string) => void;
   resetEntireSystemData: () => Promise<void>;
   restoreDemoData: () => Promise<void>;
+  quotaExceeded: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -219,6 +221,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [computerAttendances, setComputerAttendances] = useState<ComputerCourseAttendance[]>(initialComputerAttendances);
   const [computerMembers, setComputerMembers] = useState<ComputerCourseMember[]>(initialComputerMembers);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+
+  useEffect(() => {
+    const handleQuotaExceeded = () => {
+      setQuotaExceeded(true);
+    };
+    window.addEventListener('firestore-quota-exceeded', handleQuotaExceeded);
+    return () => {
+      window.removeEventListener('firestore-quota-exceeded', handleQuotaExceeded);
+    };
+  }, []);
 
   const showNotice = (msg: string) => {
     setToastMessage(msg);
@@ -756,6 +769,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteLibraryTAP = (id: string) => deleteCollectionItem('libraryTAPs', id);
+  const clearAllLibraryTAPs = async () => {
+    await clearEntireCollectionInFirestore('libraryTAPs');
+    setLibraryTAPs([]);
+  };
   const deleteLibraryBook = (id: string) => deleteCollectionItem('libraryBooks', id);
   const deleteViolationRecord = (id: string) => deleteCollectionItem('violationRecords', id);
   const clearAllViolationRecords = async () => {
@@ -1038,6 +1055,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         libraryTAPs,
         addLibraryTAP,
         deleteLibraryTAP,
+        clearAllLibraryTAPs,
         libraryBooks,
         deleteLibraryBook,
         disciplineRules,
@@ -1071,6 +1089,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showNotice,
         resetEntireSystemData,
         restoreDemoData,
+        quotaExceeded,
       }}
     >
       {children}

@@ -29,7 +29,7 @@ import { DownloadLoginView } from './components/views/DownloadLoginView';
 import { LokasiSiswaView } from './components/views/LokasiSiswaView';
 
 const MainContent: React.FC = () => {
-  const { activeTab, currentUser } = useApp();
+  const { activeTab, currentUser, quotaExceeded } = useApp();
 
   const renderView = () => {
     switch (activeTab) {
@@ -101,8 +101,29 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 text-slate-800 font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 text-slate-800 font-sans flex flex-col antialiased animate-fade-in">
       <Header />
+      
+      {quotaExceeded && (
+        <div className="bg-amber-500 text-white px-4 py-3 text-center text-xs md:text-sm font-bold flex flex-col sm:flex-row items-center justify-center gap-2 border-b border-amber-600/50 shadow-md">
+          <span className="flex items-center gap-1.5 font-black uppercase bg-amber-600 px-2 py-0.5 rounded-md text-[10px] tracking-wide">
+            ⚠️ Batas Kuota Tercapai
+          </span>
+          <span>Aplikasi mencapai batas kuota harian gratis pembacaan database Firestore (Spark Plan).</span>
+          <div className="flex gap-2 items-center mt-1 sm:mt-0">
+            <a
+              href="https://console.firebase.google.com/project/gen-lang-client-0131415670/firestore/databases/ai-studio-aplikasipresensi-b5e66c8a-ad9a-4072-aff3-572cdced10e8/data?openUpgradeDialog=true"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-amber-100 font-black cursor-pointer ml-1"
+            >
+              Upgrade ke Paket Blaze (Google Console) ↗
+            </a>
+            <span className="text-white/60">atau tunggu reset kuota harian otomatis besok hari.</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex overflow-hidden max-w-[1600px] w-full mx-auto">
         <Sidebar />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6 scrollbar-thin">

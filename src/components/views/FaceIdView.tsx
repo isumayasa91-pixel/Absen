@@ -37,6 +37,8 @@ export const FaceIdView: React.FC = () => {
   const {
     students,
     attendanceRecords,
+    deleteAttendanceRecord,
+    clearAllAttendance,
     tapRFIDOrScan,
     settings,
     saveCollectionItem,
@@ -2032,13 +2034,28 @@ export const FaceIdView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl border border-emerald-200">
               Hadir: {todayFaceRecords.filter((r) => r.statusFinal === 'Hadir').length}
             </span>
             <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-xl border border-amber-200">
               Terlambat: {todayFaceRecords.filter((r) => r.statusFinal === 'Terlambat').length}
             </span>
+            {todayFaceRecords.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm(`⚠️ Apakah Anda yakin ingin mengosongkan SELURUH (${todayFaceRecords.length}) log presensi Face ID?`)) {
+                    clearAllAttendance();
+                    showNotice('🗑️ Log presensi Face ID berhasil dikosongkan.');
+                  }
+                }}
+                className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1 rounded-xl flex items-center space-x-1 cursor-pointer transition-colors"
+                title="Hapus / Kosongkan Log Face ID"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Kosongkan Log</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -2062,6 +2079,7 @@ export const FaceIdView: React.FC = () => {
                   <th className="p-3">Jam Pulang</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Metode</th>
+                  <th className="p-3 text-center">Hapus</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -2105,6 +2123,20 @@ export const FaceIdView: React.FC = () => {
                           <ScanFace className="w-3 h-3 text-purple-700" />
                           <span>FaceID</span>
                         </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Hapus log presensi Face ID "${r.studentName}"?`)) {
+                              deleteAttendanceRecord(r.id);
+                              showNotice('🗑️ Log Face ID berhasil dihapus.');
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Hapus Log Face ID Ini"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   );
