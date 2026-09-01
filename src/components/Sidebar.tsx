@@ -32,12 +32,54 @@ import {
   ChevronRight,
   Laptop,
   Monitor,
+  Download,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, announcements, permissions, logout } = useApp();
+  const { activeTab, setActiveTab, announcements, permissions, logout, currentUser } = useApp();
 
   const pendingPermissionsCount = permissions.filter((p) => p.statusApproval === 'Menunggu Persetujuan').length;
+
+  const studentKeys = [
+    'dashboard',
+    'pengumuman',
+    'download-login',
+    'rekap-semester',
+    'sesi-les',
+    'rekap-les',
+    'perpus-harian',
+    'rekap-perpus',
+    'tata-tertib',
+    'pelanggaran',
+    'pengajuan-kartu'
+  ];
+
+  const teacherKeys = [
+    'dashboard',
+    'pengumuman',
+    'download-login',
+    'data-kelas',
+    'data-siswa',
+    'jurnal-guru',
+    'terlambat',
+    'alpa',
+    'rekap-laporan',
+    'izin-sakit',
+    'izin-keluar',
+    'rekap-semester',
+    'les-komputer',
+    'sesi-les',
+    'rekap-les',
+    'perpus-harian',
+    'rekap-perpus',
+    'tata-tertib',
+    'pelanggaran',
+    'rekap-pelanggaran',
+    'kalender-libur',
+    'pengajuan-kartu',
+    'lokasi-siswa',
+    'lokasi-sekolah'
+  ];
 
   const menuGroups = [
     {
@@ -50,6 +92,12 @@ export const Sidebar: React.FC = () => {
           icon: Megaphone,
           color: 'text-amber-600 bg-amber-50',
           badge: announcements.length > 0 ? announcements.length : undefined,
+        },
+        {
+          key: 'download-login',
+          label: 'Unduh & Login Sesi',
+          icon: Download,
+          color: 'text-violet-600 bg-violet-50 font-bold border border-violet-100',
         },
       ],
     },
@@ -128,10 +176,23 @@ export const Sidebar: React.FC = () => {
     },
   ];
 
+  const filteredGroups = menuGroups
+    .map((group) => {
+      const items = group.items.filter((item) => {
+        if (!currentUser) return true;
+        if (currentUser.role === 'admin') return true;
+        if (currentUser.role === 'guru') return teacherKeys.includes(item.key);
+        if (currentUser.role === 'siswa') return studentKeys.includes(item.key);
+        return true;
+      });
+      return { ...group, items };
+    })
+    .filter((group) => group.items.length > 0);
+
   return (
     <aside className="w-64 bg-white/95 backdrop-blur-md border-r border-indigo-100/80 h-[calc(100vh-65px)] overflow-y-auto shrink-0 py-4 px-3 sticky top-[65px] scrollbar-thin">
       <div className="space-y-6">
-        {menuGroups.map((group, idx) => (
+        {filteredGroups.map((group, idx) => (
           <div key={idx} className="space-y-1">
             <h3 className="px-3 text-[11px] font-black uppercase tracking-wider text-violet-600/90 mb-2">
               {group.title}
@@ -167,7 +228,7 @@ export const Sidebar: React.FC = () => {
                           className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                             isActive
                               ? 'bg-white text-indigo-700'
-                              : item.badgeColor || 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                              : (item as any).badgeColor || 'bg-indigo-100 text-indigo-800 border border-indigo-200'
                           }`}
                         >
                           {item.badge}

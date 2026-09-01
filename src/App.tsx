@@ -25,6 +25,7 @@ import { PelanggaranView } from './components/views/PelanggaranView';
 import { KonfigurasiView } from './components/views/KonfigurasiView';
 import { FaceIdView } from './components/views/FaceIdView';
 import { LesKomputerView } from './components/views/LesKomputerView';
+import { DownloadLoginView } from './components/views/DownloadLoginView';
 
 const MainContent: React.FC = () => {
   const { activeTab, currentUser } = useApp();
@@ -90,6 +91,8 @@ const MainContent: React.FC = () => {
       case 'lokasi-sekolah':
       case 'setting':
         return <KonfigurasiView />;
+      case 'download-login':
+        return <DownloadLoginView />;
       default:
         return <DashboardView />;
     }

@@ -3,25 +3,52 @@ import { useApp } from '../context/AppContext';
 import { Lock, User, School, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 export const LoginModal: React.FC = () => {
-  const { login, users, settings } = useApp();
+  const { login, users, settings, students } = useApp();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const found = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase());
+    const cleanUsername = username.trim().toLowerCase();
+    
+    // 1. Search in user accounts list
+    const found = users.find((u) => u.username.toLowerCase() === cleanUsername);
     if (found) {
       login(found);
       setError('');
-    } else {
-      // Fallback create admin session if username is admin
-      if (username.trim().toLowerCase() === 'admin') {
-        login(users[0]);
-      } else {
-        setError('Username tidak ditemukan! Coba gunakan preset akun di bawah.');
-      }
+      return;
     }
+
+    // 2. Search dynamically in students list by NISN or name format (lowercase, no spaces)
+    const studentFound = students.find((s) => {
+      const cleanName = s.fullName.toLowerCase().replace(/\s+/g, '');
+      return (s.nisn && s.nisn === username.trim()) || (cleanName === cleanUsername);
+    });
+
+    if (studentFound) {
+      const studentUser = {
+        id: `u-std-${studentFound.id}`,
+        username: studentFound.nisn || studentFound.fullName.toLowerCase().replace(/\s+/g, ''),
+        name: studentFound.fullName,
+        role: 'siswa' as const,
+        accessLevel: 'Siswa / Murid',
+        status: 'Aktif' as const,
+        email: `${studentFound.nisn || 'siswa'}@siswa.sch.id`,
+      };
+      login(studentUser);
+      setError('');
+      return;
+    }
+
+    // 3. Fallback to default admin
+    if (cleanUsername === 'admin') {
+      login(users[0]);
+      setError('');
+      return;
+    }
+
+    setError('Username / NISN tidak ditemukan! Masukkan NISN Anda yang terdaftar.');
   };
 
   const selectPreset = (u: typeof users[0]) => {

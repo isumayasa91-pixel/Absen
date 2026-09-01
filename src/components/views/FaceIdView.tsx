@@ -189,10 +189,25 @@ export const FaceIdView: React.FC = () => {
       } catch (err: any) {
         if (!isMounted) return;
         console.error('Kamera FaceID gagal dibuka:', err);
-        setCameraError(
-          err?.message ||
-            'Kamera tidak dapat diakses. Pastikan izin kamera aktif dan perangkat memiliki webcam yang siap digunakan.'
-        );
+        const errStr = ((err?.name || '') + ' ' + (err?.message || '') + ' ' + (err?.toString() || '')).toLowerCase();
+        const isPermissionError = errStr.includes('notallowed') || 
+                                  errStr.includes('permission') || 
+                                  errStr.includes('denied') || 
+                                  errStr.includes('dismissed');
+
+        if (isPermissionError) {
+          setCameraError(
+            'Izin kamera ditolak atau diabaikan (Permission dismissed). Karena aplikasi ini berjalan di dalam bingkai (iframe) AI Studio, silakan lakukan hal berikut untuk mengatasinya:\n\n' +
+            '1. Klik tombol "Buka di Tab Baru" (Open in New Tab) di bagian kanan atas layar AI Studio agar aplikasi berjalan di halaman mandiri.\n' +
+            '2. Klik ikon gembok/kamera di sebelah kiri bilah alamat browser (URL bar), lalu ubah izin Kamera menjadi "Izinkan" (Allow).\n' +
+            '3. Muat ulang halaman dan coba aktifkan kamera kembali.'
+          );
+        } else {
+          setCameraError(
+            err?.message ||
+              'Kamera tidak dapat diakses. Pastikan izin kamera aktif dan perangkat memiliki webcam yang siap digunakan.'
+          );
+        }
       }
     };
 
@@ -725,7 +740,7 @@ export const FaceIdView: React.FC = () => {
                   <div className="absolute inset-0 bg-slate-950/90 p-6 flex flex-col items-center justify-center text-center space-y-3 z-30">
                     <AlertCircle className="w-12 h-12 text-rose-500 animate-bounce" />
                     <h3 className="font-black text-white text-base">Akses Kamera Terkendala</h3>
-                    <p className="text-xs text-slate-300 max-w-sm">{cameraError}</p>
+                    <p className="text-xs text-slate-300 max-w-md whitespace-pre-line text-left">{cameraError}</p>
                     <button
                       type="button"
                       onClick={() => {

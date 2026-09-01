@@ -248,9 +248,25 @@ export const LesKomputerView: React.FC = () => {
         }
       } catch (err: any) {
         if (!isMounted) return;
-        setCameraError(
-          err?.message || 'Kamera tidak dapat diakses. Pastikan izin kamera aktif.'
-        );
+        console.error('Kamera Les Komputer gagal dibuka:', err);
+        const errStr = ((err?.name || '') + ' ' + (err?.message || '') + ' ' + (err?.toString() || '')).toLowerCase();
+        const isPermissionError = errStr.includes('notallowed') || 
+                                  errStr.includes('permission') || 
+                                  errStr.includes('denied') || 
+                                  errStr.includes('dismissed');
+
+        if (isPermissionError) {
+          setCameraError(
+            'Izin kamera ditolak atau diabaikan (Permission dismissed). Karena aplikasi ini berjalan di dalam bingkai (iframe) AI Studio, silakan lakukan hal berikut untuk mengatasinya:\n\n' +
+            '1. Klik tombol "Buka di Tab Baru" (Open in New Tab) di bagian kanan atas layar AI Studio agar aplikasi berjalan di halaman mandiri.\n' +
+            '2. Klik ikon gembok/kamera di sebelah kiri bilah alamat browser (URL bar), lalu ubah izin Kamera menjadi "Izinkan" (Allow).\n' +
+            '3. Muat ulang halaman dan coba aktifkan kamera kembali.'
+          );
+        } else {
+          setCameraError(
+            err?.message || 'Kamera tidak dapat diakses. Pastikan izin kamera aktif.'
+          );
+        }
       }
     };
 
@@ -1388,7 +1404,7 @@ export const LesKomputerView: React.FC = () => {
                         <AlertCircle className="w-6 h-6" />
                       </div>
                       <h4 className="text-sm font-bold text-white">Kamera Belum Terhubung</h4>
-                      <p className="text-xs text-slate-400 leading-relaxed">{cameraError}</p>
+                      <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-line text-left max-w-sm">{cameraError}</p>
                       <button
                         onClick={() => {
                           setCameraError(null);
