@@ -35,6 +35,7 @@ export const DataSiswaView: React.FC = () => {
     updateStudentPhoto,
     classes,
     settings,
+    clearAllStudents,
   } = useApp();
 
   const [showManualModal, setShowManualModal] = useState(false);
@@ -224,6 +225,25 @@ export const DataSiswaView: React.FC = () => {
     showNotice('Akun login massal untuk seluruh siswa berhasil dibuat/diperbarui!');
   };
 
+  const handleDeleteAll = () => {
+    if (students.length === 0) {
+      showNotice('⚠️ Tidak ada data siswa untuk dihapus.');
+      return;
+    }
+    const firstConfirm = window.confirm(
+      `⚠️ PERINGATAN: Apakah Anda benar-benar yakin ingin menghapus SELURUH (${students.length}) data siswa secara permanen?\n\nTindakan ini akan menghapus semua foto profil, akun login, dan RFID tag siswa.`
+    );
+    if (firstConfirm) {
+      const secondConfirm = window.confirm(
+        'Tindakan ini TIDAK dapat dibatalkan. Ketuk "OK" untuk menghapus seluruh data siswa sekarang juga.'
+      );
+      if (secondConfirm) {
+        clearAllStudents();
+        showNotice('🗑️ Berhasil menghapus seluruh data siswa dari database!');
+      }
+    }
+  };
+
   const showNotice = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(''), 4000);
@@ -279,6 +299,15 @@ export const DataSiswaView: React.FC = () => {
           >
             <UserPlus className="w-4 h-4" />
             <span>Tambah Manual</span>
+          </button>
+
+          {/* Hapus Semua Siswa */}
+          <button
+            onClick={handleDeleteAll}
+            className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 active:scale-95 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-2xs flex items-center space-x-1.5 transition-all cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4 text-rose-600" />
+            <span>Hapus Semua</span>
           </button>
         </div>
       </div>
