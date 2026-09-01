@@ -104,16 +104,16 @@ export const FaceIdView: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
   // Scanner State & Settings
   const [threshold, setThreshold] = useState<number>(settings.faceIdThreshold || 85);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [speechEnabled, setSpeechEnabled] = useState(true);
-  const [autoScanEnabled, setAutoScanEnabled] = useState(true);
+  const [autoScanEnabled, setAutoScanEnabled] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
   const [confidenceScore, setConfidenceScore] = useState<number>(0);
@@ -375,6 +375,12 @@ export const FaceIdView: React.FC = () => {
 
   // Process Face Attendance
   const processFaceAttendance = (studentToLog: Student, customConfidence?: number) => {
+    if (!isCameraActive) {
+      setIsCameraActive(true);
+      showNotice('📷 Kamera diaktifkan. Silakan posisikan wajah Anda dan klik tombol "SCAN WAJAH" sekali lagi.');
+      return;
+    }
+
     if (cooldown) return;
 
     // GPS/Geofencing Check
@@ -860,6 +866,29 @@ export const FaceIdView: React.FC = () => {
                 {/* Canvas Overlay HUD */}
                 <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
+                {/* Camera Inactive Overlay */}
+                {!isCameraActive && (
+                  <div className="absolute inset-0 bg-slate-950/95 p-6 flex flex-col items-center justify-center text-center space-y-4 z-35">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800/80 flex items-center justify-center shadow-lg">
+                      <ScanFace className="w-8 h-8 text-purple-500 animate-pulse" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="font-extrabold text-white text-base">Kamera Scan Belum Aktif</h3>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                        Modul pemindaian wajah dinonaktifkan secara bawaan untuk menghemat baterai & kuota. Silakan klik tombol di bawah untuk mengaktifkan kamera.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCameraActive(true)}
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer border border-purple-500/30"
+                    >
+                      <Camera className="w-4 h-4 text-amber-300" />
+                      <span>AKTIFKAN KAMERA SCANNER</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Camera Error Message */}
                 {cameraError && (
                   <div className="absolute inset-0 bg-slate-950/90 p-6 flex flex-col items-center justify-center text-center space-y-3 z-30">
@@ -952,10 +981,18 @@ export const FaceIdView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <span className="text-[11px] text-slate-400">Pencocokan Otomatis:</span>
-                  <span className="bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded text-[10px] font-extrabold">
-                    AKTIF
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAutoScanEnabled(!autoScanEnabled)}
+                    className={`px-2.5 py-1.5 rounded-xl text-[10px] font-extrabold border transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      autoScanEnabled
+                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60'
+                        : 'bg-slate-900 text-slate-400 border-slate-700'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${autoScanEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                    <span>Pemindaian: {autoScanEnabled ? 'OTOMATIS' : 'MANUAL (KLIK TOMBOL)'}</span>
+                  </button>
                 </div>
               </div>
             </div>
