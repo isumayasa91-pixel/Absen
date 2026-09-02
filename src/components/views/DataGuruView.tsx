@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { TeacherPosition } from '../../types';
+import { TeacherPosition, Teacher } from '../../types';
 import { exportToExcel } from '../../utils/excelExport';
 import * as XLSX from 'xlsx';
 import {
@@ -18,12 +18,15 @@ import {
   Upload,
   AlertCircle,
   FileText,
+  Pencil,
+  X,
 } from 'lucide-react';
 
 export const DataGuruView: React.FC = () => {
   const {
     teachers,
     addTeacher,
+    updateTeacher,
     importTeachers,
     generateMassTeacherAccounts,
     deleteTeacher,
@@ -31,8 +34,14 @@ export const DataGuruView: React.FC = () => {
 
   const [showManualModal, setShowManualModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState('');
+
+  // Import Excel state
+  const [importFileName, setImportFileName] = useState('');
+  const [parsedImportData, setParsedImportData] = useState<Array<{ fullNameWithTitle: string; nip: string; position: TeacherPosition; phone: string }>>([]);
+  const [importError, setImportError] = useState('');
 
   // Form state
   const [fullNameWithTitle, setFullNameWithTitle] = useState('');
@@ -40,12 +49,11 @@ export const DataGuruView: React.FC = () => {
   const [position, setPosition] = useState<TeacherPosition>('Guru Mapel');
   const [phone, setPhone] = useState('');
 
-  // Excel Import States
-  const [importFileName, setImportFileName] = useState<string>('');
-  const [parsedImportData, setParsedImportData] = useState<
-    Array<{ fullNameWithTitle: string; nip: string; position: TeacherPosition; phone?: string }>
-  >([]);
-  const [importError, setImportError] = useState<string>('');
+  // Edit Form state
+  const [editFullName, setEditFullName] = useState('');
+  const [editNip, setEditNip] = useState('');
+  const [editPosition, setEditPosition] = useState<TeacherPosition>('Guru Mapel');
+  const [editPhone, setEditPhone] = useState('');
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +64,19 @@ export const DataGuruView: React.FC = () => {
     setPhone('');
     setShowManualModal(false);
     showNotice(`Guru ${fullNameWithTitle} berhasil ditambahkan!`);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeacher || !editFullName.trim() || !editNip.trim()) return;
+    updateTeacher(editingTeacher.id, {
+      fullNameWithTitle: editFullName.trim(),
+      nip: editNip.trim(),
+      position: editPosition,
+      phone: editPhone.trim(),
+    });
+    setEditingTeacher(null);
+    showNotice(`Data guru ${editFullName} berhasil diperbarui!`);
   };
 
   const downloadTemplate = () => {
@@ -298,7 +319,20 @@ export const DataGuruView: React.FC = () => {
                       <span>{t.phone || '08123456789'}</span>
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center space-x-1">
+                    <button
+                      onClick={() => {
+                        setEditingTeacher(t);
+                        setEditFullName(t.fullNameWithTitle);
+                        setEditNip(t.nip);
+                        setEditPosition(t.position);
+                        setEditPhone(t.phone || '');
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                      title="Edit Data Guru"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => {
                         if (window.confirm(`Hapus data guru "${t.fullNameWithTitle}"?`)) {
@@ -550,6 +584,109 @@ export const DataGuruView: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Guru */}
+      {editingTeacher && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border border-slate-100 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">Edit Data Guru / Tendik</h3>
+                  <p className="text-xs text-slate-500 font-medium">Ubah informasi rincian guru</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingTeacher(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap & Gelar *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  placeholder="Contoh: Drs. H. Ahmad Dahlan, M.Pd"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    NIP / NUPTK *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editNip}
+                    onChange={(e) => setEditNip(e.target.value)}
+                    placeholder="Masukkan NIP"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Jabatan *
+                  </label>
+                  <select
+                    value={editPosition}
+                    onChange={(e) => setEditPosition(e.target.value as TeacherPosition)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Guru Mapel">Guru Mapel</option>
+                    <option value="Wali Kelas">Wali Kelas</option>
+                    <option value="Guru BK">Guru BK</option>
+                    <option value="Kepala Sekolah">Kepala Sekolah</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  No Telepon / WhatsApp
+                </label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="Contoh: 081234567890"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeacher(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

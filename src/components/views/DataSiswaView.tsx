@@ -23,12 +23,14 @@ import {
   X,
   School,
   User,
+  Pencil,
 } from 'lucide-react';
 
 export const DataSiswaView: React.FC = () => {
   const {
     students,
     addStudent,
+    updateStudent,
     importStudents,
     generateMassStudentAccounts,
     deleteStudent,
@@ -41,9 +43,20 @@ export const DataSiswaView: React.FC = () => {
   const [showManualModal, setShowManualModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedStudentForQr, setSelectedStudentForQr] = useState<Student | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('Semua Kelas');
   const [notification, setNotification] = useState('');
+
+  // Edit Student Form state
+  const [editFullName, setEditFullName] = useState('');
+  const [editNisn, setEditNisn] = useState('');
+  const [editNipd, setEditNipd] = useState('');
+  const [editClass, setEditClass] = useState('');
+  const [editGender, setEditGender] = useState<'L' | 'P'>('L');
+  const [editParentPhone, setEditParentPhone] = useState('');
+  const [editRfidCardId, setEditRfidCardId] = useState('');
+  const [editStatus, setEditStatus] = useState<'Aktif' | 'Non-Aktif' | 'Alumni' | 'Pindah'>('Aktif');
 
   const handleUploadCardPhoto = (studentId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -96,6 +109,24 @@ export const DataSiswaView: React.FC = () => {
     setNisn('');
     setShowManualModal(false);
     showNotice(`Siswa ${fullName} berhasil ditambahkan!`);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent || !editFullName.trim() || !editNisn.trim()) return;
+    updateStudent(editingStudent.id, {
+      fullName: editFullName.trim(),
+      nisn: editNisn.trim(),
+      nipd: editNipd.trim(),
+      currentClass: editClass,
+      gender: editGender,
+      parentPhone: editParentPhone.trim(),
+      rfidCardId: editRfidCardId.trim(),
+      status: editStatus,
+    });
+    setEditingStudent(null);
+    setNotification(`Data siswa ${editFullName} berhasil diperbarui!`);
+    setTimeout(() => setNotification(''), 3000);
   };
 
   const downloadTemplate = () => {
@@ -402,6 +433,23 @@ export const DataSiswaView: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-3 text-center flex items-center justify-center space-x-1">
+                    <button
+                      onClick={() => {
+                        setEditingStudent(s);
+                        setEditFullName(s.fullName);
+                        setEditNisn(s.nisn);
+                        setEditNipd(s.nipd || '');
+                        setEditClass(s.currentClass);
+                        setEditGender(s.gender);
+                        setEditParentPhone(s.parentPhone || '');
+                        setEditRfidCardId(s.rfidCardId || s.rfidTag || '');
+                        setEditStatus(s.status || 'Aktif');
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                      title="Edit Data Siswa"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setSelectedStudentForQr(s)}
                       className="p-1.5 text-blue-900 hover:text-blue-950 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
@@ -1021,6 +1069,167 @@ export const DataSiswaView: React.FC = () => {
                 <span>Cetak / Print Kartu (PDF)</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Siswa */}
+      {editingStudent && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-5 border border-slate-100 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">Edit Data Siswa</h3>
+                  <p className="text-xs text-slate-500 font-medium">Ubah profil dan informasi siswa</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap Siswa *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  placeholder="Masukkan nama siswa"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    NISN *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editNisn}
+                    onChange={(e) => setEditNisn(e.target.value)}
+                    placeholder="NISN Siswa"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    NIPD / NIK
+                  </label>
+                  <input
+                    type="text"
+                    value={editNipd}
+                    onChange={(e) => setEditNipd(e.target.value)}
+                    placeholder="NIPD / NIK Siswa"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Kelas / Rombel *
+                  </label>
+                  <select
+                    value={editClass}
+                    onChange={(e) => setEditClass(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.className}>
+                        {c.className}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Jenis Kelamin *
+                  </label>
+                  <select
+                    value={editGender}
+                    onChange={(e) => setEditGender(e.target.value as 'L' | 'P')}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="L">Laki-Laki</option>
+                    <option value="P">Perempuan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    No Telepon Ortu / WA
+                  </label>
+                  <input
+                    type="text"
+                    value={editParentPhone}
+                    onChange={(e) => setEditParentPhone(e.target.value)}
+                    placeholder="08xxxxxxxxxx"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Status Siswa
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Non-Aktif">Non-Aktif</option>
+                    <option value="Alumni">Alumni</option>
+                    <option value="Pindah">Pindah</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  ID Kartu RFID / Barcode Tag
+                </label>
+                <input
+                  type="text"
+                  value={editRfidCardId}
+                  onChange={(e) => setEditRfidCardId(e.target.value)}
+                  placeholder="ID Kartu Presensi RFID"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { exportToExcel } from '../../utils/excelExport';
-import { Library, ScanBarcode, BookMarked, Download, Plus, QrCode, CheckCircle2, Search, Trash2 } from 'lucide-react';
+import { Library, ScanBarcode, BookMarked, Download, Plus, QrCode, CheckCircle2, Search, Trash2, Pencil, BookOpen, Save, X } from 'lucide-react';
+import { LibraryBook } from '../../types';
 
 export const PerpustakaanView: React.FC = () => {
   const {
@@ -11,23 +12,44 @@ export const PerpustakaanView: React.FC = () => {
     addLibraryTAP,
     deleteLibraryTAP,
     clearAllLibraryTAPs,
+    addLibraryBook,
+    updateLibraryBook,
     deleteLibraryBook,
     students,
   } = useApp();
 
-  const getSubTabFromActiveTab = (tab: string): 'harian' | 'tap' | 'rekap' => {
+  const getSubTabFromActiveTab = (tab: string): 'harian' | 'katalog' | 'tap' | 'rekap' => {
     if (tab === 'tap-perpus') return 'tap';
     if (tab === 'rekap-perpus') return 'rekap';
+    if (tab === 'katalog-perpus') return 'katalog';
     return 'harian';
   };
 
-  const [activeSubTab, setActiveSubTab] = useState<'harian' | 'tap' | 'rekap'>(() => getSubTabFromActiveTab(activeTab));
+  const [activeSubTab, setActiveSubTab] = useState<'harian' | 'katalog' | 'tap' | 'rekap'>(() => getSubTabFromActiveTab(activeTab));
 
   useEffect(() => {
-    if (activeTab === 'perpus-harian' || activeTab === 'tap-perpus' || activeTab === 'rekap-perpus' || activeTab === 'perpustakaan') {
+    if (activeTab === 'perpus-harian' || activeTab === 'tap-perpus' || activeTab === 'rekap-perpus' || activeTab === 'perpustakaan' || activeTab === 'katalog-perpus') {
       setActiveSubTab(getSubTabFromActiveTab(activeTab));
     }
   }, [activeTab]);
+
+  // Book Catalog Modal States
+  const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [editingBook, setEditingBook] = useState<LibraryBook | null>(null);
+
+  // Add Book Form
+  const [bookBarcode, setBookBarcode] = useState('');
+  const [bookTitle, setBookTitle] = useState('');
+  const [bookAuthor, setBookAuthor] = useState('');
+  const [bookCategory, setBookCategory] = useState('Fiksi');
+  const [bookStock, setBookStock] = useState(5);
+
+  // Edit Book Form
+  const [editBookBarcode, setEditBookBarcode] = useState('');
+  const [editBookTitle, setEditBookTitle] = useState('');
+  const [editBookAuthor, setEditBookAuthor] = useState('');
+  const [editBookCategory, setEditBookCategory] = useState('Fiksi');
+  const [editBookStock, setEditBookStock] = useState(5);
 
   // TAP Perpus State
   const [selectedStudent, setSelectedStudent] = useState(students[0]?.id || '');
@@ -38,6 +60,35 @@ export const PerpustakaanView: React.FC = () => {
   // Barcode Generator State
   const [newBarcodeText, setNewBarcodeText] = useState('BK-9904');
   const [generatedBarcode, setGeneratedBarcode] = useState('');
+
+  const handleAddBookSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookBarcode.trim() || !bookTitle.trim()) return;
+    addLibraryBook({
+      barcode: bookBarcode.trim(),
+      title: bookTitle.trim(),
+      author: bookAuthor.trim(),
+      category: bookCategory,
+      stock: Number(bookStock) || 1,
+    });
+    setBookBarcode('');
+    setBookTitle('');
+    setBookAuthor('');
+    setShowAddBookModal(false);
+  };
+
+  const handleEditBookSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBook || !editBookBarcode.trim() || !editBookTitle.trim()) return;
+    updateLibraryBook(editingBook.id, {
+      barcode: editBookBarcode.trim(),
+      title: editBookTitle.trim(),
+      author: editBookAuthor.trim(),
+      category: editBookCategory,
+      stock: Number(editBookStock) || 0,
+    });
+    setEditingBook(null);
+  };
 
   const handleTapPerpusSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +142,14 @@ export const PerpustakaanView: React.FC = () => {
             }`}
           >
             Perpustakaan Harian
+          </button>
+          <button
+            onClick={() => setActiveSubTab('katalog')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeSubTab === 'katalog' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Katalog Buku
           </button>
           <button
             onClick={() => setActiveSubTab('tap')}
@@ -190,6 +249,96 @@ export const PerpustakaanView: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Sub Tab Katalog Buku */}
+      {activeSubTab === 'katalog' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center space-x-2">
+                <BookOpen className="w-4 h-4 text-indigo-600" />
+                <span>Katalog Buku Perpustakaan ({libraryBooks.length} Judul)</span>
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">Daftar koleksi buku, barcode, kategori, stok, dan opsi edit data</p>
+            </div>
+            <button
+              onClick={() => {
+                setBookBarcode(`BK-${Math.floor(1000 + Math.random() * 9000)}`);
+                setShowAddBookModal(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center space-x-1.5 cursor-pointer transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Buku</span>
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                <tr>
+                  <th className="p-3">Kode Barcode</th>
+                  <th className="p-3">Judul Buku</th>
+                  <th className="p-3">Pengarang / Penulis</th>
+                  <th className="p-3">Kategori</th>
+                  <th className="p-3 text-center">Stok</th>
+                  <th className="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                {libraryBooks.length > 0 ? (
+                  libraryBooks.map((b) => (
+                    <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-3 font-mono font-bold text-indigo-700">{b.barcode}</td>
+                      <td className="p-3 font-bold text-slate-900">{b.title}</td>
+                      <td className="p-3 text-slate-600">{b.author || '-'}</td>
+                      <td className="p-3">
+                        <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
+                          {b.category}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center font-bold text-slate-800">{b.stock}</td>
+                      <td className="p-3 text-center space-x-1">
+                        <button
+                          onClick={() => {
+                            setEditingBook(b);
+                            setEditBookBarcode(b.barcode);
+                            setEditBookTitle(b.title);
+                            setEditBookAuthor(b.author);
+                            setEditBookCategory(b.category);
+                            setEditBookStock(b.stock);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                          title="Edit Buku Ini"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Hapus buku "${b.title}" (${b.barcode})?`)) {
+                              deleteLibraryBook(b.id);
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Hapus Buku"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-400 font-medium">
+                      Belum ada data koleksi buku.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -381,6 +530,225 @@ export const PerpustakaanView: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Tambah Buku Baru */}
+      {showAddBookModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <h3 className="font-extrabold text-slate-800 text-sm">Tambah Buku Koleksi Baru</h3>
+              </div>
+              <button
+                onClick={() => setShowAddBookModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddBookSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Kode Barcode <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={bookBarcode}
+                  onChange={(e) => setBookBarcode(e.target.value)}
+                  placeholder="Contoh: BK-9904"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Judul Buku <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={bookTitle}
+                  onChange={(e) => setBookTitle(e.target.value)}
+                  placeholder="Contoh: Laskar Pelangi"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Pengarang / Penulis
+                </label>
+                <input
+                  type="text"
+                  value={bookAuthor}
+                  onChange={(e) => setBookAuthor(e.target.value)}
+                  placeholder="Contoh: Andrea Hirata"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kategori</label>
+                  <select
+                    value={bookCategory}
+                    onChange={(e) => setBookCategory(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Fiksi">Fiksi</option>
+                    <option value="Non-Fiksi">Non-Fiksi</option>
+                    <option value="Sains">Sains & Matematika</option>
+                    <option value="Sejarah">Sejarah</option>
+                    <option value="Pelajaran">Buku Paket Pelajaran</option>
+                    <option value="Ensiklopedia">Ensiklopedia</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jumlah Stok</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bookStock}
+                    onChange={(e) => setBookStock(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddBookModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Buku</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Buku */}
+      {editingBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <h3 className="font-extrabold text-slate-800 text-sm">Edit Data Buku Koleksi</h3>
+              </div>
+              <button
+                onClick={() => setEditingBook(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditBookSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Kode Barcode <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editBookBarcode}
+                  onChange={(e) => setEditBookBarcode(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Judul Buku <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editBookTitle}
+                  onChange={(e) => setEditBookTitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Pengarang / Penulis
+                </label>
+                <input
+                  type="text"
+                  value={editBookAuthor}
+                  onChange={(e) => setEditBookAuthor(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kategori</label>
+                  <select
+                    value={editBookCategory}
+                    onChange={(e) => setEditBookCategory(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                  >
+                    <option value="Fiksi">Fiksi</option>
+                    <option value="Non-Fiksi">Non-Fiksi</option>
+                    <option value="Sains">Sains & Matematika</option>
+                    <option value="Sejarah">Sejarah</option>
+                    <option value="Pelajaran">Buku Paket Pelajaran</option>
+                    <option value="Ensiklopedia">Ensiklopedia</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jumlah Stok</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editBookStock}
+                    onChange={(e) => setEditBookStock(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingBook(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -27,6 +27,8 @@ import { FaceIdView } from './components/views/FaceIdView';
 import { LesKomputerView } from './components/views/LesKomputerView';
 import { DownloadLoginView } from './components/views/DownloadLoginView';
 import { LokasiSiswaView } from './components/views/LokasiSiswaView';
+import { DaftarNilaiView } from './components/views/DaftarNilaiView';
+import { DownloadJurnalGuruView } from './components/views/DownloadJurnalGuruView';
 
 const MainContent: React.FC = () => {
   const { activeTab, currentUser, quotaExceeded } = useApp();
@@ -47,6 +49,13 @@ const MainContent: React.FC = () => {
         return <DataGuruView />;
       case 'jurnal-guru':
         return <JurnalGuruView />;
+      case 'download-jurnal-guru':
+      case 'unduh-jurnal-guru':
+      case 'download-jurnal':
+        return <DownloadJurnalGuruView />;
+      case 'daftar-nilai':
+      case 'nilai':
+        return <DaftarNilaiView />;
       case 'manajemen-user':
         return <ManajemenUserView />;
       case 'monitor-live':

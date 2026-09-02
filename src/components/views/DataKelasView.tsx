@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { ClassData } from '../../types';
 import { exportToExcel } from '../../utils/excelExport';
 import * as XLSX from 'xlsx';
 import {
@@ -14,12 +15,15 @@ import {
   AlertCircle,
   Download,
   FileText,
+  Pencil,
+  X,
 } from 'lucide-react';
 
 export const DataKelasView: React.FC = () => {
   const {
     classes,
     addClass,
+    updateClass,
     importClasses,
     deleteClass,
     clearAllClasses,
@@ -30,6 +34,7 @@ export const DataKelasView: React.FC = () => {
   } = useApp();
   const [showManualModal, setShowManualModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [editingClass, setEditingClass] = useState<ClassData | null>(null);
 
   const activeAY = academicYears.find((y) => y.isActive) || academicYears[0];
 
@@ -37,6 +42,11 @@ export const DataKelasView: React.FC = () => {
   const [className, setClassName] = useState('');
   const [homeroomTeacher, setHomeroomTeacher] = useState(teachers[0]?.fullNameWithTitle || 'Budi Santoso, M.Pd');
   const [academicYear, setAcademicYear] = useState(activeAY?.yearName || '2026/2027');
+
+  // Edit Form State
+  const [editClassName, setEditClassName] = useState('');
+  const [editHomeroomTeacher, setEditHomeroomTeacher] = useState('');
+  const [editAcademicYear, setEditAcademicYear] = useState('');
 
   // Excel Import States
   const [importFileName, setImportFileName] = useState<string>('');
@@ -51,6 +61,17 @@ export const DataKelasView: React.FC = () => {
     addClass(className.trim(), homeroomTeacher, academicYear);
     setClassName('');
     setShowManualModal(false);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClass || !editClassName.trim()) return;
+    updateClass(editingClass.id, {
+      className: editClassName.trim(),
+      homeroomTeacher: editHomeroomTeacher,
+      academicYear: editAcademicYear,
+    });
+    setEditingClass(null);
   };
 
   const downloadTemplate = () => {
@@ -289,13 +310,27 @@ export const DataKelasView: React.FC = () => {
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-100">
                       TA {c.academicYear}
                     </span>
-                    <button
-                      onClick={() => handleDeleteClass(c.id, c.className)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                      title="Hapus Kelas Ini"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => {
+                          setEditingClass(c);
+                          setEditClassName(c.className);
+                          setEditHomeroomTeacher(c.homeroomTeacher);
+                          setEditAcademicYear(c.academicYear);
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                        title="Edit Kelas Ini"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClass(c.id, c.className)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Hapus Kelas Ini"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -547,6 +582,99 @@ export const DataKelasView: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Kelas */}
+      {editingClass && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 border border-slate-100 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Pencil className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">Edit Data Rombel Kelas</h3>
+                  <p className="text-xs text-slate-500 font-medium">Ubah nama kelas & wali kelas</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingClass(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Rombongan Belajar / Kelas *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editClassName}
+                  onChange={(e) => setEditClassName(e.target.value)}
+                  placeholder="Contoh: X IPA 1, 7A, 8B"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Wali Kelas
+                </label>
+                <select
+                  value={editHomeroomTeacher}
+                  onChange={(e) => setEditHomeroomTeacher(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="Belum Ditentukan">-- Belum Ditentukan --</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.fullNameWithTitle}>
+                      {t.fullNameWithTitle} ({t.position})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Tahun Ajaran
+                </label>
+                <select
+                  value={editAcademicYear}
+                  onChange={(e) => setEditAcademicYear(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {academicYears.map((y) => (
+                    <option key={y.id} value={y.yearName}>
+                      {y.yearName} ({y.semester}) {y.isActive ? '★ Aktif' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingClass(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

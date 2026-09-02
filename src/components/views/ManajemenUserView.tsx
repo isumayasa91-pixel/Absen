@@ -1,19 +1,26 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Role } from '../../types';
-import { UserCog, UserPlus, Search, Save, Shield, CheckCircle2, Key, Trash2 } from 'lucide-react';
+import { Role, UserAccount } from '../../types';
+import { UserCog, UserPlus, Search, Save, Shield, CheckCircle2, Key, Trash2, Pencil, X } from 'lucide-react';
 
 export const ManajemenUserView: React.FC = () => {
-  const { users, addUser, deleteUser } = useApp();
+  const { users, addUser, updateUser, deleteUser } = useApp();
   const [filterRole, setFilterRole] = useState<'All' | 'admin' | 'guru' | 'siswa'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
 
   // Form states
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<Role>('admin');
   const [accessLevel, setAccessLevel] = useState('Administrator System');
+
+  // Edit states
+  const [editUsername, setEditUsername] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState<Role>('admin');
+  const [editAccessLevel, setEditAccessLevel] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +29,18 @@ export const ManajemenUserView: React.FC = () => {
     setUsername('');
     setName('');
     setShowModal(false);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser || !editUsername.trim() || !editName.trim()) return;
+    updateUser(editingUser.id, {
+      username: editUsername.trim(),
+      name: editName.trim(),
+      role: editRole,
+      accessLevel: editAccessLevel,
+    });
+    setEditingUser(null);
   };
 
   const filteredUsers = users.filter((u) => {
@@ -125,7 +144,20 @@ export const ManajemenUserView: React.FC = () => {
                       {u.status}
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center space-x-1">
+                    <button
+                      onClick={() => {
+                        setEditingUser(u);
+                        setEditUsername(u.username);
+                        setEditName(u.name);
+                        setEditRole(u.role);
+                        setEditAccessLevel(u.accessLevel);
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                      title="Edit User Ini"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => {
                         if (window.confirm(`Hapus akun user "@${u.username}"?`)) {
@@ -225,6 +257,106 @@ export const ManajemenUserView: React.FC = () => {
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Akun User</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit User */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-800 text-sm">Edit Data User / Pengguna</h3>
+                  <p className="text-xs text-slate-500 font-medium">Ubah kredensial & peranan hak akses</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Username Login <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  placeholder="Contoh: admin_piket"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Nama Lengkap User"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Peran / Hak Akses (Role) <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value as Role)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                >
+                  <option value="admin">Administrator (Akses Penuh)</option>
+                  <option value="guru">Guru / Wali Kelas</option>
+                  <option value="siswa">Siswa / Orang Tua</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Keterangan Akses
+                </label>
+                <input
+                  type="text"
+                  value={editAccessLevel}
+                  onChange={(e) => setEditAccessLevel(e.target.value)}
+                  placeholder="Contoh: Operator Piket / Admin Perpustakaan"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
                 </button>
               </div>
             </form>

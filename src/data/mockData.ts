@@ -19,6 +19,7 @@ import {
   ComputerCourseSession,
   ComputerCourseAttendance,
   ComputerCourseMember,
+  StudentGradeRecord,
 } from '../types';
 
 export const initialSystemSettings: SystemSetting = {
@@ -71,9 +72,9 @@ export const initialTeachers: Teacher[] = [
 ];
 
 export const initialUsers: UserAccount[] = [
-  { id: 'u-1', username: 'admin', name: 'Administrator Presensi', role: 'admin', accessLevel: 'Super Admin', status: 'Aktif', email: 'admin@sekolah.sch.id' },
-  { id: 'u-2', username: 'budi_santoso', name: 'Budi Santoso, M.Pd', role: 'guru', accessLevel: 'Guru / Wali Kelas', status: 'Aktif', email: 'budi@sekolah.sch.id' },
-  { id: 'u-3', username: 'aditya_pratama', name: 'Aditya Pratama', role: 'siswa', accessLevel: 'Siswa', status: 'Aktif', email: 'aditya@siswa.sch.id' },
+  { id: 'u-1', username: 'admin', password: 'admin123', name: 'Administrator Presensi', role: 'admin', accessLevel: 'Super Admin', status: 'Aktif', email: 'admin@sekolah.sch.id' },
+  { id: 'u-2', username: 'budi_santoso', password: 'guru123', name: 'Budi Santoso, M.Pd', role: 'guru', accessLevel: 'Guru / Wali Kelas', status: 'Aktif', email: 'budi@sekolah.sch.id' },
+  { id: 'u-3', username: 'aditya_pratama', password: 'siswa123', name: 'Aditya Pratama', role: 'siswa', accessLevel: 'Siswa', status: 'Aktif', email: 'aditya@siswa.sch.id' },
 ];
 
 export const initialAnnouncements: Announcement[] = [
@@ -104,8 +105,8 @@ export const initialLeavePermissions: LeavePermission[] = [
 ];
 
 export const initialTeacherJournals: TeacherJournal[] = [
-  { id: 'jrn-1', date: todayStr, teacherName: 'Budi Santoso, M.Pd', subject: 'Matematika', classTarget: 'X IPA 1', topic: 'Persamaan Kuadrat & Fungsi Logaritma', notes: 'Siswa sangat aktif menyimak contoh soal nomor 1-5.', timeSlot: 'Jam 1 - 2 (07.00 - 08.30)' },
-  { id: 'jrn-2', date: todayStr, teacherName: 'Siti Aminah, S.Pd', subject: 'Bahasa Indonesia', classTarget: 'X IPA 2', topic: 'Teks Laporan Hasil Observasi', notes: 'Praktikum pengamatan di perpustakaan sekolah.', timeSlot: 'Jam 3 - 4 (08.30 - 10.00)' },
+  { id: 'jrn-1', date: todayStr, teacherName: 'Budi Santoso, M.Pd', subject: 'Matematika', classTarget: 'X IPA 1', topic: 'Persamaan Kuadrat & Fungsi Logaritma', notes: 'Siswa sangat aktif menyimak contoh soal nomor 1-5.', timeSlot: 'Jam 1 - 2 (07.00 - 08.30)', absentStudents: 'Nihil (Hadir Semua)' },
+  { id: 'jrn-2', date: todayStr, teacherName: 'Siti Aminah, S.Pd', subject: 'Bahasa Indonesia', classTarget: 'X IPA 2', topic: 'Teks Laporan Hasil Observasi', notes: 'Praktikum pengamatan di perpustakaan sekolah.', timeSlot: 'Jam 3 - 4 (08.30 - 10.00)', absentStudents: 'Aditya Pratama (Izin), Anisa Rahmawati (Sakit)' },
 ];
 
 export const initialDisciplineRules: DisciplineRule[] = [
@@ -262,5 +263,89 @@ export const initialComputerMembers: ComputerCourseMember[] = [
   { id: 'cm-6', studentId: 'std-6', studentName: 'Eka Putri Lestari', class: 'XI IPS 1', nisn: '0078912346', batch: 'Kelompok B - Office & Desain', preferredPc: 'PC-12', registeredDate: '2026-08-01', status: 'Aktif' },
   { id: 'cm-7', studentId: 'std-7', studentName: 'Faris Naufal', class: 'X IPA 1', nisn: '0078912347', batch: 'Kelompok C - TKJ & Jaringan', preferredPc: 'PC-15', registeredDate: '2026-08-01', status: 'Aktif' },
   { id: 'cm-8', studentId: 'std-8', studentName: 'Gita Gutawa', class: 'X IPA 2', nisn: '0078912348', batch: 'Kelompok C - TKJ & Jaringan', preferredPc: 'PC-16', registeredDate: '2026-08-01', status: 'Aktif' },
+];
+
+export const initialGrades: StudentGradeRecord[] = [
+  {
+    id: 'grd-std-1-matematika',
+    studentId: 'std-1',
+    studentName: 'Aditya Pratama',
+    nisn: '0078912341',
+    currentClass: 'X IPA 1',
+    subject: 'Matematika',
+    teacherName: 'Budi Santoso, M.Pd',
+    tugas1: 85,
+    tugas2: 90,
+    tugas3: 88,
+    tugas4: 80,
+    tugas5: 92,
+    ph1: 85,
+    ph2: 88,
+    ph3: 90,
+    ph4: 82,
+    ph5: 86,
+    pts: 88,
+    pas: 90,
+    avgTugas: 87,
+    avgPH: 86.2,
+    finalScore: 87.7,
+    predicate: 'B',
+    statusPassing: 'Lulus',
+    updatedAt: todayStr,
+  },
+  {
+    id: 'grd-std-2-matematika',
+    studentId: 'std-2',
+    studentName: 'Anisa Rahmawati',
+    nisn: '0078912342',
+    currentClass: 'X IPA 1',
+    subject: 'Matematika',
+    teacherName: 'Budi Santoso, M.Pd',
+    tugas1: 95,
+    tugas2: 92,
+    tugas3: 90,
+    tugas4: 94,
+    tugas5: 96,
+    ph1: 92,
+    ph2: 95,
+    ph3: 90,
+    ph4: 93,
+    ph5: 94,
+    pts: 92,
+    pas: 95,
+    avgTugas: 93.4,
+    avgPH: 92.8,
+    finalScore: 93.4,
+    predicate: 'A',
+    statusPassing: 'Lulus',
+    updatedAt: todayStr,
+  },
+  {
+    id: 'grd-std-3-matematika',
+    studentId: 'std-3',
+    studentName: 'Bagas Kurniawan',
+    nisn: '0078912343',
+    currentClass: 'X IPA 1',
+    subject: 'Matematika',
+    teacherName: 'Budi Santoso, M.Pd',
+    tugas1: 75,
+    tugas2: 78,
+    tugas3: 80,
+    tugas4: 72,
+    tugas5: 85,
+    ph1: 76,
+    ph2: 80,
+    ph3: 75,
+    ph4: 78,
+    ph5: 82,
+    pts: 78,
+    pas: 80,
+    avgTugas: 78,
+    avgPH: 78.2,
+    finalScore: 78.5,
+    predicate: 'C',
+    statusPassing: 'Lulus',
+    updatedAt: todayStr,
+  },
 ];
 

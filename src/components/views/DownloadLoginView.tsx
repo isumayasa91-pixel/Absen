@@ -23,6 +23,8 @@ import {
   Laptop,
   Library,
   GraduationCap,
+  Eye,
+  EyeOff,
   CheckCircle,
 } from 'lucide-react';
 
@@ -49,6 +51,8 @@ export const DownloadLoginView: React.FC = () => {
   // Custom login state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showUsername, setShowUsername] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
   // Create User state
@@ -78,59 +82,87 @@ export const DownloadLoginView: React.FC = () => {
   // Login handler
   const handleManualLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim()) {
-      setLoginError('Username tidak boleh kosong!');
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanUsername || !cleanPassword) {
+      setLoginError('Password/Username yang anda masukan salah');
       return;
     }
-
-    const cleanUsername = username.trim().toLowerCase();
 
     // 1. Search in user accounts list
     const found = users.find((u) => u.username.toLowerCase() === cleanUsername);
     if (found) {
-      login(found);
-      setLoginError('');
-      setUsername('');
-      setPassword('');
-      showNotice(`Selamat datang kembali, ${found.name}!`);
-      return;
+      const expectedPassword = found.password ? found.password.toLowerCase() : '';
+      const isValidPassword = expectedPassword
+        ? cleanPassword.toLowerCase() === expectedPassword
+        : (cleanPassword === 'admin123' ||
+           cleanPassword === 'guru123' ||
+           cleanPassword === 'siswa123' ||
+           cleanPassword === '123456' ||
+           cleanPassword.toLowerCase() === cleanUsername);
+
+      if (isValidPassword) {
+        showNotice(`✓ Password/Username yang Anda masukkan benar! (Masuk sebagai ${found.name})`);
+        login(found);
+        setLoginError('');
+        setUsername('');
+        setPassword('');
+        return;
+      } else {
+        setLoginError('Password/Username yang anda masukan salah');
+        return;
+      }
     }
 
-    // 2. Search dynamically in students list by NISN or name format (lowercase, no spaces)
+    // 2. Search dynamically in students list
     const studentFound = students.find((s) => {
       const cleanName = s.fullName.toLowerCase().replace(/\s+/g, '');
       return (s.nisn && s.nisn === username.trim()) || (cleanName === cleanUsername);
     });
 
     if (studentFound) {
-      const studentUser = {
-        id: `u-std-${studentFound.id}`,
-        username: studentFound.nisn || studentFound.fullName.toLowerCase().replace(/\s+/g, ''),
-        name: studentFound.fullName,
-        role: 'siswa' as const,
-        accessLevel: 'Siswa / Murid',
-        status: 'Aktif' as const,
-        email: `${studentFound.nisn || 'siswa'}@siswa.sch.id`,
-      };
-      login(studentUser);
-      setLoginError('');
-      setUsername('');
-      setPassword('');
-      showNotice(`Selamat datang, siswa ${studentFound.fullName}!`);
-      return;
+      const isValidStudentPassword =
+        cleanPassword === 'siswa123' ||
+        cleanPassword === '123456' ||
+        cleanPassword === (studentFound.nisn || '') ||
+        cleanPassword.toLowerCase() === cleanUsername;
+
+      if (isValidStudentPassword) {
+        const studentUser = {
+          id: `u-std-${studentFound.id}`,
+          username: studentFound.nisn || studentFound.fullName.toLowerCase().replace(/\s+/g, ''),
+          name: studentFound.fullName,
+          role: 'siswa' as const,
+          accessLevel: 'Siswa / Murid',
+          status: 'Aktif' as const,
+          email: `${studentFound.nisn || 'siswa'}@siswa.sch.id`,
+        };
+        showNotice(`✓ Password/Username yang Anda masukkan benar! (Masuk sebagai ${studentFound.fullName})`);
+        login(studentUser);
+        setLoginError('');
+        setUsername('');
+        setPassword('');
+        return;
+      } else {
+        setLoginError('Password/Username yang anda masukan salah');
+        return;
+      }
     }
 
     // 3. Fallback admin login
     if (cleanUsername === 'admin') {
-      login(users[0]);
-      setLoginError('');
-      setUsername('');
-      setPassword('');
-      showNotice(`Selamat datang kembali, ${users[0].name}!`);
-      return;
+      if (cleanPassword === 'admin123' || cleanPassword === 'admin' || cleanPassword === '123456') {
+        showNotice(`✓ Password/Username yang Anda masukkan benar!`);
+        login(users[0]);
+        setLoginError('');
+        setUsername('');
+        setPassword('');
+        return;
+      }
     }
 
-    setLoginError('Username / NISN tidak terdaftar! Silakan coba lagi.');
+    setLoginError('Password/Username yang anda masukan salah');
   };
 
   // Add user handler
@@ -860,25 +892,41 @@ export const DownloadLoginView: React.FC = () => {
                     <div className="relative">
                       <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
-                        type="text"
+                        type={showUsername ? 'text' : 'password'}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         placeholder="Masukkan username (admin, guru, dll)"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowUsername(!showUsername)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 cursor-pointer"
+                        title={showUsername ? 'Sembunyikan Username' : 'Tampilkan Username'}
+                      >
+                        {showUsername ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-600 block mb-1.5">Kata Sandi</label>
+                    <label className="text-xs font-bold text-slate-600 block mb-1.5">Kata Sandi / Password</label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="•••••••• (Bebas untuk demo)"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Masukkan password"
+                        className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 cursor-pointer"
+                        title={showPassword ? 'Sembunyikan Password' : 'Tampilkan Password'}
+                      >
+                        {showPassword ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
                 </div>

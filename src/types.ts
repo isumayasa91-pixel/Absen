@@ -3,6 +3,7 @@ export type Role = 'admin' | 'guru' | 'siswa';
 export interface UserAccount {
   id: string;
   username: string;
+  password?: string;
   name: string;
   role: Role;
   accessLevel: string;
@@ -61,6 +62,43 @@ export interface TeacherJournal {
   topic: string;
   notes: string;
   timeSlot: string; // Jam Ke- 1-2
+  absentStudents?: string; // Daftar/nama siswa yang absen / tidak hadir
+}
+
+export interface StudentGradeRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  nisn: string;
+  currentClass: string;
+  subject: string; // Mapel
+  teacherName: string;
+  
+  // Nilai Tugas 1 s/d 5
+  tugas1?: number | null;
+  tugas2?: number | null;
+  tugas3?: number | null;
+  tugas4?: number | null;
+  tugas5?: number | null;
+  
+  // Nilai PH 1 s/d 5 (Penilaian Harian)
+  ph1?: number | null;
+  ph2?: number | null;
+  ph3?: number | null;
+  ph4?: number | null;
+  ph5?: number | null;
+  
+  // Nilai PTS & PAS
+  pts?: number | null;
+  pas?: number | null;
+  
+  // Hasil Akumulasi
+  avgTugas?: number;
+  avgPH?: number;
+  finalScore?: number;
+  predicate?: string;
+  statusPassing?: 'Lulus' | 'Remidial';
+  updatedAt?: string;
 }
 
 export interface Announcement {

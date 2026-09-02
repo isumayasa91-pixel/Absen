@@ -20,6 +20,7 @@ import {
   ComputerCourseSession,
   ComputerCourseAttendance,
   ComputerCourseMember,
+  StudentGradeRecord,
 } from '../types';
 import {
   initialSystemSettings,
@@ -42,6 +43,7 @@ import {
   initialComputerSessions,
   initialComputerAttendances,
   initialComputerMembers,
+  initialGrades,
 } from '../data/mockData';
 import {
   listenSingleDoc,
@@ -66,17 +68,20 @@ interface AppContextType {
 
   academicYears: AcademicYear[];
   addAcademicYear: (yearName: string, semester: 'Ganjil' | 'Genap', isActive: boolean) => void;
+  updateAcademicYear: (id: string, data: Partial<AcademicYear>) => void;
   deleteAcademicYear: (id: string) => void;
 
   classes: ClassData[];
   addClass: (className: string, homeroomTeacher: string, academicYear: string) => void;
   importClasses: (classList: Partial<ClassData>[]) => void;
+  updateClass: (id: string, data: Partial<ClassData>) => void;
   deleteClass: (id: string) => void;
   clearAllClasses: () => void;
 
   students: Student[];
   addStudent: (fullName: string, currentClass: string, nisn: string, gender: 'L' | 'P') => void;
   importStudents: (studentList: Partial<Student>[]) => void;
+  updateStudent: (id: string, data: Partial<Student>) => void;
   updateStudentPhoto: (studentId: string, photo: string) => void;
   updateMassStudentPhotos: (photosMap: { [key: string]: string }) => void;
   generateMassStudentAccounts: () => void;
@@ -86,16 +91,19 @@ interface AppContextType {
   teachers: Teacher[];
   addTeacher: (fullNameWithTitle: string, nip: string, position: any, phone?: string) => void;
   importTeachers: (teacherList: Partial<Teacher>[]) => void;
+  updateTeacher: (id: string, data: Partial<Teacher>) => void;
   generateMassTeacherAccounts: () => void;
   deleteTeacher: (id: string) => void;
   clearAllTeachers: () => void;
 
   users: UserAccount[];
   addUser: (username: string, name: string, role: 'admin' | 'guru' | 'siswa', accessLevel: string) => void;
+  updateUser: (id: string, data: Partial<UserAccount>) => void;
   deleteUser: (id: string) => void;
 
   announcements: Announcement[];
   addAnnouncement: (title: string, content: string, targetClass: string) => void;
+  updateAnnouncement: (id: string, data: Partial<Announcement>) => void;
   deleteAnnouncement: (id: string) => void;
   clearAllAnnouncements: () => void;
 
@@ -127,6 +135,7 @@ interface AppContextType {
 
   teacherJournals: TeacherJournal[];
   addTeacherJournal: (data: Omit<TeacherJournal, 'id'>) => void;
+  updateTeacherJournal: (id: string, data: Partial<TeacherJournal>) => void;
   deleteTeacherJournal: (id: string) => void;
   clearAllTeacherJournals: () => void;
 
@@ -135,6 +144,8 @@ interface AppContextType {
   deleteLibraryTAP: (id: string) => void;
   clearAllLibraryTAPs: () => void;
   libraryBooks: LibraryBook[];
+  addLibraryBook: (data: Omit<LibraryBook, 'id'>) => void;
+  updateLibraryBook: (id: string, data: Partial<LibraryBook>) => void;
   deleteLibraryBook: (id: string) => void;
 
   disciplineRules: DisciplineRule[];
@@ -169,6 +180,12 @@ interface AppContextType {
   computerMembers: ComputerCourseMember[];
   addComputerMember: (studentId: string, batch: string, preferredPc?: string) => void;
   deleteComputerMember: (id: string) => void;
+
+  grades: StudentGradeRecord[];
+  saveGradeRecord: (record: StudentGradeRecord) => void;
+  saveGradesBatch: (gradeRecords: StudentGradeRecord[]) => void;
+  deleteGradeRecord: (id: string) => void;
+  clearAllGrades: () => void;
 
   saveCollectionItem: (collectionName: string, item: any) => Promise<void>;
   showNotice: (msg: string) => void;
@@ -220,6 +237,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [computerSessions, setComputerSessions] = useState<ComputerCourseSession[]>(initialComputerSessions);
   const [computerAttendances, setComputerAttendances] = useState<ComputerCourseAttendance[]>(initialComputerAttendances);
   const [computerMembers, setComputerMembers] = useState<ComputerCourseMember[]>(initialComputerMembers);
+  const [grades, setGrades] = useState<StudentGradeRecord[]>(initialGrades);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
 
@@ -264,6 +282,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubCompSessions = listenCollection('computerSessions', initialComputerSessions, setComputerSessions);
     const unsubCompAtt = listenCollection('computerAttendances', initialComputerAttendances, setComputerAttendances);
     const unsubCompMembers = listenCollection('computerMembers', initialComputerMembers, setComputerMembers);
+    const unsubGrades = listenCollection('grades', initialGrades, setGrades);
 
     return () => {
       unsubSettings();
@@ -285,6 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubCompSessions();
       unsubCompAtt();
       unsubCompMembers();
+      unsubGrades();
     };
   }, []);
 
@@ -773,6 +793,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveCollectionItem('holidays', newH);
   };
 
+  const updateAcademicYear = (id: string, data: Partial<AcademicYear>) => {
+    const target = academicYears.find((y) => y.id === id);
+    if (target) {
+      if (data.isActive) {
+        academicYears.forEach((y) => {
+          if (y.id !== id && y.isActive) {
+            saveCollectionItem('academicYears', { ...y, isActive: false });
+          }
+        });
+      }
+      saveCollectionItem('academicYears', { ...target, ...data });
+    }
+  };
+
+  const updateClass = (id: string, data: Partial<ClassData>) => {
+    const target = classes.find((c) => c.id === id);
+    if (target) {
+      saveCollectionItem('classes', { ...target, ...data });
+    }
+  };
+
+  const updateStudent = (id: string, data: Partial<Student>) => {
+    const target = students.find((s) => s.id === id);
+    if (target) {
+      saveCollectionItem('students', { ...target, ...data });
+    }
+  };
+
+  const updateTeacher = (id: string, data: Partial<Teacher>) => {
+    const target = teachers.find((t) => t.id === id);
+    if (target) {
+      saveCollectionItem('teachers', { ...target, ...data });
+    }
+  };
+
+  const updateUser = (id: string, data: Partial<UserAccount>) => {
+    const target = users.find((u) => u.id === id);
+    if (target) {
+      saveCollectionItem('users', { ...target, ...data });
+    }
+  };
+
+  const updateAnnouncement = (id: string, data: Partial<Announcement>) => {
+    const target = announcements.find((a) => a.id === id);
+    if (target) {
+      saveCollectionItem('announcements', { ...target, ...data });
+    }
+  };
+
+  const updateTeacherJournal = (id: string, data: Partial<TeacherJournal>) => {
+    const target = teacherJournals.find((j) => j.id === id);
+    if (target) {
+      saveCollectionItem('teacherJournals', { ...target, ...data });
+    }
+  };
+
+  const addLibraryBook = (data: Omit<LibraryBook, 'id'>) => {
+    const newBook: LibraryBook = {
+      id: `bk-${Date.now()}`,
+      ...data,
+    };
+    saveCollectionItem('libraryBooks', newBook);
+  };
+
+  const updateLibraryBook = (id: string, data: Partial<LibraryBook>) => {
+    const target = libraryBooks.find((b) => b.id === id);
+    if (target) {
+      saveCollectionItem('libraryBooks', { ...target, ...data });
+    }
+  };
+
   // Delete & Clear Functions
   const deleteAcademicYear = (id: string) => deleteCollectionItem('academicYears', id);
   const deleteClass = (id: string) => deleteCollectionItem('classes', id);
@@ -998,6 +1089,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
+  const saveGradeRecord = (record: StudentGradeRecord) => {
+    saveCollectionItem('grades', record);
+  };
+
+  const saveGradesBatch = (gradeRecords: StudentGradeRecord[]) => {
+    saveCollectionItemsBatch('grades', gradeRecords);
+  };
+
+  const deleteGradeRecord = (id: string) => {
+    deleteCollectionItem('grades', id);
+  };
+
+  const clearAllGrades = () => {
+    clearCollectionBatch('grades', grades);
+    setGrades([]);
+  };
+
   const resetEntireSystemData = async () => {
     await clearEntireCollectionInFirestore('students');
     await clearEntireCollectionInFirestore('teachers');
@@ -1060,15 +1168,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSettings,
         academicYears,
         addAcademicYear,
+        updateAcademicYear,
         deleteAcademicYear,
         classes,
         addClass,
         importClasses,
+        updateClass,
         deleteClass,
         clearAllClasses,
         students,
         addStudent,
         importStudents,
+        updateStudent,
         updateStudentPhoto,
         updateMassStudentPhotos,
         generateMassStudentAccounts,
@@ -1077,14 +1188,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         teachers,
         addTeacher,
         importTeachers,
+        updateTeacher,
         generateMassTeacherAccounts,
         deleteTeacher,
         clearAllTeachers,
         users,
         addUser,
+        updateUser,
         deleteUser,
         announcements,
         addAnnouncement,
+        updateAnnouncement,
         deleteAnnouncement,
         clearAllAnnouncements,
         attendanceRecords,
@@ -1103,6 +1217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteLeavePermission,
         teacherJournals,
         addTeacherJournal,
+        updateTeacherJournal,
         deleteTeacherJournal,
         clearAllTeacherJournals,
         libraryTAPs,
@@ -1110,6 +1225,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteLibraryTAP,
         clearAllLibraryTAPs,
         libraryBooks,
+        addLibraryBook,
+        updateLibraryBook,
         deleteLibraryBook,
         disciplineRules,
         violationRecords,
@@ -1138,6 +1255,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         computerMembers,
         addComputerMember,
         deleteComputerMember,
+        grades,
+        saveGradeRecord,
+        saveGradesBatch,
+        deleteGradeRecord,
+        clearAllGrades,
         saveCollectionItem,
         showNotice,
         resetEntireSystemData,

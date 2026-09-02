@@ -33,6 +33,8 @@ import {
   Laptop,
   Monitor,
   Download,
+  FileDown,
+  Award,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -44,6 +46,7 @@ export const Sidebar: React.FC = () => {
     'dashboard',
     'pengumuman',
     'download-login',
+    'daftar-nilai',
     'rekap-semester',
     'sesi-les',
     'rekap-les',
@@ -62,6 +65,8 @@ export const Sidebar: React.FC = () => {
     'data-kelas',
     'data-siswa',
     'jurnal-guru',
+    'download-jurnal-guru',
+    'daftar-nilai',
     'terlambat',
     'alpa',
     'rekap-laporan',
@@ -110,6 +115,8 @@ export const Sidebar: React.FC = () => {
         { key: 'data-siswa', label: 'Data Siswa', icon: Users, color: 'text-emerald-600 bg-emerald-50' },
         { key: 'data-guru', label: 'Data Guru', icon: UserCheck, color: 'text-teal-600 bg-teal-50' },
         { key: 'jurnal-guru', label: 'Jurnal Guru', icon: BookOpenCheck, color: 'text-purple-600 bg-purple-50' },
+        { key: 'download-jurnal-guru', label: 'Download Jurnal Guru', icon: FileDown, color: 'text-indigo-600 bg-indigo-50 font-bold border border-indigo-100' },
+        { key: 'daftar-nilai', label: 'Daftar Nilai', icon: Award, color: 'text-amber-600 bg-amber-50 font-bold border border-amber-100' },
       ],
     },
     {
