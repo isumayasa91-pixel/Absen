@@ -48,9 +48,13 @@ export const DashboardView: React.FC = () => {
 
   // Class rekap summary data
   const classSummary = classes.map((c) => {
-    const classStd = students.filter((s) => s.currentClass === c.className);
-    const totalClassStd = classStd.length || c.studentCount || 30;
-    const cRecords = todayRecords.filter((r) => r.class === c.className);
+    const classStd = students.filter(
+      (s) => s.currentClass?.toLowerCase().trim() === c.className?.toLowerCase().trim()
+    );
+    const totalClassStd = classStd.length;
+    const cRecords = todayRecords.filter(
+      (r) => r.class?.toLowerCase().trim() === c.className?.toLowerCase().trim()
+    );
 
     const cHadir = cRecords.filter((r) => r.statusFinal === 'Hadir').length;
     const cSakit = cRecords.filter((r) => r.statusFinal === 'Sakit').length;

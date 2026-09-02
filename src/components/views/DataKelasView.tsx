@@ -17,7 +17,17 @@ import {
 } from 'lucide-react';
 
 export const DataKelasView: React.FC = () => {
-  const { classes, addClass, importClasses, deleteClass, clearAllClasses, teachers, academicYears } = useApp();
+  const {
+    classes,
+    addClass,
+    importClasses,
+    deleteClass,
+    clearAllClasses,
+    teachers,
+    academicYears,
+    students,
+    setActiveTab,
+  } = useApp();
   const [showManualModal, setShowManualModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -207,6 +217,41 @@ export const DataKelasView: React.FC = () => {
         </div>
       </div>
 
+      {/* Metric Cards Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
+            <School className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Rombel Kelas</div>
+            <div className="text-lg font-black text-slate-800">{classes.length} Kelas</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Siswa Terdaftar</div>
+            <div className="text-lg font-black text-slate-800">{students.length} Siswa</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs col-span-2 sm:col-span-1 flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rata-rata Siswa/Kelas</div>
+            <div className="text-lg font-black text-slate-800">
+              {classes.length > 0 ? Math.round(students.length / classes.length) : 0} Siswa
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Grid Kelas Cards */}
       {classes.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-4 shadow-xs">
@@ -229,37 +274,55 @@ export const DataKelasView: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {classes.map((c) => (
-            <div
-              key={c.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-100">
-                  TA {c.academicYear}
-                </span>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1 text-slate-500 text-xs font-bold">
-                    <Users className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>{c.studentCount || 0} Siswa</span>
+          {classes.map((c) => {
+            const actualStudentCount = students.filter(
+              (s) => s.currentClass?.toLowerCase().trim() === c.className?.toLowerCase().trim()
+            ).length;
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all space-y-3 relative group flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-100">
+                      TA {c.academicYear}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteClass(c.id, c.className)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="Hapus Kelas Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-extrabold text-slate-900">{c.className}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Wali Kelas: <span className="font-bold text-slate-700">{c.homeroomTeacher}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-xs font-extrabold text-indigo-700 bg-indigo-50/80 border border-indigo-100 px-2.5 py-1 rounded-lg">
+                    <Users className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>{actualStudentCount} Siswa Input</span>
                   </div>
 
                   <button
-                    onClick={() => handleDeleteClass(c.id, c.className)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                    title="Hapus Kelas Ini"
+                    onClick={() => setActiveTab('siswa')}
+                    className="text-[11px] font-bold text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                    title="Lihat Data Siswa"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    Detail ↗
                   </button>
                 </div>
               </div>
-
-              <div>
-                <h3 className="text-xl font-extrabold text-slate-900">{c.className}</h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Wali Kelas: <span className="font-bold text-slate-700">{c.homeroomTeacher}</span></p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
