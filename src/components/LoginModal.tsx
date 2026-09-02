@@ -14,7 +14,7 @@ import {
 import { UserAccount } from '../types';
 
 export const LoginModal: React.FC = () => {
-  const { login, users, settings, students } = useApp();
+  const { login, users, settings, students, teachers } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showUsername, setShowUsername] = useState(true);
@@ -66,7 +66,46 @@ export const LoginModal: React.FC = () => {
       }
     }
 
-    // 2. Search in students list by NISN or name format
+    // 2. Search in teachers list by NIP or name format
+    const teacherFound = teachers.find((t) => {
+      const cleanName = t.fullNameWithTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanNip = (t.nip || '').replace(/\s+/g, '');
+      const cleanInput = username.trim().replace(/\s+/g, '');
+      return (cleanNip && cleanNip === cleanInput) || (cleanName === cleanUsername);
+    });
+
+    if (teacherFound) {
+      const cleanNip = (teacherFound.nip || '').replace(/\s+/g, '');
+      const isValidTeacherPassword =
+        cleanPassword === 'guru123' ||
+        cleanPassword === '123456' ||
+        cleanPassword === cleanNip ||
+        cleanPassword.toLowerCase() === cleanUsername;
+
+      if (isValidTeacherPassword) {
+        const teacherUser: UserAccount = {
+          id: `u-tch-${teacherFound.id}`,
+          username: cleanNip || teacherFound.fullNameWithTitle.toLowerCase().replace(/\s+/g, ''),
+          name: teacherFound.fullNameWithTitle,
+          role: 'guru' as const,
+          accessLevel: teacherFound.position || 'Guru Mapel',
+          status: 'Aktif' as const,
+          email: `${cleanNip || 'guru'}@guru.sch.id`,
+        };
+        setSuccessNotice('Password/Username yang Anda masukkan benar!');
+        setTimeout(() => {
+          login(teacherUser);
+          setIsSubmitting(false);
+        }, 900);
+        return;
+      } else {
+        setIsSubmitting(false);
+        setError('Password/Username yang anda masukan salah');
+        return;
+      }
+    }
+
+    // 3. Search in students list by NISN or name format
     const studentFound = students.find((s) => {
       const cleanName = s.fullName.toLowerCase().replace(/\s+/g, '');
       return (s.nisn && s.nisn === username.trim()) || (cleanName === cleanUsername);
@@ -119,8 +158,12 @@ export const LoginModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden space-y-0">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 relative overflow-hidden animate-in fade-in duration-300">
+      {/* Decorative ambient background glows */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100/20 max-w-md w-full overflow-hidden space-y-0 relative z-10">
         
         {/* Header: Logo Sekolah & Branding */}
         <div className="p-6 pb-4 bg-gradient-to-b from-indigo-50/70 to-white text-center space-y-3 border-b border-slate-100">

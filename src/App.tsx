@@ -109,6 +109,10 @@ const MainContent: React.FC = () => {
     }
   };
 
+  if (!currentUser) {
+    return <LoginModal />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 text-slate-800 font-sans flex flex-col antialiased animate-fade-in">
       <Header />
@@ -139,8 +143,6 @@ const MainContent: React.FC = () => {
           {renderView()}
         </main>
       </div>
-
-      {!currentUser && <LoginModal />}
     </div>
   );
 };

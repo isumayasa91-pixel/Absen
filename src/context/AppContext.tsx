@@ -214,7 +214,7 @@ const saveToStorage = <T,>(key: string, value: T) => {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadFromStorage('currentUser', initialUsers[0]));
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadFromStorage('currentUser', null));
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
   const [settings, setSettings] = useState<SystemSetting>(initialSystemSettings);
