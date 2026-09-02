@@ -210,7 +210,7 @@ export const DataSiswaView: React.FC = () => {
 
     importStudents(parsedImportData);
     setShowImportModal(false);
-    showNotice(`${parsedImportData.length} data siswa berhasil diimpor dari Excel!`);
+    showNotice(`✅ ${parsedImportData.length} data siswa & daftar kelas baru otomatis tersimpan di database!`);
     resetImportState();
   };
 

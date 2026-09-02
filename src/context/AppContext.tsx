@@ -333,21 +333,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const importClasses = (classList: Partial<ClassData>[]) => {
-    const formatted: ClassData[] = classList.map((c, i) => ({
-      id: `c-imp-${Date.now()}-${i}`,
-      className: c.className || `Kelas Baru ${i + 1}`,
-      homeroomTeacher: c.homeroomTeacher || 'Belum Ditentukan',
-      academicYear: c.academicYear || '2026/2027',
-      studentCount: 30,
-    }));
-    saveCollectionItemsBatch('classes', formatted);
+    const activeAY = academicYears.find((y) => y.isActive) || academicYears[0];
+    const existingClassNames = new Set(classes.map((c) => c.className.toLowerCase().trim()));
+
+    const formatted: ClassData[] = classList
+      .map((c, i) => {
+        const cName = (c.className || `Kelas Baru ${i + 1}`).trim();
+        return {
+          id: `c-imp-${Date.now()}-${i}`,
+          className: cName,
+          homeroomTeacher: c.homeroomTeacher || 'Belum Ditentukan',
+          academicYear: c.academicYear || activeAY?.yearName || '2026/2027',
+          studentCount: c.studentCount || students.filter((s) => s.currentClass.toLowerCase().trim() === cName.toLowerCase()).length || 0,
+        };
+      })
+      .filter((c) => c.className.length > 0 && !existingClassNames.has(c.className.toLowerCase()));
+
+    if (formatted.length > 0) {
+      saveCollectionItemsBatch('classes', formatted);
+    }
   };
 
   const addStudent = (fullName: string, currentClass: string, nisn: string, gender: 'L' | 'P') => {
+    const cleanClass = (currentClass || 'X IPA 1').trim();
     const newStudent: Student = {
       id: `std-${Date.now()}`,
       fullName,
-      currentClass,
+      currentClass: cleanClass,
       nisn,
       gender,
       rfidTag: `RFID-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -355,19 +367,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Aktif',
     };
     saveCollectionItem('students', newStudent);
+
+    // Otomatis simpan data kelas jika belum ada di sistem
+    if (cleanClass) {
+      const classExists = classes.some(
+        (c) => c.className.toLowerCase().trim() === cleanClass.toLowerCase()
+      );
+      if (!classExists) {
+        const activeAY = academicYears.find((y) => y.isActive) || academicYears[0];
+        const autoClass: ClassData = {
+          id: `c-auto-${Date.now()}`,
+          className: cleanClass,
+          homeroomTeacher: 'Belum Ditentukan',
+          academicYear: activeAY?.yearName || '2026/2027',
+          studentCount: 1,
+        };
+        saveCollectionItem('classes', autoClass);
+      }
+    }
   };
 
   const importStudents = (studentList: Partial<Student>[]) => {
     const formatted: Student[] = studentList.map((s, i) => ({
       id: `std-imp-${Date.now()}-${i}`,
       fullName: s.fullName || `Siswa Baru ${i + 1}`,
-      currentClass: s.currentClass || 'X IPA 1',
+      currentClass: (s.currentClass || 'X IPA 1').trim(),
       nisn: s.nisn || `00${Math.floor(10000000 + Math.random() * 90000000)}`,
       gender: s.gender === 'P' ? 'P' : 'L',
       rfidTag: `RFID-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'Aktif',
     }));
     saveCollectionItemsBatch('students', formatted);
+
+    // Otomatis buat & simpan data kelas baru dari daftar siswa yang di-import
+    const activeAY = academicYears.find((y) => y.isActive) || academicYears[0];
+    const existingClassNames = new Set(classes.map((c) => c.className.toLowerCase().trim()));
+    const newClassesToCreate: ClassData[] = [];
+
+    formatted.forEach((std) => {
+      const clsName = std.currentClass.trim();
+      if (clsName && !existingClassNames.has(clsName.toLowerCase())) {
+        existingClassNames.add(clsName.toLowerCase());
+        newClassesToCreate.push({
+          id: `c-auto-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          className: clsName,
+          homeroomTeacher: 'Belum Ditentukan',
+          academicYear: activeAY?.yearName || '2026/2027',
+          studentCount: formatted.filter((s) => s.currentClass.toLowerCase().trim() === clsName.toLowerCase()).length,
+        });
+      }
+    });
+
+    if (newClassesToCreate.length > 0) {
+      saveCollectionItemsBatch('classes', newClassesToCreate);
+    }
   };
 
   const updateStudentPhoto = (studentId: string, photo: string) => {
