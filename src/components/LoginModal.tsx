@@ -10,9 +10,6 @@ import {
   EyeOff,
   CheckCircle2,
   XCircle,
-  Info,
-  KeyRound,
-  Sparkles,
 } from 'lucide-react';
 import { UserAccount } from '../types';
 
@@ -242,85 +239,14 @@ export const LoginModal: React.FC = () => {
             </button>
           </form>
 
-          {/* Catatan Informasi Akun Login di Paling Bawah Kotak Dialog */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                  <span>Catatan Akun Login</span>
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium">Kredensial Default</span>
-              </div>
-
-              {/* Admin Note Card */}
-              <div className="p-2.5 bg-white rounded-xl border border-indigo-100 shadow-xs flex items-center justify-between gap-2">
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
-                      Akun Admin
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-700 font-medium flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                    <span>
-                      Username: <strong className="text-slate-900 font-bold font-mono">admin</strong>
-                    </span>
-                    <span>
-                      Password: <strong className="text-slate-900 font-bold font-mono">admin123</strong>
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsername('admin');
-                    setPassword('admin123');
-                    setError('');
-                  }}
-                  className="shrink-0 text-[11px] font-bold px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg transition-all border border-indigo-200 hover:border-indigo-600 cursor-pointer flex items-center gap-1"
-                  title="Klik untuk mengisi formulir login dengan akun Admin"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>Gunakan</span>
-                </button>
-              </div>
-
-              {/* Guru & Siswa Hint Notes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
-                <div
-                  onClick={() => {
-                    setUsername('guru');
-                    setPassword('guru123');
-                    setError('');
-                  }}
-                  className="p-2 bg-white rounded-lg border border-slate-200/80 hover:border-indigo-300 transition-colors cursor-pointer text-left"
-                >
-                  <div className="text-[10px] font-bold text-slate-500 uppercase">Akun Guru / Tendik</div>
-                  <div className="text-[11px] text-slate-700 font-mono mt-0.5">
-                    <strong>guru</strong> / <strong>guru123</strong>
-                  </div>
-                </div>
-
-                <div
-                  onClick={() => {
-                    setUsername('siswa');
-                    setPassword('siswa123');
-                    setError('');
-                  }}
-                  className="p-2 bg-white rounded-lg border border-slate-200/80 hover:border-indigo-300 transition-colors cursor-pointer text-left"
-                >
-                  <div className="text-[10px] font-bold text-slate-500 uppercase">Akun Siswa / Murid</div>
-                  <div className="text-[11px] text-slate-700 font-mono mt-0.5">
-                    <strong>siswa</strong> / <strong>siswa123</strong>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-slate-500 italic text-center pt-0.5">
-                * Anda juga dapat login menggunakan NIP guru atau NISN siswa terdaftar.
-              </p>
-            </div>
+          {/* Footer Pengembang */}
+          <div className="pt-3 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
+              <span>Aplikasi ini di kembangkan oleh :</span>
+              <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                @wayansuma70
+              </span>
+            </p>
           </div>
         </div>
       </div>
