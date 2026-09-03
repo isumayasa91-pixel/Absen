@@ -21,6 +21,7 @@ import {
   ComputerCourseAttendance,
   ComputerCourseMember,
   StudentGradeRecord,
+  PiketBookRecord,
 } from '../types';
 import {
   initialSystemSettings,
@@ -44,6 +45,7 @@ import {
   initialComputerAttendances,
   initialComputerMembers,
   initialGrades,
+  initialPiketRecords,
 } from '../data/mockData';
 import {
   listenSingleDoc,
@@ -187,6 +189,11 @@ interface AppContextType {
   deleteGradeRecord: (id: string) => void;
   clearAllGrades: () => void;
 
+  piketRecords: PiketBookRecord[];
+  savePiketRecord: (record: PiketBookRecord) => void;
+  deletePiketRecord: (id: string) => void;
+  clearAllPiketRecords: () => void;
+
   saveCollectionItem: (collectionName: string, item: any) => Promise<void>;
   showNotice: (msg: string) => void;
   resetEntireSystemData: () => Promise<void>;
@@ -238,6 +245,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [computerAttendances, setComputerAttendances] = useState<ComputerCourseAttendance[]>(initialComputerAttendances);
   const [computerMembers, setComputerMembers] = useState<ComputerCourseMember[]>(initialComputerMembers);
   const [grades, setGrades] = useState<StudentGradeRecord[]>(initialGrades);
+  const [piketRecords, setPiketRecords] = useState<PiketBookRecord[]>(initialPiketRecords);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
 
@@ -283,6 +291,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubCompAtt = listenCollection('computerAttendances', initialComputerAttendances, setComputerAttendances);
     const unsubCompMembers = listenCollection('computerMembers', initialComputerMembers, setComputerMembers);
     const unsubGrades = listenCollection('grades', initialGrades, setGrades);
+    const unsubPiket = listenCollection('piketRecords', initialPiketRecords, setPiketRecords);
 
     return () => {
       unsubSettings();
@@ -305,6 +314,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubCompAtt();
       unsubCompMembers();
       unsubGrades();
+      unsubPiket();
     };
   }, []);
 
@@ -1106,6 +1116,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGrades([]);
   };
 
+  const savePiketRecord = (record: PiketBookRecord) => {
+    saveCollectionItem('piketRecords', record);
+    showNotice(`Buku Piket tanggal ${record.date} berhasil disimpan.`);
+  };
+
+  const deletePiketRecord = (id: string) => {
+    deleteCollectionItem('piketRecords', id);
+    showNotice('Catatan Buku Piket berhasil dihapus.');
+  };
+
+  const clearAllPiketRecords = () => {
+    clearCollectionBatch('piketRecords', piketRecords);
+    setPiketRecords([]);
+    showNotice('Semua catatan Buku Piket berhasil dibersihkan.');
+  };
+
   const resetEntireSystemData = async () => {
     await clearEntireCollectionInFirestore('students');
     await clearEntireCollectionInFirestore('teachers');
@@ -1122,6 +1148,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await clearEntireCollectionInFirestore('computerSessions');
     await clearEntireCollectionInFirestore('computerAttendances');
     await clearEntireCollectionInFirestore('computerMembers');
+    await clearEntireCollectionInFirestore('grades');
+    await clearEntireCollectionInFirestore('piketRecords');
     setStudents([]);
     setTeachers([]);
     setClasses([]);
@@ -1137,6 +1165,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setComputerSessions([]);
     setComputerAttendances([]);
     setComputerMembers([]);
+    setGrades([]);
+    setPiketRecords([]);
   };
 
   const restoreDemoData = async () => {
@@ -1154,6 +1184,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await saveCollectionItemsBatch('computerSessions', initialComputerSessions);
     await saveCollectionItemsBatch('computerAttendances', initialComputerAttendances);
     await saveCollectionItemsBatch('computerMembers', initialComputerMembers);
+    await saveCollectionItemsBatch('grades', initialGrades);
+    await saveCollectionItemsBatch('piketRecords', initialPiketRecords);
   };
 
   return (
@@ -1260,6 +1292,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveGradesBatch,
         deleteGradeRecord,
         clearAllGrades,
+        piketRecords,
+        savePiketRecord,
+        deletePiketRecord,
+        clearAllPiketRecords,
         saveCollectionItem,
         showNotice,
         resetEntireSystemData,

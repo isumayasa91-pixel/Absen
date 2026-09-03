@@ -282,3 +282,77 @@ export interface ComputerCourseMember {
   registeredDate: string;
   status: 'Aktif' | 'Nonaktif';
 }
+
+export interface PiketTeacherAttendance {
+  teacherId: string;
+  teacherName: string;
+  nip?: string;
+  subject?: string;
+  status: 'Hadir' | 'Izin' | 'Sakit' | 'Tugas Luar' | 'Alpa' | 'Terlambat';
+  timeSlot?: string; // Jam Pelajaran (misal: "Jam 1-3" atau "07:30 - 09:30")
+  substituteTeacher?: string; // Guru Pengganti / Pembawa Tugas
+  notes?: string;
+}
+
+export interface PiketClassAttendance {
+  className: string;
+  totalStudents: number;
+  hadir: number;
+  sakit: number;
+  izin: number;
+  alpa: number;
+  dispen?: number;
+  terlambat?: number;
+  absentStudentNames?: string; // Detail nama siswa yang tidak hadir & alasan
+}
+
+export interface EarlyLeaveRecord {
+  id: string;
+  studentName: string;
+  className: string;
+  timeOut: string;
+  reason: string;
+  pickedUpBy?: string; // Penjemput / Nama Orang Tua / Wali
+}
+
+export interface PiketBookRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  dayName: string; // Hari (Senin, Selasa, dll)
+  lessonStartTime: string; // Pelajaran dimulai (misal "07:15 WITA" / "07.00")
+  
+  // Guru Piket (dipilih sinkron dari data guru)
+  piketTeacherIds: string[];
+  piketTeacherNames: string[];
+  piketTeacherNips?: string[];
+  
+  // A. Absen Guru
+  teacherAttendances: PiketTeacherAttendance[];
+  
+  // B. Absen Siswa (Kelas VII A s/d IX E)
+  classAttendances: PiketClassAttendance[];
+  
+  // Kejadian Penting / Absen Siswa yang Mendahului Pulang
+  earlyLeaves: EarlyLeaveRecord[];
+  importantEvents: string;
+  
+  // Rekapitulasi Total
+  rekapSummary?: {
+    totalStudents: number;
+    totalHadir: number;
+    totalSakit: number;
+    totalIzin: number;
+    totalAlpa: number;
+    totalDispen: number;
+    totalTeachers: number;
+    teachersPresent: number;
+    teachersAbsent: number;
+  };
+
+  // Pengesahan
+  principalName?: string;
+  principalNip?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

@@ -29,6 +29,7 @@ import { DownloadLoginView } from './components/views/DownloadLoginView';
 import { LokasiSiswaView } from './components/views/LokasiSiswaView';
 import { DaftarNilaiView } from './components/views/DaftarNilaiView';
 import { DownloadJurnalGuruView } from './components/views/DownloadJurnalGuruView';
+import { BukuPiketView } from './components/views/BukuPiketView';
 
 const MainContent: React.FC = () => {
   const { activeTab, currentUser, quotaExceeded } = useApp();
@@ -53,6 +54,10 @@ const MainContent: React.FC = () => {
       case 'unduh-jurnal-guru':
       case 'download-jurnal':
         return <DownloadJurnalGuruView />;
+      case 'buku-piket':
+      case 'piket':
+      case 'piket-sekolah':
+        return <BukuPiketView />;
       case 'daftar-nilai':
       case 'nilai':
         return <DaftarNilaiView />;

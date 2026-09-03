@@ -165,14 +165,20 @@ export const listenCollection = <T extends { id: string }>(
     colRef,
     async (snapshot) => {
       if (snapshot.empty) {
+        // If snapshot is from cache and empty, provide fallback to UI but don't force write yet
+        if (snapshot.metadata.fromCache) {
+          onUpdate(initialFallback);
+          return;
+        }
+
         const initialized = await checkMetaInitialized();
         if (!initialized && initialFallback.length > 0) {
-          // First time launching app on fresh empty DB -> seed initial data ONCE
+          // First time connected to fresh empty DB -> seed initial data ONCE
           await saveCollectionItemsBatch(colName, initialFallback);
           await markMetaInitialized();
           onUpdate(initialFallback);
         } else {
-          // Data was deleted or dataset is empty -> STAY EMPTY!
+          // Data was intentionally deleted or empty -> STAY EMPTY!
           onUpdate([]);
         }
       } else {
@@ -188,8 +194,18 @@ export const listenCollection = <T extends { id: string }>(
       }
     },
     (err) => {
-      console.error(`Error listening to collection ${colName}:`, err);
-      if (err.code === 'resource-exhausted' || err.message?.includes('Quota')) {
+      // Gracefully log offline / unavailable errors without crashing
+      if (err.code === 'unavailable') {
+        console.warn(`Firestore is offline/connecting for ${colName}. Operating in offline cache mode.`);
+        return;
+      }
+      if (
+        err.code === 'resource-exhausted' ||
+        err.message?.includes('Quota') ||
+        err.message?.includes('quota') ||
+        String(err).includes('Quota') ||
+        String(err).includes('quota')
+      ) {
         window.dispatchEvent(new CustomEvent('firestore-quota-exceeded', { detail: err }));
       }
     }
@@ -207,16 +223,28 @@ export const listenSingleDoc = <T extends Record<string, any>>(
   return onSnapshot(
     docRef,
     (snapshot) => {
+      const isFromCache = snapshot.metadata?.fromCache ?? false;
       if (!snapshot.exists()) {
-        syncSingleDoc(colName, docId, initialFallback);
+        if (!isFromCache) {
+          syncSingleDoc(colName, docId, initialFallback);
+        }
         onUpdate(initialFallback);
       } else {
         onUpdate(snapshot.data() as T);
       }
     },
     (err) => {
-      console.error(`Error listening to doc ${colName}/${docId}:`, err);
-      if (err.code === 'resource-exhausted' || err.message?.includes('Quota')) {
+      if (err.code === 'unavailable') {
+        console.warn(`Firestore is offline/connecting for doc ${colName}/${docId}. Operating in offline cache mode.`);
+        return;
+      }
+      if (
+        err.code === 'resource-exhausted' ||
+        err.message?.includes('Quota') ||
+        err.message?.includes('quota') ||
+        String(err).includes('Quota') ||
+        String(err).includes('quota')
+      ) {
         window.dispatchEvent(new CustomEvent('firestore-quota-exceeded', { detail: err }));
       }
     }
