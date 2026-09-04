@@ -26,6 +26,8 @@ import {
   FileDown,
   X,
   FileCheck,
+  Printer,
+  FileText,
 } from 'lucide-react';
 
 export const commonSubjects = [
@@ -60,6 +62,7 @@ export const DaftarNilaiView: React.FC = () => {
     saveGradesBatch,
     showNotice,
     currentUser,
+    settings,
   } = useApp();
 
   const isStudent = currentUser?.role === 'siswa';
@@ -87,6 +90,12 @@ export const DaftarNilaiView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
 
   // Grade weights state (percentage, total = 100)
   const [weights, setWeights] = useState<GradeWeights>({
@@ -533,27 +542,38 @@ export const DaftarNilaiView: React.FC = () => {
             </p>
           </div>
 
-          {!isStudent && (
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setShowWeightModal(true)}
-                className="px-3.5 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-md text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
-              >
-                <Sliders className="w-4 h-4 text-amber-200" />
-                <span>Bobot ({weights.tugas}% T, {weights.ph}% PH, {weights.pts}% PTS, {weights.pas}% PAS)</span>
-              </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowPdfModal(true)}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-extrabold text-xs transition-all shadow-lg flex items-center gap-2 cursor-pointer border border-red-500"
+            >
+              <Printer className="w-4 h-4 text-white" />
+              <span>Cetak / Download PDF</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={handleSaveAll}
-                className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 rounded-xl font-extrabold text-xs transition-all shadow-lg flex items-center gap-2 cursor-pointer border border-amber-200"
-              >
-                <Save className="w-4 h-4 text-amber-600" />
-                <span>Simpan Semua Nilai</span>
-              </button>
-            </div>
-          )}
+            {!isStudent && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowWeightModal(true)}
+                  className="px-3.5 py-2 bg-white/15 hover:bg-white/25 rounded-xl backdrop-blur-md text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
+                >
+                  <Sliders className="w-4 h-4 text-amber-200" />
+                  <span>Bobot ({weights.tugas}% T, {weights.ph}% PH, {weights.pts}% PTS, {weights.pas}% PAS)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 rounded-xl font-extrabold text-xs transition-all shadow-lg flex items-center gap-2 cursor-pointer border border-amber-200"
+                >
+                  <Save className="w-4 h-4 text-amber-600" />
+                  <span>Simpan Semua Nilai</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -692,6 +712,15 @@ export const DaftarNilaiView: React.FC = () => {
         {!isStudent && (
           <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPdfModal(true)}
+                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Printer className="w-4 h-4 text-white" />
+                <span>Download PDF / Cetak</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setShowUploadModal(true)}
@@ -1171,6 +1200,225 @@ export const DaftarNilaiView: React.FC = () => {
               >
                 Batal
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Cetak / Preview PDF Daftar Nilai Resmi */}
+      {showPdfModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static">
+          <div className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 my-8 print:border-none print:shadow-none print:m-0 print:p-4 print:rounded-none">
+            {/* Modal Header Controls (Hidden during print) */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Pratinjau Dokumen PDF Daftar Nilai</h3>
+                  <p className="text-xs text-slate-500 font-medium">Format cetak resmi A4 lengkap KOP Sekolah & pengesahan TTD</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintPdf}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Cetak / Simpan ke PDF Sekarang</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPdfModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Document Content Container */}
+            <div ref={printRef} className="print-area space-y-6 text-slate-900 font-sans p-2">
+              {/* Kop Surat Resmi Dual Logo (Kabupaten & Sekolah) */}
+              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 gap-4">
+                {/* Logo Kabupaten (Kiri) */}
+                {settings?.regencyLogo ? (
+                  <img src={settings.regencyLogo} alt="Logo Kabupaten" className="w-16 h-16 object-contain shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 bg-slate-100 rounded-xl border border-slate-300 flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0">
+                    LOGO PEMDA
+                  </div>
+                )}
+
+                <div className="text-center flex-1 space-y-0.5">
+                  <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-700">
+                    PEMERINTAH {settings?.city ? settings.city.toUpperCase() : 'KABUPATEN / KOTA'}
+                  </p>
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
+                    DINAS PENDIDIKAN DAN KEBUDAYAAN
+                  </p>
+                  <h2 className="text-lg font-black uppercase tracking-wider text-slate-950">
+                    {settings?.schoolName || 'SMP NEGERI 1 CONTOH'}
+                  </h2>
+                  <p className="text-xs font-medium text-slate-700">
+                    {settings?.schoolAddress || 'Jl. Pendidikan No. 1'} &bull; {settings?.city || 'Denpasar'}
+                  </p>
+                  <p className="text-xs font-extrabold text-slate-900 pt-0.5">
+                    LEMBAR HASIL EVALUASI AKADEMIK & REKAPITULASI NILAI SISWA
+                  </p>
+                </div>
+
+                {/* Logo Sekolah (Kanan) */}
+                {settings?.schoolLogo ? (
+                  <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-16 h-16 object-contain shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 bg-slate-100 rounded-xl border border-slate-300 flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0">
+                    LOGO SEKOLAH
+                  </div>
+                )}
+              </div>
+
+              {/* Title Section */}
+              <div className="text-center space-y-1">
+                <h3 className="text-base font-black uppercase underline tracking-wide text-slate-900">
+                  DAFTAR NILAI CAPAIAN PEMBELAJARAN
+                </h3>
+                <p className="text-xs font-bold text-slate-600">
+                  TAHUN AJARAN {activeAY}
+                </p>
+              </div>
+
+              {/* Metadata Table */}
+              <div className="grid grid-cols-2 text-xs font-semibold bg-slate-50/80 p-3.5 rounded-xl border border-slate-300 gap-x-6 gap-y-1.5">
+                <div>
+                  <span className="text-slate-500">Mata Pelajaran:</span>{' '}
+                  <strong className="text-slate-900 font-bold">{selectedSubject}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">Kelas:</span>{' '}
+                  <strong className="text-slate-900 font-bold">{selectedClass}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">Guru Pengampu:</span>{' '}
+                  <strong className="text-slate-900 font-bold">{selectedTeacher || 'Guru Mapel'}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">NIP / NUPTK:</span>{' '}
+                  <strong className="text-slate-900 font-bold">
+                    {teachers.find((t) => t.fullNameWithTitle.toLowerCase() === selectedTeacher.toLowerCase())?.nip ||
+                     teachers.find((t) => t.fullNameWithTitle.toLowerCase() === selectedTeacher.toLowerCase())?.nuptk ||
+                     '-'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">Ketentuan Bobot:</span>{' '}
+                  <strong className="text-slate-800">
+                    Tugas ({weights.tugas}%), PH ({weights.ph}%), PTS ({weights.pts}%), PAS ({weights.pas}%)
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">Rata-rata Kelas:</span>{' '}
+                  <strong className="text-indigo-900 font-bold">{classStats.classAvg || '-'}</strong>
+                </div>
+              </div>
+
+              {/* Grade Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse border border-slate-400">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-800 font-extrabold uppercase text-[10px] text-center border-b border-slate-400">
+                      <th className="p-2 border border-slate-400 w-8">No</th>
+                      <th className="p-2 border border-slate-400 w-28">NISN</th>
+                      <th className="p-2 border border-slate-400 text-left">Nama Siswa</th>
+                      <th className="p-2 border border-slate-400 w-8">L/P</th>
+                      <th className="p-2 border border-slate-400 w-16">Rata Tugas</th>
+                      <th className="p-2 border border-slate-400 w-16">Rata PH</th>
+                      <th className="p-2 border border-slate-400 w-12">PTS</th>
+                      <th className="p-2 border border-slate-400 w-12">PAS</th>
+                      <th className="p-2 border border-slate-400 w-20 bg-slate-200 text-slate-900 font-black">Nilai Akhir</th>
+                      <th className="p-2 border border-slate-400 w-14">Predikat</th>
+                      <th className="p-2 border border-slate-400 w-20">Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-300 font-medium text-slate-900">
+                    {classStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="text-center py-6 text-slate-500">
+                          Tidak ada data siswa
+                        </td>
+                      </tr>
+                    ) : (
+                      classStudents.map((std, idx) => {
+                        const draft = draftGrades[std.id] || {};
+                        const calc = calculateAccumulated(draft);
+
+                        return (
+                          <tr key={std.id} className="text-center">
+                            <td className="p-2 border border-slate-300 font-bold">{idx + 1}</td>
+                            <td className="p-2 border border-slate-300 font-mono text-[11px]">{std.nisn}</td>
+                            <td className="p-2 border border-slate-300 text-left font-bold text-slate-900">{std.fullName}</td>
+                            <td className="p-2 border border-slate-300 font-bold">{std.gender}</td>
+                            <td className="p-2 border border-slate-300">{calc.avgTugas || '-'}</td>
+                            <td className="p-2 border border-slate-300">{calc.avgPH || '-'}</td>
+                            <td className="p-2 border border-slate-300">{draft.pts ?? '-'}</td>
+                            <td className="p-2 border border-slate-300">{draft.pas ?? '-'}</td>
+                            <td className="p-2 border border-slate-300 font-black bg-slate-50 text-slate-950">
+                              {calc.hasAnyInput ? calc.finalScore : '-'}
+                            </td>
+                            <td className="p-2 border border-slate-300 font-bold">{calc.hasAnyInput ? calc.predicate : '-'}</td>
+                            <td className="p-2 border border-slate-300 font-bold">
+                              {calc.hasAnyInput ? (
+                                <span className={calc.statusPassing === 'Lulus' ? 'text-emerald-700' : 'text-rose-600'}>
+                                  {calc.statusPassing}
+                                </span>
+                              ) : (
+                                '-'
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Tanda Tangan Resmi Pengesahan */}
+              {(() => {
+                const principalName = settings?.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.';
+                const principalNip = settings?.principalNip || '19750812 199903 1 002';
+                const cityName = settings?.city || 'Denpasar';
+
+                const printTeacherName = selectedTeacher || currentUser?.name || 'Guru Pengampu';
+                const printTeacherObj = teachers.find(
+                  (t) => t.fullNameWithTitle.toLowerCase() === printTeacherName.toLowerCase()
+                );
+                const printTeacherNip = printTeacherObj?.nip || printTeacherObj?.nuptk || '-';
+
+                return (
+                  <div className="grid grid-cols-2 pt-8 text-xs font-semibold text-center break-inside-avoid">
+                    <div>
+                      <p>Mengetahui,</p>
+                      <p className="font-bold">Kepala Sekolah</p>
+                      <div className="h-20 flex items-center justify-center">
+                        {settings?.principalSignature && (
+                          <img src={settings.principalSignature} alt="TTD Kepala Sekolah" className="h-16 object-contain" />
+                        )}
+                      </div>
+                      <p className="font-extrabold underline">{principalName}</p>
+                      <p className="text-[11px] text-slate-600">NIP. {principalNip}</p>
+                    </div>
+
+                    <div>
+                      <p>{cityName}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      <p className="font-bold">Guru Mata Pelajaran</p>
+                      <div className="h-20" />
+                      <p className="font-extrabold underline">{printTeacherName}</p>
+                      <p className="text-[11px] text-slate-600">NIP. {printTeacherNip}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

@@ -1410,17 +1410,43 @@ export const BukuPiketView: React.FC = () => {
 
           {/* Printable Document Container */}
           <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-300 shadow-xl max-w-5xl mx-auto text-slate-900 font-serif leading-relaxed print:p-0 print:border-none print:shadow-none">
-            {/* Kop Surat Sekolah */}
-            <div className="text-center border-b-4 border-double border-slate-900 pb-4 mb-6">
-              <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider font-sans text-slate-900">
-                {settings.schoolName || 'SMP NEGERI 1 INDONESIA'}
-              </h2>
-              <p className="text-xs font-sans text-slate-700 mt-1">
-                {settings.schoolAddress || 'Alamat Sekolah Terpadu, Jl. Pendidikan No. 01'} - {settings.city || 'Kota'}
-              </p>
-              <h1 className="text-base md:text-lg font-black uppercase tracking-widest mt-3 underline font-sans text-rose-900">
-                BUKU PIKET HARIAN
-              </h1>
+            {/* Kop Surat Sekolah Dual Logo */}
+            <div className="flex items-center justify-between border-b-4 border-double border-slate-900 pb-4 mb-6 gap-4">
+              {/* Logo Pemda (Kiri) */}
+              {settings?.regencyLogo ? (
+                <img src={settings.regencyLogo} alt="Logo Pemda" className="w-16 h-16 object-contain shrink-0" />
+              ) : (
+                <div className="w-16 h-16 bg-slate-100 rounded-xl border border-slate-300 flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0 font-sans">
+                  LOGO PEMDA
+                </div>
+              )}
+
+              <div className="text-center flex-1 space-y-0.5">
+                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-700 font-sans">
+                  PEMERINTAH {settings?.city ? settings.city.toUpperCase() : 'KABUPATEN / KOTA'}
+                </p>
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 font-sans">
+                  DINAS PENDIDIKAN DAN KEBUDAYAAN
+                </p>
+                <h2 className="text-xl font-black uppercase tracking-wider font-sans text-slate-900">
+                  {settings.schoolName || 'SMP NEGERI 1 INDONESIA'}
+                </h2>
+                <p className="text-xs font-sans text-slate-700">
+                  {settings.schoolAddress || 'Alamat Sekolah Terpadu, Jl. Pendidikan No. 01'} - {settings.city || 'Kota'}
+                </p>
+                <h1 className="text-base font-black uppercase tracking-widest pt-1 underline font-sans text-rose-900">
+                  BUKU PIKET HARIAN
+                </h1>
+              </div>
+
+              {/* Logo Sekolah (Kanan) */}
+              {settings?.schoolLogo ? (
+                <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-16 h-16 object-contain shrink-0" />
+              ) : (
+                <div className="w-16 h-16 bg-slate-100 rounded-xl border border-slate-300 flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0 font-sans">
+                  LOGO SEKOLAH
+                </div>
+              )}
             </div>
 
             {/* Header Informasi Hari, Tanggal, Jam Dimulai & Guru Piket */}

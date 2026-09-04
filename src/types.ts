@@ -224,6 +224,7 @@ export interface SystemSetting {
   principalName: string;
   principalNip: string;
   schoolLogo: string;
+  regencyLogo?: string;
   principalSignature?: string;
   schoolStamp?: string;
   enableClassAttendance: boolean;

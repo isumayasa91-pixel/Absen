@@ -773,16 +773,20 @@ export const DataSiswaView: React.FC = () => {
                   style={{ width: '90mm', height: '53mm' }}
                   className="w-[340px] h-[200px] bg-white text-slate-900 rounded-[12px] p-0 shadow-lg border-[1.5px] border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans crisp-card print-exact-card"
                 >
-                  {/* Header Bar dengan Alamat Sekolah */}
+                  {/* Header Bar dengan Logo Pemkab & Logo Sekolah */}
                   <div className="bg-blue-900 text-white px-2.5 py-1.5 flex items-center justify-between">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                      {/* Logo Pemkab (Kiri) */}
                       <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-2xs">
-                        {settings.schoolLogo ? (
+                        {settings.regencyLogo ? (
+                          <img src={settings.regencyLogo} alt="Logo Pemda" className="w-full h-full object-contain crisp-card" />
+                        ) : settings.schoolLogo ? (
                           <img src={settings.schoolLogo} alt="Logo" className="w-full h-full object-contain crisp-card" />
                         ) : (
                           <School className="w-4 h-4 text-blue-900" />
                         )}
                       </div>
+
                       <div className="leading-tight text-left min-w-0 flex-1">
                         <span className="text-[9.5px] font-black uppercase tracking-wider text-white truncate block" title={settings.schoolName}>
                           {settings.schoolName || 'SMP NEGERI 1'}
@@ -794,6 +798,13 @@ export const DataSiswaView: React.FC = () => {
                           KARTU PRESENSI DIGITAL RFID
                         </span>
                       </div>
+
+                      {/* Logo Sekolah (Kanan jika ada logo Pemkab) */}
+                      {settings.regencyLogo && settings.schoolLogo && (
+                        <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-2xs">
+                          <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain crisp-card" />
+                        </div>
+                      )}
                     </div>
                     <span className="text-[7px] font-mono font-black bg-red-600 text-white px-1.5 py-0.5 rounded ml-1 shrink-0 shadow-2xs border border-red-700">
                       9.0 x 5.3 cm

@@ -708,17 +708,43 @@ export const DownloadJurnalGuruView: React.FC = () => {
 
             {/* Printable Document Area */}
             <div ref={printRef} className="space-y-6 text-slate-900 font-sans">
-              {/* Kop Surat Resmi */}
-              <div className="text-center border-b-2 border-slate-800 pb-4">
-                <h2 className="text-lg font-black uppercase tracking-wider">
-                  {settings?.schoolName || 'SMP NEGERI 1 CONTOH'}
-                </h2>
-                <p className="text-xs font-medium text-slate-700">
-                  {settings?.schoolAddress || 'Jl. Pendidikan No. 1, Kota Denpasar, Bali'} &bull; NPSN: {settings?.npsn || '50102030'}
-                </p>
-                <p className="text-xs font-bold text-slate-800 mt-1">
-                  TAHUN AJARAN {activeAY}
-                </p>
+              {/* Kop Surat Resmi dengan Dual Logo (Kabupaten & Sekolah) */}
+              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 gap-4">
+                {/* Logo Kabupaten / Pemda (Kiri) */}
+                {settings?.regencyLogo ? (
+                  <img src={settings.regencyLogo} alt="Logo Pemda/Kabupaten" className="w-16 h-16 object-contain shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 bg-slate-100 border border-slate-300 rounded-xl flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0">
+                    LOGO PEMDA
+                  </div>
+                )}
+
+                <div className="text-center flex-1 space-y-0.5">
+                  <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-700">
+                    PEMERINTAH {settings?.city ? settings.city.toUpperCase() : 'KABUPATEN / KOTA'}
+                  </p>
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
+                    DINAS PENDIDIKAN DAN KEBUDAYAAN
+                  </p>
+                  <h2 className="text-lg font-black uppercase tracking-wider text-slate-950">
+                    {settings?.schoolName || 'SMP NEGERI 1 CONTOH'}
+                  </h2>
+                  <p className="text-xs font-medium text-slate-700">
+                    {settings?.schoolAddress || 'Jl. Pendidikan No. 1'} &bull; {settings?.city || 'Kota'}
+                  </p>
+                  <p className="text-xs font-extrabold text-slate-900 pt-0.5">
+                    TAHUN AJARAN {activeAY}
+                  </p>
+                </div>
+
+                {/* Logo Sekolah (Kanan) */}
+                {settings?.schoolLogo ? (
+                  <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-16 h-16 object-contain shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 bg-slate-100 border border-slate-300 rounded-xl flex items-center justify-center text-slate-400 font-bold text-[9px] text-center p-1 shrink-0">
+                    LOGO SEKOLAH
+                  </div>
+                )}
               </div>
 
               <div className="text-center space-y-1">

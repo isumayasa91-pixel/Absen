@@ -13,6 +13,7 @@ import {
   Save,
   CheckCircle2,
   Plus,
+  Building,
   Building2,
   School,
   Sparkles,
@@ -303,6 +304,21 @@ export const KonfigurasiView: React.FC = () => {
       if (base64) {
         setFormData((prev) => ({ ...prev, schoolLogo: base64 }));
         showNotice('✅ Logo sekolah berhasil diunggah!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRegencyLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, regencyLogo: base64 }));
+        showNotice('✅ Logo Kabupaten / Dinas Pendidikan berhasil diunggah!');
       }
     };
     reader.readAsDataURL(file);
@@ -1022,16 +1038,20 @@ export const KonfigurasiView: React.FC = () => {
                           style={{ width: '90mm', height: '53mm' }}
                           className="w-[340px] h-[200px] bg-white text-slate-900 rounded-[12px] p-0 shadow-lg border-[1.5px] border-blue-900 relative overflow-hidden flex flex-col justify-between shrink-0 font-sans crisp-card print-exact-card"
                         >
-                          {/* Header Bar: Biru Tua Pekat & Logo Sekolah */}
+                          {/* Header Bar: Biru Tua Pekat & Dual Logo */}
                           <div className="bg-blue-900 text-white px-2.5 py-1.5 flex items-center justify-between">
-                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                            <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                              {/* Logo Pemkab (Kiri) */}
                               <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-2xs">
-                                {settings.schoolLogo ? (
+                                {settings.regencyLogo ? (
+                                  <img src={settings.regencyLogo} alt="Logo Pemda" className="w-full h-full object-contain crisp-card" />
+                                ) : settings.schoolLogo ? (
                                   <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain crisp-card" />
                                 ) : (
                                   <School className="w-4 h-4 text-blue-900" />
                                 )}
                               </div>
+
                               <div className="leading-tight text-left min-w-0 flex-1">
                                 <div className="text-[9.5px] font-black uppercase tracking-wider text-white truncate" title={settings.schoolName}>
                                   {settings.schoolName || 'SMP NEGERI 1'}
@@ -1043,6 +1063,13 @@ export const KonfigurasiView: React.FC = () => {
                                   KARTU PRESENSI DIGITAL RFID
                                 </div>
                               </div>
+
+                              {/* Logo Sekolah (Kanan) */}
+                              {settings.regencyLogo && settings.schoolLogo && (
+                                <div className="w-7 h-7 rounded-md bg-white border border-blue-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-2xs">
+                                  <img src={settings.schoolLogo} alt="Logo Sekolah" className="w-full h-full object-contain crisp-card" />
+                                </div>
+                              )}
                             </div>
                             <span className="text-[7px] font-mono font-black bg-red-600 text-white px-1.5 py-0.5 rounded ml-1 shrink-0 shadow-2xs border border-red-700">
                               9.0 x 5.3 cm
@@ -2027,6 +2054,68 @@ export const KonfigurasiView: React.FC = () => {
                         className="px-2 py-0.5 bg-purple-100 hover:bg-purple-200 text-purple-800 text-[10px] font-bold rounded cursor-pointer transition-colors"
                       >
                         Buku Edukasi
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* LOGO KABUPATEN / PEMDA / DINAS PENDIDIKAN */}
+              <div className="md:col-span-2 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Building className="w-4 h-4 text-emerald-600" />
+                  <span>Logo Kabupaten / Pemda / Dinas Pendidikan (KOP Surat Kiri)</span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl border-2 border-emerald-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
+                    {formData.regencyLogo ? (
+                      <img
+                        src={formData.regencyLogo}
+                        alt="Logo Kabupaten"
+                        className="w-full h-full object-contain rounded-xl"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                    ) : (
+                      <Building className="w-8 h-8 text-emerald-500" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={formData.regencyLogo || ''}
+                        onChange={(e) => setFormData({ ...formData, regencyLogo: e.target.value })}
+                        placeholder="https://domain.go.id/logo-kabupaten.png"
+                        className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
+                      />
+                      <label className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center justify-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-emerald-200" />
+                        <span>Upload Logo Pemda</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleRegencyLogoFileUpload}
+                        />
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] text-slate-500 font-medium">Preset Contoh Logo Pemda:</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            regencyLogo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&auto=format&fit=crop&q=80',
+                          })
+                        }
+                        className="px-2 py-0.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold rounded cursor-pointer transition-colors"
+                      >
+                        Logo Pemda / Tut Wuri
                       </button>
                     </div>
                   </div>
