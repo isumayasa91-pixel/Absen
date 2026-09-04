@@ -1,6 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FileCheck2, Plus, Save, CheckCircle, XCircle, Clock, Camera, Image, CheckCircle2, Trash2 } from 'lucide-react';
+import {
+  FileCheck2,
+  Plus,
+  Save,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Camera,
+  Image as ImageIcon,
+  CheckCircle2,
+  Trash2,
+  Upload,
+  Eye,
+  X,
+  ZoomIn,
+  FileText,
+} from 'lucide-react';
 
 export const IzinSakitView: React.FC = () => {
   const {
@@ -12,6 +28,7 @@ export const IzinSakitView: React.FC = () => {
   } = useApp();
 
   const [showModal, setShowModal] = useState(false);
+  const [previewImageModalUrl, setPreviewImageModalUrl] = useState<string | null>(null);
 
   // Form states
   const [studentId, setStudentId] = useState(students[0]?.id || '');
@@ -21,6 +38,28 @@ export const IzinSakitView: React.FC = () => {
   const [reason, setReason] = useState('');
   const [proofPhotoUrl, setProofPhotoUrl] = useState('');
   const [statusApprovalChoice, setStatusApprovalChoice] = useState<'Menunggu Persetujuan' | 'Langsung Disetujui'>('Menunggu Persetujuan');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // File Upload Handler (Base64)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Mohon pilih file gambar/foto (JPG, PNG, WEBP, dll).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setProofPhotoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +160,34 @@ export const IzinSakitView: React.FC = () => {
             <p className="text-xs text-slate-600 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-xl">
               "{p.reason}"
             </p>
+
+            {/* Preview Foto Surat jika ada */}
+            {p.proofPhotoUrl && (
+              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="w-12 h-12 rounded-lg bg-slate-200 border border-slate-300 overflow-hidden shrink-0">
+                    <img
+                      src={p.proofPhotoUrl}
+                      alt="Foto Surat Bukti"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">Foto Surat Bukti Terlampir</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Dokumen Bukti Fisik / Surat Dokter</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewImageModalUrl(p.proofPhotoUrl || null)}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center space-x-1 shrink-0 transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Lihat Foto</span>
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-2 border-t border-slate-100">
               <div className="flex items-center space-x-1">
@@ -243,19 +310,128 @@ export const IzinSakitView: React.FC = () => {
               {/* File Bukti Photo Surat */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  File Bukti Photo Surat Dokter / Orangtua
+                  Upload File Photo Surat Dokter / Orang Tua
                 </label>
-                <div className="p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-center space-y-1">
-                  <Camera className="w-5 h-5 text-slate-400 mx-auto" />
-                  <span className="text-[11px] font-semibold text-slate-600 block">Upload atau Ambil Foto Surat Bukti</span>
-                  <input
-                    type="text"
-                    value={proofPhotoUrl}
-                    onChange={(e) => setProofPhotoUrl(e.target.value)}
-                    placeholder="Atau tempelkan URL Foto Surat Dokter"
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] bg-white font-mono mt-1"
-                  />
-                </div>
+
+                {/* Hidden File Inputs */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {proofPhotoUrl ? (
+                  /* Preview Foto Ter-upload */
+                  <div className="p-3 border-2 border-emerald-300 rounded-2xl bg-emerald-50/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        Foto Surat Berhasil Diunggah
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProofPhotoUrl('')}
+                        className="p-1 rounded-lg hover:bg-rose-100 text-rose-600 transition-colors"
+                        title="Hapus Foto Ini"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="relative rounded-xl overflow-hidden border border-emerald-200 bg-slate-100 max-h-48 flex items-center justify-center group">
+                      <img
+                        src={proofPhotoUrl}
+                        alt="Preview Surat"
+                        className="max-h-48 w-auto object-contain rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImageModalUrl(proofPhotoUrl)}
+                          className="px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-900 font-bold text-xs flex items-center gap-1 shadow-md"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                          <span>Perbesar</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 py-1.5 px-3 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Ganti File Foto</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="flex-1 py-1.5 px-3 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Ambil ulang dari Kamera</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Area Dropzone & Tombol Upload */
+                  <div className="p-4 border-2 border-dashed border-indigo-200 rounded-2xl bg-indigo-50/40 hover:bg-indigo-50 text-center space-y-3 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">
+                        Pilih foto surat atau ambil foto langsung
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium block">
+                        Format: JPG, PNG, WEBP, atau foto langsung dari kamera HP/laptop
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span>Upload File Foto</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>Kamera HP / Laptop</span>
+                      </button>
+                    </div>
+
+                    {/* Alternatif Input URL */}
+                    <div className="pt-2 border-t border-indigo-100">
+                      <input
+                        type="text"
+                        value={proofPhotoUrl}
+                        onChange={(e) => setProofPhotoUrl(e.target.value)}
+                        placeholder="Atau tempelkan URL Gambar Foto Surat Dokter/Izin"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] bg-white font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status Persetujuan: Menunggu Persetujuan / Langsung Disetujui */}
@@ -290,6 +466,51 @@ export const IzinSakitView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal Pratinjau Foto Surat */}
+      {previewImageModalUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4"
+          onClick={() => setPreviewImageModalUrl(null)}
+        >
+          <div
+            className="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <ImageIcon className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold text-white">Foto Bukti Surat Dokter / Izin Orang Tua</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewImageModalUrl(null)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 flex-1 flex items-center justify-center overflow-auto bg-slate-950">
+              <img
+                src={previewImageModalUrl}
+                alt="Bukti Surat Izin Dokter / Orangtua"
+                className="max-h-[75vh] w-auto object-contain rounded-lg shadow-lg"
+              />
+            </div>
+
+            <div className="p-3 bg-slate-900 border-t border-slate-800 text-center">
+              <button
+                type="button"
+                onClick={() => setPreviewImageModalUrl(null)}
+                className="px-5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              >
+                Tutup Pratinjau
+              </button>
+            </div>
           </div>
         </div>
       )}
