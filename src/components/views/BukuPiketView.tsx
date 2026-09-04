@@ -18,6 +18,10 @@ import {
   Edit3,
   Eye,
   Building,
+  X,
+  UserX,
+  Check,
+  Filter,
 } from 'lucide-react';
 import {
   PiketBookRecord,
@@ -68,6 +72,12 @@ export const BukuPiketView: React.FC = () => {
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  // State Modal Pilih Siswa Tidak Hadir Per Kelas
+  const [activeClassModalIndex, setActiveClassModalIndex] = useState<number | null>(null);
+  const [studentPickerStatuses, setStudentPickerStatuses] = useState<Record<string, 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | 'Dispensasi'>>({});
+  const [studentSearchTerm, setStudentSearchTerm] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'Semua' | 'TidakHadir' | 'Sakit' | 'Izin' | 'Alpa' | 'Dispensasi'>('Semua');
 
   // Form State
   const [formData, setFormData] = useState<PiketBookRecord>(() => {
@@ -200,6 +210,128 @@ export const BukuPiketView: React.FC = () => {
     }));
 
     showNotice(`Sinkronisasi absensi siswa tanggal ${targetDate} berhasil!`);
+  };
+
+  // Handler Buka Modal Pilih Siswa Tidak Hadir
+  const handleOpenStudentPicker = (classIndex: number) => {
+    const cls = formData.classAttendances[classIndex];
+    if (!cls) return;
+
+    // Filter siswa berdasarkan kelas
+    const classStudents = students.filter(
+      (s) =>
+        s.currentClass === cls.className ||
+        s.currentClass?.replaceAll(' ', '').toLowerCase() === cls.className?.replaceAll(' ', '').toLowerCase()
+    );
+
+    const targetDate = formData.date;
+    const recordsOnDate = attendanceRecords.filter((a) => a.date === targetDate);
+
+    const newStatuses: Record<string, 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | 'Dispensasi'> = {};
+
+    classStudents.forEach((std) => {
+      // 1. Cek dari record presensi tanggal hari ini
+      const att = recordsOnDate.find((r) => r.studentId === std.id);
+      if (att) {
+        if (att.statusFinal === 'Sakit') newStatuses[std.id] = 'Sakit';
+        else if (att.statusFinal === 'Izin') newStatuses[std.id] = 'Izin';
+        else if (att.statusFinal === 'Alpa') newStatuses[std.id] = 'Alpa';
+        else if (att.statusFinal === 'Dispensasi') newStatuses[std.id] = 'Dispensasi';
+        else newStatuses[std.id] = 'Hadir';
+      } else {
+        // 2. Cek jika sudah ditulis di absentStudentNames
+        const currentAbsentStr = cls.absentStudentNames || '';
+        const stdNameLower = std.fullName.toLowerCase();
+        if (currentAbsentStr.toLowerCase().includes(stdNameLower)) {
+          if (currentAbsentStr.toLowerCase().includes(`${stdNameLower} (sakit)`)) newStatuses[std.id] = 'Sakit';
+          else if (currentAbsentStr.toLowerCase().includes(`${stdNameLower} (izin)`)) newStatuses[std.id] = 'Izin';
+          else if (currentAbsentStr.toLowerCase().includes(`${stdNameLower} (alpa)`)) newStatuses[std.id] = 'Alpa';
+          else if (currentAbsentStr.toLowerCase().includes(`${stdNameLower} (dispensasi)`)) newStatuses[std.id] = 'Dispensasi';
+          else newStatuses[std.id] = 'Sakit';
+        } else {
+          newStatuses[std.id] = 'Hadir';
+        }
+      }
+    });
+
+    setStudentPickerStatuses(newStatuses);
+    setStudentSearchTerm('');
+    setStatusFilter('Semua');
+    setActiveClassModalIndex(classIndex);
+  };
+
+  // Handler Terapkan Hasil Pilih Siswa ke Form Buku Piket
+  const handleApplyStudentPicker = () => {
+    if (activeClassModalIndex === null) return;
+    const cls = formData.classAttendances[activeClassModalIndex];
+    const classStudents = students.filter(
+      (s) =>
+        s.currentClass === cls.className ||
+        s.currentClass?.replaceAll(' ', '').toLowerCase() === cls.className?.replaceAll(' ', '').toLowerCase()
+    );
+
+    let sakit = 0;
+    let izin = 0;
+    let alpa = 0;
+    let dispen = 0;
+    const absentDetails: string[] = [];
+
+    classStudents.forEach((std) => {
+      const status = studentPickerStatuses[std.id] || 'Hadir';
+      if (status === 'Sakit') {
+        sakit++;
+        absentDetails.push(`${std.fullName} (Sakit)`);
+      } else if (status === 'Izin') {
+        izin++;
+        absentDetails.push(`${std.fullName} (Izin)`);
+      } else if (status === 'Alpa') {
+        alpa++;
+        absentDetails.push(`${std.fullName} (Alpa)`);
+      } else if (status === 'Dispensasi') {
+        dispen++;
+        absentDetails.push(`${std.fullName} (Dispensasi)`);
+      }
+    });
+
+    const totalStudents = classStudents.length > 0 ? classStudents.length : cls.totalStudents;
+    const hadir = Math.max(0, totalStudents - (sakit + izin + alpa + dispen));
+
+    const updatedClassAttendances = [...formData.classAttendances];
+    updatedClassAttendances[activeClassModalIndex] = {
+      ...cls,
+      totalStudents,
+      hadir,
+      sakit,
+      izin,
+      alpa,
+      dispen,
+      absentStudentNames: absentDetails.length > 0 ? absentDetails.join(', ') : '-',
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      classAttendances: updatedClassAttendances,
+    }));
+
+    showNotice(`Absensi & daftar siswa tidak hadir Kelas ${cls.className} telah diperbarui!`);
+    setActiveClassModalIndex(null);
+  };
+
+  // Handler Quick Set Status Semua Siswa di Modal
+  const handleSetAllStudentsStatusInModal = (status: 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | 'Dispensasi') => {
+    if (activeClassModalIndex === null) return;
+    const cls = formData.classAttendances[activeClassModalIndex];
+    const classStudents = students.filter(
+      (s) =>
+        s.currentClass === cls.className ||
+        s.currentClass?.replaceAll(' ', '').toLowerCase() === cls.className?.replaceAll(' ', '').toLowerCase()
+    );
+
+    const updated = { ...studentPickerStatuses };
+    classStudents.forEach((std) => {
+      updated[std.id] = status;
+    });
+    setStudentPickerStatuses(updated);
   };
 
   // Set Guru Piket untuk Slot Tertentu (Slot 1, 2, 3)
@@ -999,13 +1131,24 @@ export const BukuPiketView: React.FC = () => {
                         />
                       </td>
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={cls.absentStudentNames || ''}
-                          onChange={(e) => handleUpdateClassAttendance(idx, 'absentStudentNames', e.target.value)}
-                          placeholder="Nama siswa & alasan (contoh: Andi (Sakit), Budi (Izin))"
-                          className="w-full px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-xs"
-                        />
+                        <div className="flex items-center gap-1.5 min-w-[280px]">
+                          <input
+                            type="text"
+                            value={cls.absentStudentNames || ''}
+                            onChange={(e) => handleUpdateClassAttendance(idx, 'absentStudentNames', e.target.value)}
+                            placeholder="Nama siswa & alasan (contoh: Andi (Sakit), Budi (Izin))"
+                            className="flex-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStudentPicker(idx)}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1 shrink-0 shadow-2xs transition-all"
+                            title={`Pilih Nama Siswa dari Data Kelas ${cls.className}`}
+                          >
+                            <UserCheck className="w-3.5 h-3.5" />
+                            <span>Pilih Siswa</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1083,17 +1226,7 @@ export const BukuPiketView: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Nama Siswa</label>
-                          <input
-                            type="text"
-                            value={el.studentName}
-                            onChange={(e) => handleUpdateEarlyLeave(idx, 'studentName', e.target.value)}
-                            placeholder="Nama Lengkap"
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Kelas</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">1. Pilih Kelas</label>
                           <select
                             value={el.className}
                             onChange={(e) => handleUpdateEarlyLeave(idx, 'className', e.target.value)}
@@ -1105,6 +1238,29 @@ export const BukuPiketView: React.FC = () => {
                               </option>
                             ))}
                           </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">2. Pilih / Nama Siswa</label>
+                          <div className="space-y-1">
+                            <select
+                              value={el.studentName}
+                              onChange={(e) => handleUpdateEarlyLeave(idx, 'studentName', e.target.value)}
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-900"
+                            >
+                              <option value="">-- Pilih Siswa Kelas {el.className} --</option>
+                              {students
+                                .filter(
+                                  (s) =>
+                                    s.currentClass === el.className ||
+                                    s.currentClass?.replaceAll(' ', '').toLowerCase() === el.className?.replaceAll(' ', '').toLowerCase()
+                                )
+                                .map((s) => (
+                                  <option key={s.id} value={s.fullName}>
+                                    {s.fullName} ({s.nisn || 'NISN -'})
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase">Jam Pulang</label>
@@ -1423,18 +1579,16 @@ export const BukuPiketView: React.FC = () => {
 
               <div className="text-center flex-1 space-y-0.5">
                 <p className="text-[12px] font-black uppercase tracking-widest text-slate-800 font-sans">
-                  {settings?.city && settings.city.toUpperCase().includes('PEMERINTAH')
-                    ? settings.city.toUpperCase()
-                    : `PEMERINTAH ${settings?.city?.toUpperCase().startsWith('KABUPATEN') || settings?.city?.toUpperCase().startsWith('KOTA') ? '' : 'KABUPATEN '}${settings?.city ? settings.city.toUpperCase() : 'KABUPATEN TABANAN'}`}
+                  {settings?.governmentHeaderLine1 || 'PEMERINTAH KABUPATEN TABANAN'}
                 </p>
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 font-sans">
-                  DINAS PENDIDIKAN DAN KEBUDAYAAN
+                  {settings?.governmentHeaderLine2 || 'DINAS PENDIDIKAN'}
                 </p>
                 <h2 className="text-xl font-black uppercase tracking-wider font-sans text-slate-900">
                   {settings.schoolName || 'SMP NEGERI 1 INDONESIA'}
                 </h2>
                 <p className="text-xs font-sans text-slate-700">
-                  {settings.schoolAddress || 'Alamat Sekolah Terpadu, Jl. Pendidikan No. 01'} - {settings.city || 'Kota'}
+                  {settings.schoolAddress || 'Alamat Sekolah Terpadu, Jl. Pendidikan No. 01'} - {settings.city || 'Kota'}{settings.npsn ? ` • NPSN: ${settings.npsn}` : ''}
                 </p>
                 <h1 className="text-base font-black uppercase tracking-widest pt-1 underline font-sans text-rose-900">
                   BUKU PIKET HARIAN
@@ -1653,6 +1807,241 @@ export const BukuPiketView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL / DIALOG PILIH SISWA TIDAK HADIR KELAS */}
+      {activeClassModalIndex !== null && (() => {
+        const currentClassObj = formData.classAttendances[activeClassModalIndex];
+        if (!currentClassObj) return null;
+
+        const classStudents = students.filter(
+          (s) =>
+            s.currentClass === currentClassObj.className ||
+            s.currentClass?.replaceAll(' ', '').toLowerCase() === currentClassObj.className?.replaceAll(' ', '').toLowerCase()
+        );
+
+        // Filter pencarian & status filter
+        const filteredStudents = classStudents.filter((std) => {
+          const matchSearch =
+            std.fullName.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
+            (std.nisn && std.nisn.includes(studentSearchTerm)) ||
+            (std.nis && std.nis.includes(studentSearchTerm));
+
+          const st = studentPickerStatuses[std.id] || 'Hadir';
+
+          if (statusFilter === 'TidakHadir') {
+            return matchSearch && st !== 'Hadir';
+          } else if (statusFilter !== 'Semua') {
+            return matchSearch && st === statusFilter;
+          }
+          return matchSearch;
+        });
+
+        // Rekap ringkas di modal
+        const counts = {
+          Hadir: 0,
+          Sakit: 0,
+          Izin: 0,
+          Alpa: 0,
+          Dispensasi: 0,
+        };
+        classStudents.forEach((std) => {
+          const st = studentPickerStatuses[std.id] || 'Hadir';
+          if (counts[st] !== undefined) counts[st]++;
+          else counts['Hadir']++;
+        });
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden font-sans">
+              {/* Header Modal */}
+              <div className="bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-black text-amber-300">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black tracking-wide flex items-center gap-2">
+                      Pilih Siswa Tidak Hadir — Kelas {currentClassObj.className}
+                    </h3>
+                    <p className="text-xs text-blue-100 font-medium">
+                      Pilih status kehadiran siswa (Sakit, Izin, Alpa, Dispensasi) untuk merekap otomatis di Buku Piket.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveClassModalIndex(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Bar Filter & Pencarian */}
+              <div className="p-4 bg-slate-50 border-b border-slate-200 space-y-3 shrink-0">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder={`Cari nama siswa di kelas ${currentClassObj.className}...`}
+                      value={studentSearchTerm}
+                      onChange={(e) => setStudentSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleSetAllStudentsStatusInModal('Hadir')}
+                      className="px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs border border-emerald-300 transition-all flex items-center gap-1"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Set Semua Hadir
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter Status Tabs */}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase mr-1">Filter:</span>
+                  {[
+                    { key: 'Semua', label: `Semua (${classStudents.length})`, cls: 'bg-slate-200 text-slate-800' },
+                    { key: 'TidakHadir', label: `Tidak Hadir (${counts.Sakit + counts.Izin + counts.Alpa + counts.Dispensasi})`, cls: 'bg-rose-100 text-rose-800 border-rose-300' },
+                    { key: 'Sakit', label: `Sakit (${counts.Sakit})`, cls: 'bg-amber-100 text-amber-800' },
+                    { key: 'Izin', label: `Izin (${counts.Izin})`, cls: 'bg-blue-100 text-blue-800' },
+                    { key: 'Alpa', label: `Alpa (${counts.Alpa})`, cls: 'bg-rose-100 text-rose-800' },
+                    { key: 'Dispensasi', label: `Dispensasi (${counts.Dispensasi})`, cls: 'bg-purple-100 text-purple-800' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setStatusFilter(tab.key as any)}
+                      className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all border ${
+                        statusFilter === tab.key
+                          ? 'ring-2 ring-indigo-600 bg-indigo-900 text-white border-indigo-900 shadow-2xs'
+                          : `${tab.cls} border-transparent hover:opacity-80`
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Daftar Siswa */}
+              <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                {classStudents.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 space-y-2">
+                    <Users className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="text-xs font-bold text-slate-600">
+                      Belum ada data siswa terdaftar di Kelas "{currentClassObj.className}".
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      Anda dapat memasukkan data siswa di menu Data Siswa terlebih dahulu, atau langsung ketikkan nama siswa secara manual pada tabel Buku Piket.
+                    </p>
+                  </div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl text-slate-500 text-xs font-medium">
+                    Tidak ditemukan siswa dengan kriteria pencarian atau filter yang dipilih.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                    {filteredStudents.map((std, idx) => {
+                      const currentStatus = studentPickerStatuses[std.id] || 'Hadir';
+
+                      return (
+                        <div
+                          key={std.id}
+                          className={`p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+                            currentStatus !== 'Hadir' ? 'bg-amber-50/40' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs shrink-0 overflow-hidden">
+                              {std.photoUrl ? (
+                                <img src={std.photoUrl} alt={std.fullName} className="w-full h-full object-cover" />
+                              ) : (
+                                std.fullName.charAt(0)
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">
+                                {idx + 1}. {std.fullName}
+                              </p>
+                              <p className="text-[10px] text-slate-500 font-mono">
+                                NISN: {std.nisn || '-'} &bull; Gender: {std.gender || '-'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Tombol Pilihan Status */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {[
+                              { label: 'Hadir', bgActive: 'bg-emerald-600 text-white ring-2 ring-emerald-600', bgInactive: 'bg-slate-100 text-slate-600 hover:bg-emerald-50' },
+                              { label: 'Sakit', bgActive: 'bg-amber-500 text-white ring-2 ring-amber-500', bgInactive: 'bg-slate-100 text-slate-600 hover:bg-amber-50' },
+                              { label: 'Izin', bgActive: 'bg-blue-600 text-white ring-2 ring-blue-600', bgInactive: 'bg-slate-100 text-slate-600 hover:bg-blue-50' },
+                              { label: 'Alpa', bgActive: 'bg-rose-600 text-white ring-2 ring-rose-600', bgInactive: 'bg-slate-100 text-slate-600 hover:bg-rose-50' },
+                              { label: 'Dispensasi', bgActive: 'bg-purple-600 text-white ring-2 ring-purple-600', bgInactive: 'bg-slate-100 text-slate-600 hover:bg-purple-50' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.label}
+                                type="button"
+                                onClick={() =>
+                                  setStudentPickerStatuses((prev) => ({
+                                    ...prev,
+                                    [std.id]: opt.label as any,
+                                  }))
+                                }
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all ${
+                                  currentStatus === opt.label ? `${opt.bgActive} shadow-xs` : opt.bgInactive
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Ringkasan Modal & Tombol Aksi */}
+              <div className="p-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <span className="text-slate-500">Rekap:</span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-black">H: {counts.Hadir}</span>
+                  <span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-black">S: {counts.Sakit}</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-200 text-blue-900 font-black">I: {counts.Izin}</span>
+                  <span className="px-2 py-0.5 rounded bg-rose-200 text-rose-900 font-black">A: {counts.Alpa}</span>
+                  <span className="px-2 py-0.5 rounded bg-purple-200 text-purple-900 font-black">D: {counts.Dispensasi}</span>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveClassModalIndex(null)}
+                    className="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplyStudentPicker}
+                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    Simpan & Terapkan Kehadiran
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

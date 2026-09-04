@@ -1891,6 +1891,84 @@ export const KonfigurasiView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Header KOP Surat Cetak/Download */}
+              <div className="md:col-span-2 p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-3">
+                <label className="block text-xs font-extrabold text-emerald-900 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Building className="w-4 h-4 text-emerald-600" />
+                  <span>Pengaturan Header KOP Surat Hasil Cetak / Download PDF</span>
+                </label>
+                <p className="text-xs text-emerald-800">
+                  Kustomisasi teks baris teratas KOP Surat (Header) untuk seluruh dokumen yang dicetak atau diunduh dari aplikasi.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      KOP Baris 1 (Pemerintah / Instansi Atasan)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.governmentHeaderLine1 || ''}
+                      onChange={(e) => setFormData({ ...formData, governmentHeaderLine1: e.target.value })}
+                      placeholder="Contoh: PEMERINTAH KABUPATEN TABANAN"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      KOP Baris 2 (Dinas / Instansi Pengelola)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.governmentHeaderLine2 || ''}
+                      onChange={(e) => setFormData({ ...formData, governmentHeaderLine2: e.target.value })}
+                      placeholder="Contoh: DINAS PENDIDIKAN DAN KEBUDAYAAN"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Preview Kop Surat */}
+                <div className="pt-2">
+                  <label className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1.5">
+                    Pratinjau Hasil (KOP Surat Dokumen / Cetakan):
+                  </label>
+                  <div className="p-4 bg-white border border-slate-300 rounded-xl shadow-xs font-sans text-center">
+                    <div className="flex items-center justify-between gap-4 pb-2 border-b-2 border-slate-900">
+                      <div className="w-12 h-12 rounded bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                        {formData.regencyLogo ? (
+                          <img src={formData.regencyLogo} alt="Pemda" className="w-full h-full object-contain" />
+                        ) : (
+                          <Building className="w-6 h-6 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-0.5">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-slate-900">
+                          {formData.governmentHeaderLine1 || 'PEMERINTAH KABUPATEN TABANAN'}
+                        </p>
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800">
+                          {formData.governmentHeaderLine2 || 'DINAS PENDIDIKAN'}
+                        </p>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-indigo-950">
+                          {formData.schoolName || 'SMP NEGERI 1 TABANAN'}
+                        </h4>
+                        <p className="text-[9px] text-slate-600 font-medium">
+                          {formData.schoolAddress || 'Jl. Pemuda Pendidikan No. 45'} &bull; {formData.city || 'Kabupaten Tabanan'}{formData.npsn ? ` • NPSN: ${formData.npsn}` : ''}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 rounded bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                        {formData.schoolLogo ? (
+                          <img src={formData.schoolLogo} alt="Sekolah" className="w-full h-full object-contain" />
+                        ) : (
+                          <School className="w-6 h-6 text-slate-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Nama Sekolah / Lembaga
@@ -1904,6 +1982,22 @@ export const KonfigurasiView: React.FC = () => {
                     placeholder="Contoh: SMA Negeri 1 Nusa Bangsa"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  NPSN (Nomor Pokok Sekolah Nasional)
+                </label>
+                <div className="relative">
+                  <Tag className="w-4 h-4 text-emerald-600 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    value={formData.npsn || ''}
+                    onChange={(e) => setFormData({ ...formData, npsn: e.target.value })}
+                    placeholder="Contoh: 50102145"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                   />
                 </div>
               </div>

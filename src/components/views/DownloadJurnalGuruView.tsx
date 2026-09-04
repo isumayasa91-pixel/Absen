@@ -721,18 +721,16 @@ export const DownloadJurnalGuruView: React.FC = () => {
 
                 <div className="text-center flex-1 space-y-0.5">
                   <p className="text-[12px] font-black uppercase tracking-widest text-slate-800">
-                    {settings?.city && settings.city.toUpperCase().includes('PEMERINTAH')
-                      ? settings.city.toUpperCase()
-                      : `PEMERINTAH ${settings?.city?.toUpperCase().startsWith('KABUPATEN') || settings?.city?.toUpperCase().startsWith('KOTA') ? '' : 'KABUPATEN '}${settings?.city ? settings.city.toUpperCase() : 'KABUPATEN TABANAN'}`}
+                    {settings?.governmentHeaderLine1 || 'PEMERINTAH KABUPATEN TABANAN'}
                   </p>
                   <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
-                    DINAS PENDIDIKAN DAN KEBUDAYAAN
+                    {settings?.governmentHeaderLine2 || 'DINAS PENDIDIKAN'}
                   </p>
                   <h2 className="text-lg font-black uppercase tracking-wider text-slate-950">
                     {settings?.schoolName || 'SMP NEGERI 1 CONTOH'}
                   </h2>
                   <p className="text-xs font-medium text-slate-700">
-                    {settings?.schoolAddress || 'Jl. Pendidikan No. 1'} &bull; {settings?.city || 'Kota'}
+                    {settings?.schoolAddress || 'Jl. Pendidikan No. 1'} &bull; {settings?.city || 'Kota'}{settings?.npsn ? ` • NPSN: ${settings.npsn}` : ''}
                   </p>
                   <p className="text-xs font-extrabold text-slate-900 pt-0.5">
                     TAHUN AJARAN {activeAY}

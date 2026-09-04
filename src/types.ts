@@ -218,6 +218,7 @@ export interface CardRequest {
 
 export interface SystemSetting {
   schoolName: string;
+  npsn?: string;
   appNameBranding: string;
   city: string;
   schoolAddress: string;
@@ -225,6 +226,8 @@ export interface SystemSetting {
   principalNip: string;
   schoolLogo: string;
   regencyLogo?: string;
+  governmentHeaderLine1?: string; // Baris 1 KOP Surat (contoh: PEMERINTAH KABUPATEN TABANAN)
+  governmentHeaderLine2?: string; // Baris 2 KOP Surat (contoh: DINAS PENDIDIKAN)
   principalSignature?: string;
   schoolStamp?: string;
   enableClassAttendance: boolean;
