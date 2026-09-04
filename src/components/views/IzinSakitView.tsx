@@ -25,6 +25,7 @@ export const IzinSakitView: React.FC = () => {
     updatePermissionStatus,
     deletePermission,
     students,
+    currentUser,
   } = useApp();
 
   const [showModal, setShowModal] = useState(false);
@@ -143,17 +144,19 @@ export const IzinSakitView: React.FC = () => {
                   {p.statusApproval}
                 </span>
 
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Hapus surat izin/sakit "${p.studentName}"?`)) {
-                      deletePermission(p.id);
-                    }
-                  }}
-                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                  title="Hapus Izin/Sakit Ini"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {currentUser?.role !== 'siswa' && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Hapus surat izin/sakit "${p.studentName}"?`)) {
+                        deletePermission(p.id);
+                      }
+                    }}
+                    className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    title="Hapus Izin/Sakit Ini"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 

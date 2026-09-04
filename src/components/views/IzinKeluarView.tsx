@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { LogOut, Plus, Save, Clock, CheckSquare, Trash2 } from 'lucide-react';
 
 export const IzinKeluarView: React.FC = () => {
-  const { leavePermissions, addLeavePermission, deleteLeavePermission, students } = useApp();
+  const { leavePermissions, addLeavePermission, deleteLeavePermission, students, currentUser } = useApp();
   const [showModal, setShowModal] = useState(false);
 
   // Form state
@@ -96,17 +96,19 @@ export const IzinKeluarView: React.FC = () => {
                     </span>
                   </td>
                   <td className="p-3 text-center">
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Hapus izin keluar "${l.studentName}"?`)) {
-                          deleteLeavePermission(l.id);
-                        }
-                      }}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Hapus Surat Izin Ini"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {currentUser?.role !== 'siswa' && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus izin keluar "${l.studentName}"?`)) {
+                            deleteLeavePermission(l.id);
+                          }
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Hapus Surat Izin Ini"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

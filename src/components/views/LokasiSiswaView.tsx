@@ -512,7 +512,7 @@ export const LokasiSiswaView: React.FC = () => {
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-slate-700 block">Riwayat Verifikasi Saya:</span>
-                    {logs.length > 0 && (
+                    {logs.length > 0 && currentUser?.role !== 'siswa' && (
                       <button
                         onClick={() => {
                           if (window.confirm('Kosongkan riwayat verifikasi lokasi?')) {

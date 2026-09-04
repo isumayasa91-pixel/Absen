@@ -875,66 +875,91 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Delete & Clear Functions
-  const deleteAcademicYear = (id: string) => deleteCollectionItem('academicYears', id);
-  const deleteClass = (id: string) => deleteCollectionItem('classes', id);
+  const safeDeleteCollectionItem = (collectionName: string, id: string) => {
+    if (currentUser?.role === 'siswa') {
+      showNotice('⚠️ Akses ditolak: Akun Siswa tidak diizinkan untuk menghapus data.');
+      return;
+    }
+    deleteCollectionItem(collectionName, id);
+  };
+
+  const isDeleteAllowed = (): boolean => {
+    if (currentUser?.role === 'siswa') {
+      showNotice('⚠️ Akses ditolak: Akun Siswa tidak diizinkan untuk menghapus data.');
+      return false;
+    }
+    return true;
+  };
+
+  const deleteAcademicYear = (id: string) => safeDeleteCollectionItem('academicYears', id);
+  const deleteClass = (id: string) => safeDeleteCollectionItem('classes', id);
   const clearAllClasses = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('classes');
     setClasses([]);
   };
 
-  const deleteStudent = (id: string) => deleteCollectionItem('students', id);
+  const deleteStudent = (id: string) => safeDeleteCollectionItem('students', id);
   const clearAllStudents = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('students');
     setStudents([]);
   };
 
-  const deleteTeacher = (id: string) => deleteCollectionItem('teachers', id);
+  const deleteTeacher = (id: string) => safeDeleteCollectionItem('teachers', id);
   const clearAllTeachers = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('teachers');
     setTeachers([]);
   };
 
-  const deleteUser = (id: string) => deleteCollectionItem('users', id);
-  const deleteAnnouncement = (id: string) => deleteCollectionItem('announcements', id);
+  const deleteUser = (id: string) => safeDeleteCollectionItem('users', id);
+  const deleteAnnouncement = (id: string) => safeDeleteCollectionItem('announcements', id);
   const clearAllAnnouncements = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('announcements');
     setAnnouncements([]);
   };
 
-  const deleteAttendanceRecord = (id: string) => deleteCollectionItem('attendanceRecords', id);
+  const deleteAttendanceRecord = (id: string) => safeDeleteCollectionItem('attendanceRecords', id);
   const clearAllAttendance = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('attendanceRecords');
     setAttendanceRecords([]);
   };
 
-  const deletePermission = (id: string) => deleteCollectionItem('permissions', id);
+  const deletePermission = (id: string) => safeDeleteCollectionItem('permissions', id);
   const clearAllPermissions = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('permissions');
     await clearEntireCollectionInFirestore('leavePermissions');
     setPermissions([]);
     setLeavePermissions([]);
   };
 
-  const deleteLeavePermission = (id: string) => deleteCollectionItem('leavePermissions', id);
-  const deleteTeacherJournal = (id: string) => deleteCollectionItem('teacherJournals', id);
+  const deleteLeavePermission = (id: string) => safeDeleteCollectionItem('leavePermissions', id);
+  const deleteTeacherJournal = (id: string) => safeDeleteCollectionItem('teacherJournals', id);
   const clearAllTeacherJournals = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('teacherJournals');
     setTeacherJournals([]);
   };
 
-  const deleteLibraryTAP = (id: string) => deleteCollectionItem('libraryTAPs', id);
+  const deleteLibraryTAP = (id: string) => safeDeleteCollectionItem('libraryTAPs', id);
   const clearAllLibraryTAPs = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('libraryTAPs');
     setLibraryTAPs([]);
   };
-  const deleteLibraryBook = (id: string) => deleteCollectionItem('libraryBooks', id);
-  const deleteViolationRecord = (id: string) => deleteCollectionItem('violationRecords', id);
+  const deleteLibraryBook = (id: string) => safeDeleteCollectionItem('libraryBooks', id);
+  const deleteViolationRecord = (id: string) => safeDeleteCollectionItem('violationRecords', id);
   const clearAllViolationRecords = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('violationRecords');
     setViolationRecords([]);
   };
 
-  const deleteHoliday = (id: string) => deleteCollectionItem('holidays', id);
+  const deleteHoliday = (id: string) => safeDeleteCollectionItem('holidays', id);
 
   const addCardRequest = (data: Omit<CardRequest, 'id'>) => {
     const newReq: CardRequest = {
@@ -951,8 +976,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const deleteCardRequest = (id: string) => deleteCollectionItem('cardRequests', id);
+  const deleteCardRequest = (id: string) => safeDeleteCollectionItem('cardRequests', id);
   const clearAllCardRequests = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('cardRequests');
     setCardRequests([]);
   };
@@ -974,8 +1000,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const deleteComputerSession = (id: string) => deleteCollectionItem('computerSessions', id);
+  const deleteComputerSession = (id: string) => safeDeleteCollectionItem('computerSessions', id);
   const clearAllComputerSessions = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('computerSessions');
     setComputerSessions([]);
   };
@@ -996,8 +1023,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const deleteComputerAttendance = (id: string) => deleteCollectionItem('computerAttendances', id);
+  const deleteComputerAttendance = (id: string) => safeDeleteCollectionItem('computerAttendances', id);
   const clearAllComputerAttendances = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('computerAttendances');
     setComputerAttendances([]);
   };
@@ -1030,7 +1058,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveCollectionItem('computerMembers', newMember);
   };
 
-  const deleteComputerMember = (id: string) => deleteCollectionItem('computerMembers', id);
+  const deleteComputerMember = (id: string) => safeDeleteCollectionItem('computerMembers', id);
 
   const tapComputerCourse = (
     studentId: string,
@@ -1108,10 +1136,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteGradeRecord = (id: string) => {
-    deleteCollectionItem('grades', id);
+    safeDeleteCollectionItem('grades', id);
   };
 
   const clearAllGrades = () => {
+    if (!isDeleteAllowed()) return;
     clearCollectionBatch('grades', grades);
     setGrades([]);
   };
@@ -1122,17 +1151,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deletePiketRecord = (id: string) => {
-    deleteCollectionItem('piketRecords', id);
+    if (!isDeleteAllowed()) return;
+    safeDeleteCollectionItem('piketRecords', id);
     showNotice('Catatan Buku Piket berhasil dihapus.');
   };
 
   const clearAllPiketRecords = () => {
+    if (!isDeleteAllowed()) return;
     clearCollectionBatch('piketRecords', piketRecords);
     setPiketRecords([]);
     showNotice('Semua catatan Buku Piket berhasil dibersihkan.');
   };
 
   const resetEntireSystemData = async () => {
+    if (!isDeleteAllowed()) return;
     await clearEntireCollectionInFirestore('students');
     await clearEntireCollectionInFirestore('teachers');
     await clearEntireCollectionInFirestore('classes');

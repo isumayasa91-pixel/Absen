@@ -10,6 +10,7 @@ export const PelanggaranView: React.FC = () => {
     addViolationRecord,
     deleteViolationRecord,
     students,
+    currentUser,
   } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'tata-tertib' | 'pelanggaran' | 'rekap' => {
@@ -185,17 +186,19 @@ export const PelanggaranView: React.FC = () => {
                     <td className="p-3 text-slate-700">{v.sanction}</td>
                     <td className="p-3 text-slate-500 font-semibold">{v.reporter}</td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Hapus catatan pelanggaran siswa "${v.studentName}"?`)) {
-                            deleteViolationRecord(v.id);
-                          }
-                        }}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Hapus Catatan Pelanggaran"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {currentUser?.role !== 'siswa' && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Hapus catatan pelanggaran siswa "${v.studentName}"?`)) {
+                              deleteViolationRecord(v.id);
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Hapus Catatan Pelanggaran"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

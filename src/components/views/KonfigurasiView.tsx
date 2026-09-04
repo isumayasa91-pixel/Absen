@@ -71,6 +71,7 @@ export const KonfigurasiView: React.FC = () => {
     clearAllCardRequests,
     resetEntireSystemData,
     restoreDemoData,
+    currentUser,
   } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'jam' | 'libur' | 'kartu' | 'faceid' | 'lokasi-siswa' | 'lokasi-sekolah' | 'system' | 'reset-data' => {
@@ -649,20 +650,22 @@ export const KonfigurasiView: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowManagePhotosModal(true)}
-                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
-                  title="Menu Kelola & Hapus Pas Foto Kartu Peserta"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-600" />
-                  <span>Hapus / Kelola Foto Kartu</span>
-                  {students.filter((s) => !!s.photo).length > 0 && (
-                    <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
-                      {students.filter((s) => !!s.photo).length}
-                    </span>
-                  )}
-                </button>
+                {currentUser?.role !== 'siswa' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowManagePhotosModal(true)}
+                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer transition-all shrink-0"
+                    title="Menu Kelola & Hapus Pas Foto Kartu Peserta"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Hapus / Kelola Foto Kartu</span>
+                    {students.filter((s) => !!s.photo).length > 0 && (
+                      <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full ml-0.5">
+                        {students.filter((s) => !!s.photo).length}
+                      </span>
+                    )}
+                  </button>
+                )}
 
                 <label className="bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center justify-center space-x-1.5 cursor-pointer transition-all">
                   <Upload className="w-4 h-4 text-red-400" />
@@ -971,15 +974,17 @@ export const KonfigurasiView: React.FC = () => {
                               <span>Cetak Kartu</span>
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCard(c.id, c.studentName)}
-                              className="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
-                              title="Hapus data pengajuan jika salah input"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Hapus</span>
-                            </button>
+                            {currentUser?.role !== 'siswa' && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCard(c.id, c.studentName)}
+                                className="inline-flex items-center space-x-1 px-2 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                                title="Hapus data pengajuan jika salah input"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Hapus</span>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

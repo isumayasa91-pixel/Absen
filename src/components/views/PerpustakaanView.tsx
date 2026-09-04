@@ -16,6 +16,7 @@ export const PerpustakaanView: React.FC = () => {
     updateLibraryBook,
     deleteLibraryBook,
     students,
+    currentUser,
   } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'harian' | 'katalog' | 'tap' | 'rekap' => {
@@ -185,7 +186,7 @@ export const PerpustakaanView: React.FC = () => {
               <Library className="w-4 h-4 text-pink-600" />
               <span>Kunjungan Perpustakaan Hari Ini ({libraryTAPs.length} Log)</span>
             </h3>
-            {libraryTAPs.length > 0 && (
+            {libraryTAPs.length > 0 && currentUser?.role !== 'siswa' && (
               <button
                 onClick={() => {
                   if (window.confirm(`⚠️ Apakah Anda yakin ingin mengosongkan SELURUH (${libraryTAPs.length}) riwayat log TAP perpustakaan?`)) {
@@ -235,17 +236,19 @@ export const PerpustakaanView: React.FC = () => {
                       )}
                     </td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Hapus log TAP perpus ini?')) {
-                            deleteLibraryTAP(t.id);
-                          }
-                        }}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Hapus Log TAP"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {currentUser?.role !== 'siswa' && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Hapus log TAP perpus ini?')) {
+                              deleteLibraryTAP(t.id);
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Hapus Log TAP"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -318,17 +321,19 @@ export const PerpustakaanView: React.FC = () => {
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Hapus buku "${b.title}" (${b.barcode})?`)) {
-                              deleteLibraryBook(b.id);
-                            }
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Hapus Buku"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {currentUser?.role !== 'siswa' && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Hapus buku "${b.title}" (${b.barcode})?`)) {
+                                deleteLibraryBook(b.id);
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Hapus Buku"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

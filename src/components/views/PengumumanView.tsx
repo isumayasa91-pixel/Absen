@@ -4,7 +4,7 @@ import { Announcement } from '../../types';
 import { Megaphone, Plus, Save, X, Calendar, User, Search, Pin, Trash2, Pencil } from 'lucide-react';
 
 export const PengumumanView: React.FC = () => {
-  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, classes } = useApp();
+  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, classes, currentUser } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
 
@@ -64,13 +64,15 @@ export const PengumumanView: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center space-x-2 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Pengumuman</span>
-        </button>
+        {currentUser?.role !== 'siswa' && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Pengumuman</span>
+          </button>
+        )}
       </div>
 
       {/* Search Bar */}
@@ -100,31 +102,33 @@ export const PengumumanView: React.FC = () => {
                   </span>
                   <h3 className="font-extrabold text-slate-800 text-base leading-snug">{ann.title}</h3>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => {
-                      setEditingAnnouncement(ann);
-                      setEditTitle(ann.title);
-                      setEditContent(ann.content);
-                      setEditTargetClass(ann.targetClass);
-                    }}
-                    className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
-                    title="Edit Pengumuman"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Hapus pengumuman "${ann.title}"?`)) {
-                        deleteAnnouncement(ann.id);
-                      }
-                    }}
-                    className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                    title="Hapus Pengumuman Ini"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {currentUser?.role !== 'siswa' && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => {
+                        setEditingAnnouncement(ann);
+                        setEditTitle(ann.title);
+                        setEditContent(ann.content);
+                        setEditTargetClass(ann.targetClass);
+                      }}
+                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                      title="Edit Pengumuman"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus pengumuman "${ann.title}"?`)) {
+                          deleteAnnouncement(ann.id);
+                        }
+                      }}
+                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Hapus Pengumuman Ini"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line">{ann.content}</p>

@@ -60,6 +60,7 @@ export const LesKomputerView: React.FC = () => {
     deleteComputerMember,
     showNotice,
     settings,
+    currentUser,
   } = useApp();
 
   const getSubTabFromActiveTab = (tab: string): 'presensi' | 'faceid' | 'sesi' | 'peserta' | 'rekap' => {
@@ -1150,7 +1151,7 @@ export const LesKomputerView: React.FC = () => {
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Daftar Kehadiran Sesi Berjalan ({sessionAttendances.length} Siswa)
                   </h4>
-                  {sessionAttendances.length > 0 && (
+                  {sessionAttendances.length > 0 && currentUser?.role !== 'siswa' && (
                     <button
                       onClick={() => {
                         if (window.confirm('Hapus seluruh presensi untuk sesi ini?')) {
@@ -1237,13 +1238,15 @@ export const LesKomputerView: React.FC = () => {
                               />
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <button
-                                onClick={() => deleteComputerAttendance(att.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
-                                title="Hapus Presensi"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              {currentUser?.role !== 'siswa' && (
+                                <button
+                                  onClick={() => deleteComputerAttendance(att.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
+                                  title="Hapus Presensi"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -1842,13 +1845,15 @@ export const LesKomputerView: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-3 py-2.5 text-center">
-                            <button
-                              onClick={() => deleteComputerAttendance(att.id)}
-                              className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
-                              title="Hapus Presensi"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {currentUser?.role !== 'siswa' && (
+                              <button
+                                onClick={() => deleteComputerAttendance(att.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
+                                title="Hapus Presensi"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1971,18 +1976,20 @@ export const LesKomputerView: React.FC = () => {
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
 
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Hapus sesi praktikum "${s.topic}"?`)) {
-                          deleteComputerSession(s.id);
-                          showNotice('Sesi praktikum berhasil dihapus.');
-                        }
-                      }}
-                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                      title="Hapus Sesi"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {currentUser?.role !== 'siswa' && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Hapus sesi praktikum "${s.topic}"?`)) {
+                            deleteComputerSession(s.id);
+                            showNotice('Sesi praktikum berhasil dihapus.');
+                          }
+                        }}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                        title="Hapus Sesi"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -2059,18 +2066,20 @@ export const LesKomputerView: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`Hapus ${m.studentName} dari daftar les komputer?`)) {
-                                deleteComputerMember(m.id);
-                                showNotice('Peserta berhasil dihapus.');
-                              }
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
-                            title="Hapus Peserta"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {currentUser?.role !== 'siswa' && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Hapus ${m.studentName} dari daftar les komputer?`)) {
+                                  deleteComputerMember(m.id);
+                                  showNotice('Peserta berhasil dihapus.');
+                                }
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
+                              title="Hapus Peserta"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
