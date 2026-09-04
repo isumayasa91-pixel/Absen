@@ -24,9 +24,9 @@ import {
 } from '../types';
 
 export const initialSystemSettings: SystemSetting = {
-  schoolName: 'SMA Negeri 1 Nusa Bangsa',
+  schoolName: 'SMP Negeri 1 Tabanan',
   appNameBranding: 'Presensi Digital Pro',
-  city: 'Kota Jakarta Selatan',
+  city: 'Kabupaten Tabanan',
   schoolAddress: 'Jl. Pemuda Pendidikan No. 45, Kebayoran Baru',
   principalName: 'Dr. H. Ahmad Wijaya, M.Pd.',
   principalNip: '19750812 199903 1 002',

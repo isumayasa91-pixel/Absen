@@ -720,8 +720,10 @@ export const DownloadJurnalGuruView: React.FC = () => {
                 )}
 
                 <div className="text-center flex-1 space-y-0.5">
-                  <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-700">
-                    PEMERINTAH {settings?.city ? settings.city.toUpperCase() : 'KABUPATEN / KOTA'}
+                  <p className="text-[12px] font-black uppercase tracking-widest text-slate-800">
+                    {settings?.city && settings.city.toUpperCase().includes('PEMERINTAH')
+                      ? settings.city.toUpperCase()
+                      : `PEMERINTAH ${settings?.city?.toUpperCase().startsWith('KABUPATEN') || settings?.city?.toUpperCase().startsWith('KOTA') ? '' : 'KABUPATEN '}${settings?.city ? settings.city.toUpperCase() : 'KABUPATEN TABANAN'}`}
                   </p>
                   <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
                     DINAS PENDIDIKAN DAN KEBUDAYAAN
