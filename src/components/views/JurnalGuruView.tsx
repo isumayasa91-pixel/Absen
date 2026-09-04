@@ -221,17 +221,21 @@ export const JurnalGuruView: React.FC = () => {
       return;
     }
 
-    const exportData = filteredJournals.map((j, idx) => ({
-      'No': idx + 1,
-      'Tanggal': j.date,
-      'Waktu/Jam': j.timeSlot || '-',
-      'Nama Guru': j.teacherName,
-      'Mata Pelajaran': j.subject,
-      'Kelas': j.classTarget,
-      'Materi / Topik Pembelajaran': j.topic,
-      'Siswa Tidak Hadir': j.absentStudents || 'Nihil (Hadir Semua)',
-      'Catatan / Evaluasi': j.notes || '-',
-    }));
+    const exportData = filteredJournals.map((j, idx) => {
+      const teacherObj = teachers.find((t) => t.fullNameWithTitle.toLowerCase() === j.teacherName.toLowerCase());
+      return {
+        'No': idx + 1,
+        'Tanggal': j.date,
+        'Waktu/Jam': j.timeSlot || '-',
+        'Nama Guru Pengampu': j.teacherName,
+        'NIP / NUPTK': teacherObj?.nip || teacherObj?.nuptk || '-',
+        'Mata Pelajaran': j.subject,
+        'Kelas': j.classTarget,
+        'Materi / Topik Pembelajaran': j.topic,
+        'Siswa Tidak Hadir': j.absentStudents || 'Nihil (Hadir Semua)',
+        'Catatan / Evaluasi': j.notes || '-',
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const colWidths = [
@@ -239,6 +243,7 @@ export const JurnalGuruView: React.FC = () => {
       { wch: 14 },
       { wch: 22 },
       { wch: 28 },
+      { wch: 20 },
       { wch: 22 },
       { wch: 12 },
       { wch: 38 },
@@ -588,25 +593,62 @@ export const JurnalGuruView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Guru Pendidik
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Guru Pendidik (Sinkron Data Guru) <span className="text-rose-500">*</span>
+                    </label>
+                    {teachers.length > 0 && (
+                      <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                        {teachers.length} Guru Terdaftar
+                      </span>
+                    )}
+                  </div>
+
                   {teachers.length > 0 ? (
-                    <select
-                      value={teacherName}
-                      onChange={(e) => {
-                        setTeacherName(e.target.value);
-                        const tch = teachers.find((t) => t.fullNameWithTitle === e.target.value);
-                        if (tch?.subject) setSubject(tch.subject);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-                    >
-                      {teachers.map((t) => (
-                        <option key={t.id} value={t.fullNameWithTitle}>
-                          {t.fullNameWithTitle} {t.position ? `(${t.position})` : ''}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-1.5">
+                      <select
+                        value={teacherName}
+                        onChange={(e) => {
+                          const selectedName = e.target.value;
+                          setTeacherName(selectedName);
+                          const tch = teachers.find(
+                            (t) => t.fullNameWithTitle === selectedName || t.fullNameWithTitle.toLowerCase() === selectedName.toLowerCase()
+                          );
+                          if (tch?.subject) setSubject(tch.subject);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white cursor-pointer shadow-xs"
+                      >
+                        {teachers.map((t) => (
+                          <option key={t.id} value={t.fullNameWithTitle}>
+                            {t.fullNameWithTitle} {t.position ? `(${t.position})` : ''} {t.nip ? `— NIP: ${t.nip}` : ''}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Selected Teacher Info Badge */}
+                      {(() => {
+                        const selectedTch = teachers.find(
+                          (t) => t.fullNameWithTitle === teacherName || t.fullNameWithTitle.toLowerCase() === teacherName.toLowerCase()
+                        );
+                        if (!selectedTch) return null;
+                        return (
+                          <div className="text-[11px] bg-purple-50/80 border border-purple-100 p-2 rounded-xl flex flex-wrap items-center justify-between gap-1.5 text-purple-900">
+                            <div className="flex items-center space-x-1.5">
+                              <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span className="font-bold">{selectedTch.fullNameWithTitle}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-medium text-slate-600">
+                              <span className="bg-white px-1.5 py-0.5 rounded border border-purple-200">
+                                NIP: {selectedTch.nip || selectedTch.nuptk || '-'}
+                              </span>
+                              <span className="bg-white px-1.5 py-0.5 rounded border border-purple-200">
+                                Mapel: {selectedTch.subject || selectedTch.position || 'Guru Mapel'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   ) : (
                     <input
                       type="text"
@@ -1006,16 +1048,71 @@ export const JurnalGuruView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Nama Guru Pengajar
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editTeacherName}
-                    onChange={(e) => setEditTeacherName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Nama Guru Pengajar <span className="text-rose-500">*</span>
+                    </label>
+                    {teachers.length > 0 && (
+                      <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
+                        Sinkron Data Guru
+                      </span>
+                    )}
+                  </div>
+
+                  {teachers.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <select
+                        value={editTeacherName}
+                        onChange={(e) => {
+                          const selectedName = e.target.value;
+                          setEditTeacherName(selectedName);
+                          const tch = teachers.find(
+                            (t) => t.fullNameWithTitle === selectedName || t.fullNameWithTitle.toLowerCase() === selectedName.toLowerCase()
+                          );
+                          if (tch?.subject) setEditSubject(tch.subject);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white cursor-pointer shadow-xs"
+                      >
+                        {teachers.map((t) => (
+                          <option key={t.id} value={t.fullNameWithTitle}>
+                            {t.fullNameWithTitle} {t.position ? `(${t.position})` : ''} {t.nip ? `— NIP: ${t.nip}` : ''}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Selected Teacher Info Badge */}
+                      {(() => {
+                        const selectedTch = teachers.find(
+                          (t) => t.fullNameWithTitle === editTeacherName || t.fullNameWithTitle.toLowerCase() === editTeacherName.toLowerCase()
+                        );
+                        if (!selectedTch) return null;
+                        return (
+                          <div className="text-[11px] bg-purple-50/80 border border-purple-100 p-2 rounded-xl flex flex-wrap items-center justify-between gap-1.5 text-purple-900">
+                            <div className="flex items-center space-x-1.5">
+                              <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span className="font-bold">{selectedTch.fullNameWithTitle}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-medium text-slate-600">
+                              <span className="bg-white px-1.5 py-0.5 rounded border border-purple-200">
+                                NIP: {selectedTch.nip || selectedTch.nuptk || '-'}
+                              </span>
+                              <span className="bg-white px-1.5 py-0.5 rounded border border-purple-200">
+                                Mapel: {selectedTch.subject || selectedTch.position || 'Guru Mapel'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      value={editTeacherName}
+                      onChange={(e) => setEditTeacherName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                    />
+                  )}
                 </div>
               </div>
 

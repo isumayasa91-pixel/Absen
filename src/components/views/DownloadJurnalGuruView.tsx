@@ -805,29 +805,49 @@ export const DownloadJurnalGuruView: React.FC = () => {
               </table>
 
               {/* Tanda Tangan Resmi Pengesahan */}
-              <div className="grid grid-cols-2 pt-8 text-xs font-semibold text-center break-inside-avoid">
-                <div>
-                  <p>Mengetahui,</p>
-                  <p className="font-bold">Kepala Sekolah / Waka Kurikulum</p>
-                  <div className="h-20" />
-                  <p className="font-extrabold underline">{settings?.headmasterName || 'Drs. I Wayan Sudarta, M.Pd'}</p>
-                  <p className="text-[11px] text-slate-600">NIP. {settings?.headmasterNip || '19750815 200003 1 005'}</p>
-                </div>
+              {(() => {
+                const principalName = settings?.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.';
+                const principalNip = settings?.principalNip || '19750812 199903 1 002';
+                const cityName = settings?.city || 'Denpasar';
 
-                <div>
-                  <p>{settings?.schoolCity || 'Denpasar'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                  <p className="font-bold">Guru Mata Pelajaran</p>
-                  <div className="h-20" />
-                  <p className="font-extrabold underline">
-                    {printMode === 'single'
-                      ? selectedJournalForPrint?.teacherName
-                      : selectedTeacher !== 'Semua Guru'
-                      ? selectedTeacher
-                      : currentUser?.name || 'Guru Pengampu'}
-                  </p>
-                  <p className="text-[11px] text-slate-600">NIP / NUPTK. -</p>
-                </div>
-              </div>
+                const printTeacherName = printMode === 'single'
+                  ? selectedJournalForPrint?.teacherName || 'Guru Pengampu'
+                  : selectedTeacher !== 'Semua Guru'
+                  ? selectedTeacher
+                  : currentUser?.name || teachers[0]?.fullNameWithTitle || 'Guru Pengampu';
+
+                const printTeacherObj = teachers.find(
+                  (t) => t.fullNameWithTitle.toLowerCase() === printTeacherName.toLowerCase()
+                );
+
+                const printTeacherNip = printTeacherObj?.nip || printTeacherObj?.nuptk || '-';
+
+                return (
+                  <div className="grid grid-cols-2 pt-8 text-xs font-semibold text-center break-inside-avoid">
+                    <div>
+                      <p>Mengetahui,</p>
+                      <p className="font-bold">Kepala Sekolah</p>
+                      <div className="h-20 flex items-center justify-center">
+                        {settings?.principalSignature && (
+                          <img src={settings.principalSignature} alt="TTD Kepala Sekolah" className="h-16 object-contain" />
+                        )}
+                      </div>
+                      <p className="font-extrabold underline">{principalName}</p>
+                      <p className="text-[11px] text-slate-600">NIP. {principalNip}</p>
+                    </div>
+
+                    <div>
+                      <p>{cityName}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      <p className="font-bold">Guru Mata Pelajaran</p>
+                      <div className="h-20" />
+                      <p className="font-extrabold underline">
+                        {printTeacherName}
+                      </p>
+                      <p className="text-[11px] text-slate-600">NIP. {printTeacherNip}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
