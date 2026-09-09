@@ -2520,7 +2520,7 @@ export const LesKomputerView: React.FC = () => {
             </div>
 
             {/* Printable Preview Card */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/50 border border-indigo-100 space-y-4">
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/50 border border-indigo-100 space-y-4 print-area">
               <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black">
