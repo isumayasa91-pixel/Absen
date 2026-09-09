@@ -1764,7 +1764,23 @@ export const BukuPiketView: React.FC = () => {
                   <p className="font-bold uppercase mt-1">Mengetahui,</p>
                   <p className="font-bold uppercase">Kepala Sekolah</p>
                 </div>
-                <div className="pt-20">
+                <div className="my-2 h-20 flex items-center justify-center relative overflow-visible">
+                  {settings?.schoolStamp && (
+                    <img
+                      src={settings.schoolStamp}
+                      alt="Cap Sekolah"
+                      className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-16 w-16 object-contain opacity-85 pointer-events-none"
+                    />
+                  )}
+                  {settings?.principalSignature && (
+                    <img
+                      src={settings.principalSignature}
+                      alt="TTD Kepala Sekolah"
+                      className="relative z-10 h-16 object-contain pointer-events-none"
+                    />
+                  )}
+                </div>
+                <div>
                   <p className="font-bold underline text-sm">
                     {settings.principalName || formData.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}
                   </p>

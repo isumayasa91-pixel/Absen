@@ -432,6 +432,16 @@ export const DownloadLoginView: React.FC = () => {
                   QR ID<br />[${selectedStudentForCard?.nisn}]
                 </div>
               </div>
+              <div style="border-top: 1px solid #e2e8f0; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+                <div style="font-size: 8px; color: #334155;">
+                  <div>Mengetahui, <b>Kepala Sekolah</b></div>
+                  <div style="font-weight: bold; text-decoration: underline; margin-top: 2px;">${settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
+                </div>
+                <div style="position: relative; width: 70px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                  ${settings.schoolStamp ? `<img src="${settings.schoolStamp}" style="position: absolute; left: 0; top: 0; width: 32px; height: 32px; opacity: 0.85; object-fit: contain;" />` : ''}
+                  ${settings.principalSignature ? `<img src="${settings.principalSignature}" style="position: relative; z-index: 2; height: 26px; max-width: 100%; object-fit: contain;" />` : ''}
+                </div>
+              </div>
             </div>
             <script>
               window.onload = function() { window.print(); window.close(); }
@@ -737,6 +747,23 @@ export const DownloadLoginView: React.FC = () => {
                           <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
                             NISN: {selectedStudentForCard.nisn} &bull; Kelas {selectedStudentForCard.currentClass}
                           </p>
+                        </div>
+                      </div>
+
+                      {/* Signature & Stamp Validation */}
+                      <div className="bg-slate-50 border-t border-slate-100 px-4 py-2 flex items-center justify-between">
+                        <div className="text-[9px]">
+                          <p className="text-slate-400 font-bold">Mengetahui,</p>
+                          <p className="font-extrabold text-slate-800 text-[9.5px]">Kepala Sekolah</p>
+                          <p className="text-[9px] font-bold text-slate-900 underline truncate max-w-[120px]">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</p>
+                        </div>
+                        <div className="h-9 w-20 relative flex items-center justify-center shrink-0">
+                          {settings.schoolStamp && (
+                            <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-9 w-9 opacity-85 object-contain" />
+                          )}
+                          {settings.principalSignature && (
+                            <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-7 max-w-full object-contain" />
+                          )}
                         </div>
                       </div>
 

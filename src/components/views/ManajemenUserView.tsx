@@ -577,11 +577,20 @@ export const ManajemenUserView: React.FC = () => {
                     {settings?.city || 'Kota'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                   <p className="text-xs font-bold text-slate-900">Kepala Sekolah / Administrator</p>
-                  <div className="h-16 flex items-center justify-center">
-                    {settings?.principalSignature ? (
-                      <img src={settings.principalSignature} alt="Tanda Tangan" className="h-14 object-contain" />
-                    ) : (
-                      <span className="text-[10px] text-slate-300 italic">( Tanda Tangan Digital )</span>
+                  <div className="h-16 flex items-center justify-center relative overflow-visible">
+                    {settings?.schoolStamp && (
+                      <img
+                        src={settings.schoolStamp}
+                        alt="Cap Sekolah"
+                        className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-16 w-16 object-contain opacity-85 pointer-events-none"
+                      />
+                    )}
+                    {settings?.principalSignature && (
+                      <img
+                        src={settings.principalSignature}
+                        alt="Tanda Tangan"
+                        className="relative z-10 h-14 object-contain pointer-events-none"
+                      />
                     )}
                   </div>
                   <p className="text-xs font-extrabold text-slate-900 underline">

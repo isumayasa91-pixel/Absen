@@ -2572,6 +2572,23 @@ export const LesKomputerView: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Validation Signature & Stamp */}
+              <div className="pt-3 border-t border-indigo-100 flex items-center justify-between">
+                <div className="text-[10px] text-slate-500 font-medium">
+                  <p>Mengetahui,</p>
+                  <p className="font-bold text-slate-800">Kepala Sekolah</p>
+                  <p className="font-bold text-slate-900 mt-8 underline">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</p>
+                </div>
+                <div className="h-12 w-28 relative flex items-center justify-center shrink-0">
+                  {settings.schoolStamp && (
+                    <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-12 w-12 opacity-85 object-contain" />
+                  )}
+                  {settings.principalSignature && (
+                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-10 max-w-full object-contain" />
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-end space-x-2 pt-2">

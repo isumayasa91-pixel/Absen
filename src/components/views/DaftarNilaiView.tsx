@@ -1400,9 +1400,20 @@ export const DaftarNilaiView: React.FC = () => {
                     <div>
                       <p>Mengetahui,</p>
                       <p className="font-bold">Kepala Sekolah</p>
-                      <div className="h-20 flex items-center justify-center">
+                      <div className="h-20 flex items-center justify-center relative overflow-visible">
+                        {settings?.schoolStamp && (
+                          <img
+                            src={settings.schoolStamp}
+                            alt="Cap Sekolah"
+                            className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-16 w-16 object-contain opacity-85 pointer-events-none"
+                          />
+                        )}
                         {settings?.principalSignature && (
-                          <img src={settings.principalSignature} alt="TTD Kepala Sekolah" className="h-16 object-contain" />
+                          <img
+                            src={settings.principalSignature}
+                            alt="TTD Kepala Sekolah"
+                            className="relative z-10 h-16 object-contain pointer-events-none"
+                          />
                         )}
                       </div>
                       <p className="font-extrabold underline">{principalName}</p>
