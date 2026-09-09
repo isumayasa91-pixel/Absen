@@ -38,6 +38,7 @@ import {
   QrCode,
   Download,
   Upload,
+  Wand2,
 } from 'lucide-react';
 
 export const KonfigurasiView: React.FC = () => {
@@ -112,6 +113,8 @@ export const KonfigurasiView: React.FC = () => {
   const [formData, setFormData] = useState({ ...settings });
   const [saveNotice, setSaveNotice] = useState(false);
   const [configGpsLoading, setConfigGpsLoading] = useState(false);
+  const [isProcessingWatermark, setIsProcessingWatermark] = useState<'signature' | 'stamp' | null>(null);
+  const [watermarkTolerance, setWatermarkTolerance] = useState<number>(210);
 
   useEffect(() => {
     setFormData({ ...settings });
@@ -353,6 +356,79 @@ export const KonfigurasiView: React.FC = () => {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const cleanImageBackground = (imageSrc: string, tolerance: number = 210): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(imageSrc);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, img.width, img.height);
+        const data = imgData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const a = data[i + 3];
+
+          if (a === 0) continue;
+
+          const brightness = (r + g + b) / 3;
+
+          if (r >= tolerance && g >= tolerance && b >= tolerance) {
+            data[i + 3] = 0; // Transparent
+          } else if (brightness > tolerance - 30) {
+            const alphaFactor = (tolerance - brightness) / 30;
+            data[i + 3] = Math.max(0, Math.min(255, Math.round(a * alphaFactor)));
+          } else {
+            // Sharpen ink colors
+            data[i] = Math.max(0, r - 10);
+            data[i + 1] = Math.max(0, g - 10);
+            data[i + 2] = Math.max(0, b - 10);
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = (err) => reject(err);
+      img.src = imageSrc;
+    });
+  };
+
+  const handleRemoveWatermark = async (target: 'signature' | 'stamp') => {
+    const src = target === 'signature' ? formData.principalSignature : formData.schoolStamp;
+    if (!src) {
+      showActionNotice(`⚠️ Silakan upload atau masukkan gambar ${target === 'signature' ? 'TTD' : 'Cap'} terlebih dahulu!`);
+      return;
+    }
+
+    setIsProcessingWatermark(target);
+    try {
+      const cleaned = await cleanImageBackground(src, watermarkTolerance);
+      if (target === 'signature') {
+        setFormData((prev) => ({ ...prev, principalSignature: cleaned }));
+        showActionNotice('✨ Berhasil membersihkan watermark & background putih TTD menjadi transparan!');
+      } else {
+        setFormData((prev) => ({ ...prev, schoolStamp: cleaned }));
+        showActionNotice('✨ Berhasil membersihkan watermark & background putih Cap Stempel menjadi transparan!');
+      }
+    } catch (err) {
+      console.error(err);
+      showActionNotice('❌ Gagal memproses pembersihan watermark. Pastikan format gambar valid.');
+    } finally {
+      setIsProcessingWatermark(null);
+    }
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -2306,6 +2382,61 @@ export const KonfigurasiView: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Fitur Hapus Watermark & Background TTD */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50/70 p-3 rounded-xl border border-blue-200/80 space-y-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+                            <Wand2 className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Pembersih Watermark & Background Putih</span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-600">
+                            Menghapus background kertas/putih & watermark hasil scan agar TTD bening/transparan.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveWatermark('signature')}
+                          disabled={!formData.principalSignature || isProcessingWatermark === 'signature'}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-all shrink-0 active:scale-95"
+                        >
+                          {isProcessingWatermark === 'signature' ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Proses...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="w-3.5 h-3.5" />
+                              <span>Hapus Watermark & Background</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center space-x-2 text-[10.5px] text-slate-600 pt-1 border-t border-blue-100">
+                        <span className="font-semibold text-slate-700">Tingkat Pembersihan:</span>
+                        {[
+                          { label: 'Biasa (225)', val: 225 },
+                          { label: 'Sedang (210)', val: 210 },
+                          { label: 'Kuat (190)', val: 190 },
+                        ].map((lvl) => (
+                          <button
+                            key={lvl.val}
+                            type="button"
+                            onClick={() => setWatermarkTolerance(lvl.val)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                              watermarkTolerance === lvl.val
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {lvl.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span>Format disarankan: PNG Transparan (Background bening).</span>
                       {formData.principalSignature && (
@@ -2407,6 +2538,61 @@ export const KonfigurasiView: React.FC = () => {
                           className="w-full accent-red-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                         />
                         <span className="text-[10px] font-bold text-slate-400">120px</span>
+                      </div>
+                    </div>
+
+                    {/* Fitur Hapus Watermark & Background Cap */}
+                    <div className="bg-gradient-to-r from-red-50 to-rose-50/70 p-3 rounded-xl border border-red-200/80 space-y-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-1.5 text-xs font-bold text-red-900">
+                            <Wand2 className="w-3.5 h-3.5 text-red-600" />
+                            <span>Pembersih Watermark & Background Putih</span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-600">
+                            Menghapus background kertas/putih & watermark agar stempel bening & transparan saat menimpa TTD.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveWatermark('stamp')}
+                          disabled={!formData.schoolStamp || isProcessingWatermark === 'stamp'}
+                          className="bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center space-x-1.5 cursor-pointer transition-all shrink-0 active:scale-95"
+                        >
+                          {isProcessingWatermark === 'stamp' ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Proses...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="w-3.5 h-3.5" />
+                              <span>Hapus Watermark & Background</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center space-x-2 text-[10.5px] text-slate-600 pt-1 border-t border-red-100">
+                        <span className="font-semibold text-slate-700">Tingkat Pembersihan:</span>
+                        {[
+                          { label: 'Biasa (225)', val: 225 },
+                          { label: 'Sedang (210)', val: 210 },
+                          { label: 'Kuat (190)', val: 190 },
+                        ].map((lvl) => (
+                          <button
+                            key={lvl.val}
+                            type="button"
+                            onClick={() => setWatermarkTolerance(lvl.val)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                              watermarkTolerance === lvl.val
+                                ? 'bg-red-600 text-white border-red-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {lvl.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
