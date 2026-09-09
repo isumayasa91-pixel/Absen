@@ -229,7 +229,9 @@ export interface SystemSetting {
   governmentHeaderLine1?: string; // Baris 1 KOP Surat (contoh: PEMERINTAH KABUPATEN TABANAN)
   governmentHeaderLine2?: string; // Baris 2 KOP Surat (contoh: DINAS PENDIDIKAN)
   principalSignature?: string;
+  principalSignatureSize?: number; // Height in px, range 30 - 120, default 64
   schoolStamp?: string;
+  schoolStampSize?: number; // Height/Width in px, range 30 - 120, default 64
   enableClassAttendance: boolean;
   enableOnlineAttendance: boolean;
   autoViolationPoints: boolean;

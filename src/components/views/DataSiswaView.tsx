@@ -959,19 +959,26 @@ export const DataSiswaView: React.FC = () => {
                         <div className="text-[6.5px] text-slate-800 font-black leading-tight">Kepala Sekolah</div>
 
                         {/* Visual Container Signature + Stamp (Enlarged & Proportional) */}
-                        <div className="h-9 my-0.5 relative flex items-center justify-center overflow-visible">
+                        <div className="h-10 my-0.5 relative flex items-center justify-center overflow-visible">
                           {settings.schoolStamp && (
                             <img
                               src={settings.schoolStamp}
                               alt="Cap Sekolah"
-                              className="absolute left-1/2 top-1/2 -translate-x-[58%] -translate-y-1/2 h-9 w-9 object-contain opacity-90 pointer-events-none crisp-card"
+                              style={{
+                                height: `${Math.max(20, Math.min(48, (settings.schoolStampSize || 64) * 0.55))}px`,
+                                width: `${Math.max(20, Math.min(48, (settings.schoolStampSize || 64) * 0.55))}px`,
+                              }}
+                              className="absolute left-1/2 top-1/2 -translate-x-[58%] -translate-y-1/2 object-contain opacity-90 pointer-events-none crisp-card transition-all"
                             />
                           )}
                           {settings.principalSignature && (
                             <img
                               src={settings.principalSignature}
                               alt="TTD Kepsek"
-                              className="relative z-10 h-7.5 max-h-7.5 max-w-[100px] w-auto object-contain pointer-events-none crisp-card"
+                              style={{
+                                height: `${Math.max(16, Math.min(42, (settings.principalSignatureSize || 64) * 0.5))}px`,
+                              }}
+                              className="relative z-10 max-w-[100px] w-auto object-contain pointer-events-none crisp-card transition-all"
                             />
                           )}
                         </div>
@@ -1049,12 +1056,27 @@ export const DataSiswaView: React.FC = () => {
                     NIP. {settings.principalNip || '19750812 199903 1 002'}
                   </div>
                 </div>
-                <div className="h-10 w-24 relative shrink-0 flex items-center justify-center">
+                <div className="h-12 w-24 relative shrink-0 flex items-center justify-center">
                   {settings.schoolStamp && (
-                    <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-10 w-10 opacity-85 object-contain" />
+                    <img
+                      src={settings.schoolStamp}
+                      alt="Cap"
+                      style={{
+                        height: `${Math.max(24, Math.min(48, (settings.schoolStampSize || 64) * 0.6))}px`,
+                        width: `${Math.max(24, Math.min(48, (settings.schoolStampSize || 64) * 0.6))}px`,
+                      }}
+                      className="absolute -left-1 opacity-85 object-contain"
+                    />
                   )}
                   {settings.principalSignature && (
-                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-8.5 max-w-full object-contain" />
+                    <img
+                      src={settings.principalSignature}
+                      alt="TTD"
+                      style={{
+                        height: `${Math.max(20, Math.min(40, (settings.principalSignatureSize || 64) * 0.55))}px`,
+                      }}
+                      className="relative z-10 max-w-full object-contain"
+                    />
                   )}
                 </div>
               </div>

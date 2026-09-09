@@ -1405,14 +1405,21 @@ export const DaftarNilaiView: React.FC = () => {
                           <img
                             src={settings.schoolStamp}
                             alt="Cap Sekolah"
-                            className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 h-16 w-16 object-contain opacity-85 pointer-events-none"
+                            style={{
+                              height: `${settings?.schoolStampSize || 64}px`,
+                              width: `${settings?.schoolStampSize || 64}px`,
+                            }}
+                            className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 object-contain opacity-85 pointer-events-none transition-all"
                           />
                         )}
                         {settings?.principalSignature && (
                           <img
                             src={settings.principalSignature}
                             alt="TTD Kepala Sekolah"
-                            className="relative z-10 h-16 object-contain pointer-events-none"
+                            style={{
+                              height: `${settings?.principalSignatureSize || 64}px`,
+                            }}
+                            className="relative z-10 object-contain pointer-events-none transition-all"
                           />
                         )}
                       </div>

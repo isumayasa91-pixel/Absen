@@ -2580,12 +2580,27 @@ export const LesKomputerView: React.FC = () => {
                   <p className="font-bold text-slate-800">Kepala Sekolah</p>
                   <p className="font-bold text-slate-900 mt-8 underline">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</p>
                 </div>
-                <div className="h-12 w-28 relative flex items-center justify-center shrink-0">
+                <div className="h-14 w-28 relative flex items-center justify-center shrink-0">
                   {settings.schoolStamp && (
-                    <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-12 w-12 opacity-85 object-contain" />
+                    <img
+                      src={settings.schoolStamp}
+                      alt="Cap"
+                      style={{
+                        height: `${Math.max(24, Math.min(50, (settings.schoolStampSize || 64) * 0.6))}px`,
+                        width: `${Math.max(24, Math.min(50, (settings.schoolStampSize || 64) * 0.6))}px`,
+                      }}
+                      className="absolute -left-1 opacity-85 object-contain"
+                    />
                   )}
                   {settings.principalSignature && (
-                    <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-10 max-w-full object-contain" />
+                    <img
+                      src={settings.principalSignature}
+                      alt="TTD"
+                      style={{
+                        height: `${Math.max(20, Math.min(44, (settings.principalSignatureSize || 64) * 0.55))}px`,
+                      }}
+                      className="relative z-10 max-w-full object-contain"
+                    />
                   )}
                 </div>
               </div>

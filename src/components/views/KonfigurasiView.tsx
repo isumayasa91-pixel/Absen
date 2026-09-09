@@ -2223,25 +2223,31 @@ export const KonfigurasiView: React.FC = () => {
 
               {/* TANDA TANGAN KEPALA SEKOLAH */}
               <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
-                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <span>Tanda Tangan Kepala Sekolah (TTD)</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span>Tanda Tangan Kepala Sekolah (TTD)</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full">
+                    Tinggi: {formData.principalSignatureSize || 64}px
+                  </span>
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-24 h-16 rounded-2xl border-2 border-blue-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
+                  <div className="w-24 h-20 rounded-2xl border-2 border-blue-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
                     {formData.principalSignature ? (
                       <img
                         src={formData.principalSignature}
                         alt="TTD Kepsek"
-                        className="w-full h-full object-contain"
+                        style={{ height: `${formData.principalSignatureSize || 64}px` }}
+                        className="max-w-full object-contain"
                       />
                     ) : (
                       <span className="text-[10px] text-slate-400 font-bold text-center">Belum ada TTD</span>
                     )}
                   </div>
 
-                  <div className="flex-1 w-full space-y-2">
+                  <div className="flex-1 w-full space-y-3">
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
@@ -2261,6 +2267,45 @@ export const KonfigurasiView: React.FC = () => {
                         />
                       </label>
                     </div>
+
+                    {/* Slider Ukuran TTD */}
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                        <span>Pengatur Ukuran TTD pada Cetakan:</span>
+                        <div className="space-x-1">
+                          {[45, 64, 85].map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, principalSignatureSize: s })}
+                              className={`px-2 py-0.5 text-[10px] rounded-md border font-semibold cursor-pointer transition-all ${
+                                (formData.principalSignatureSize || 64) === s
+                                  ? 'bg-blue-600 text-white border-blue-600'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {s === 45 ? 'Kecil' : s === 64 ? 'Sedang' : 'Besar'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-[10px] font-bold text-slate-400">30px</span>
+                        <input
+                          type="range"
+                          min="30"
+                          max="120"
+                          step="2"
+                          value={formData.principalSignatureSize || 64}
+                          onChange={(e) =>
+                            setFormData({ ...formData, principalSignatureSize: Number(e.target.value) })
+                          }
+                          className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400">120px</span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span>Format disarankan: PNG Transparan (Background bening).</span>
                       {formData.principalSignature && (
@@ -2279,25 +2324,34 @@ export const KonfigurasiView: React.FC = () => {
 
               {/* CAP / STEMPEL RESMI SEKOLAH */}
               <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
-                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-                  <Award className="w-4 h-4 text-red-600" />
-                  <span>Cap / Stempel Resmi Sekolah</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                    <Award className="w-4 h-4 text-red-600" />
+                    <span>Cap / Stempel Resmi Sekolah</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-red-700 bg-red-100/80 px-2.5 py-0.5 rounded-full">
+                    Ukuran: {formData.schoolStampSize || 64}px
+                  </span>
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-20 h-20 rounded-2xl border-2 border-red-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
+                  <div className="w-24 h-20 rounded-2xl border-2 border-red-200 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
                     {formData.schoolStamp ? (
                       <img
                         src={formData.schoolStamp}
                         alt="Cap Sekolah"
-                        className="w-full h-full object-contain"
+                        style={{
+                          height: `${formData.schoolStampSize || 64}px`,
+                          width: `${formData.schoolStampSize || 64}px`,
+                        }}
+                        className="max-w-full max-h-full object-contain"
                       />
                     ) : (
                       <span className="text-[10px] text-slate-400 font-bold text-center">Belum ada Cap</span>
                     )}
                   </div>
 
-                  <div className="flex-1 w-full space-y-2">
+                  <div className="flex-1 w-full space-y-3">
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
@@ -2317,8 +2371,47 @@ export const KonfigurasiView: React.FC = () => {
                         />
                       </label>
                     </div>
+
+                    {/* Slider Ukuran Cap */}
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                        <span>Pengatur Ukuran Cap Stempel pada Cetakan:</span>
+                        <div className="space-x-1">
+                          {[45, 64, 85].map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, schoolStampSize: s })}
+                              className={`px-2 py-0.5 text-[10px] rounded-md border font-semibold cursor-pointer transition-all ${
+                                (formData.schoolStampSize || 64) === s
+                                  ? 'bg-red-600 text-white border-red-600'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {s === 45 ? 'Kecil' : s === 64 ? 'Sedang' : 'Besar'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-[10px] font-bold text-slate-400">30px</span>
+                        <input
+                          type="range"
+                          min="30"
+                          max="120"
+                          step="2"
+                          value={formData.schoolStampSize || 64}
+                          onChange={(e) =>
+                            setFormData({ ...formData, schoolStampSize: Number(e.target.value) })
+                          }
+                          className="w-full accent-red-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400">120px</span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>Cap akan dicetak menimpa tanda tangan pada kartu fisik.</span>
+                      <span>Cap akan dicetak menimpa tanda tangan pada seluruh cetakan dokumen.</span>
                       {formData.schoolStamp && (
                         <button
                           type="button"
@@ -2330,6 +2423,55 @@ export const KonfigurasiView: React.FC = () => {
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* PRATINJAU REALTIME PENGESAHAN KEPALA SEKOLAH */}
+              <div className="p-4 bg-purple-50/70 border border-purple-200/80 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-purple-900 uppercase tracking-wider flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                    <span>Pratinjau Hasil Cetak Pengesahan TTD & Cap (Realtime)</span>
+                  </span>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
+                    Simulasi Ukuran Dokumen
+                  </span>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl border border-purple-200/80 shadow-xs text-center space-y-1">
+                  <p className="text-[11px] text-slate-500 font-medium">Mengetahui,</p>
+                  <p className="text-xs font-extrabold text-slate-900">Kepala Sekolah</p>
+
+                  <div className="h-24 flex items-center justify-center relative overflow-visible my-2">
+                    {formData.schoolStamp && (
+                      <img
+                        src={formData.schoolStamp}
+                        alt="Cap Stempel"
+                        style={{
+                          height: `${formData.schoolStampSize || 64}px`,
+                          width: `${formData.schoolStampSize || 64}px`,
+                        }}
+                        className="absolute left-1/2 top-1/2 -translate-x-[60%] -translate-y-1/2 object-contain opacity-85 pointer-events-none transition-all"
+                      />
+                    )}
+                    {formData.principalSignature && (
+                      <img
+                        src={formData.principalSignature}
+                        alt="TTD Kepsek"
+                        style={{
+                          height: `${formData.principalSignatureSize || 64}px`,
+                        }}
+                        className="relative z-10 object-contain pointer-events-none transition-all"
+                      />
+                    )}
+                  </div>
+
+                  <p className="text-xs font-extrabold text-slate-900 underline">
+                    {formData.principalName || 'Nama Kepala Sekolah'}
+                  </p>
+                  <p className="text-[11px] text-slate-600 font-medium">
+                    NIP. {formData.principalNip || '-'}
+                  </p>
                 </div>
               </div>
             </div>

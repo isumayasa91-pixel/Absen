@@ -437,9 +437,9 @@ export const DownloadLoginView: React.FC = () => {
                   <div>Mengetahui, <b>Kepala Sekolah</b></div>
                   <div style="font-weight: bold; text-decoration: underline; margin-top: 2px;">${settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</div>
                 </div>
-                <div style="position: relative; width: 70px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                  ${settings.schoolStamp ? `<img src="${settings.schoolStamp}" style="position: absolute; left: 0; top: 0; width: 32px; height: 32px; opacity: 0.85; object-fit: contain;" />` : ''}
-                  ${settings.principalSignature ? `<img src="${settings.principalSignature}" style="position: relative; z-index: 2; height: 26px; max-width: 100%; object-fit: contain;" />` : ''}
+                <div style="position: relative; width: 80px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                  ${settings.schoolStamp ? `<img src="${settings.schoolStamp}" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: ${Math.max(20, Math.min(42, (settings.schoolStampSize || 64) * 0.5))}px; height: ${Math.max(20, Math.min(42, (settings.schoolStampSize || 64) * 0.5))}px; opacity: 0.85; object-fit: contain;" />` : ''}
+                  ${settings.principalSignature ? `<img src="${settings.principalSignature}" style="position: relative; z-index: 2; height: ${Math.max(16, Math.min(36, (settings.principalSignatureSize || 64) * 0.45))}px; max-width: 100%; object-fit: contain;" />` : ''}
                 </div>
               </div>
             </div>
@@ -757,12 +757,27 @@ export const DownloadLoginView: React.FC = () => {
                           <p className="font-extrabold text-slate-800 text-[9.5px]">Kepala Sekolah</p>
                           <p className="text-[9px] font-bold text-slate-900 underline truncate max-w-[120px]">{settings.principalName || 'Dr. H. Ahmad Wijaya, M.Pd.'}</p>
                         </div>
-                        <div className="h-9 w-20 relative flex items-center justify-center shrink-0">
+                        <div className="h-10 w-20 relative flex items-center justify-center shrink-0">
                           {settings.schoolStamp && (
-                            <img src={settings.schoolStamp} alt="Cap" className="absolute -left-1 h-9 w-9 opacity-85 object-contain" />
+                            <img
+                              src={settings.schoolStamp}
+                              alt="Cap"
+                              style={{
+                                height: `${Math.max(20, Math.min(42, (settings.schoolStampSize || 64) * 0.5))}px`,
+                                width: `${Math.max(20, Math.min(42, (settings.schoolStampSize || 64) * 0.5))}px`,
+                              }}
+                              className="absolute -left-1 opacity-85 object-contain"
+                            />
                           )}
                           {settings.principalSignature && (
-                            <img src={settings.principalSignature} alt="TTD" className="relative z-10 h-7 max-w-full object-contain" />
+                            <img
+                              src={settings.principalSignature}
+                              alt="TTD"
+                              style={{
+                                height: `${Math.max(16, Math.min(36, (settings.principalSignatureSize || 64) * 0.45))}px`,
+                              }}
+                              className="relative z-10 max-w-full object-contain"
+                            />
                           )}
                         </div>
                       </div>
