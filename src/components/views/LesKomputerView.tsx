@@ -2574,7 +2574,7 @@ export const LesKomputerView: React.FC = () => {
               </div>
 
               {/* Validation Signature & Stamp */}
-              <div className="pt-3 border-t border-indigo-100 flex items-center justify-between">
+              <div className="pt-3 border-t border-indigo-100 flex items-center justify-between break-inside-avoid print-pengesahan">
                 <div className="text-[10px] text-slate-500 font-medium">
                   <p>Mengetahui,</p>
                   <p className="font-bold text-slate-800">Kepala Sekolah</p>

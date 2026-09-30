@@ -1046,7 +1046,7 @@ export const DataSiswaView: React.FC = () => {
               </div>
 
               {/* Data Pengesahan Kepsek */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left flex items-center justify-between">
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-left flex items-center justify-between break-inside-avoid print-pengesahan">
                 <div className="min-w-0 flex-1 pr-2">
                   <div className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">Kepala Sekolah</div>
                   <div className="text-xs font-black text-slate-900 truncate" title={settings.principalName}>

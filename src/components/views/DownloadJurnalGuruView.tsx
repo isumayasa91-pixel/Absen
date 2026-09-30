@@ -849,7 +849,7 @@ export const DownloadJurnalGuruView: React.FC = () => {
                 const printTeacherNip = printTeacherObj?.nip || printTeacherObj?.nuptk || '-';
 
                 return (
-                  <div className="grid grid-cols-2 pt-8 text-xs font-semibold text-center break-inside-avoid">
+                  <div className="grid grid-cols-2 pt-8 text-xs font-semibold text-center break-inside-avoid print-pengesahan">
                     <div>
                       <p>Mengetahui,</p>
                       <p className="font-bold">Kepala Sekolah</p>

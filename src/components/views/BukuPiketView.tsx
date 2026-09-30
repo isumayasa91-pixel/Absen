@@ -1756,7 +1756,7 @@ export const BukuPiketView: React.FC = () => {
                 BAWAH KIRI: MENGETAHUI KEPALA SEKOLAH
                 BAWAH KANAN: PETUGAS GURU PIKET (3 ORANG)
             */}
-            <div className="grid grid-cols-2 gap-8 text-xs font-sans pt-4 mt-6">
+            <div className="grid grid-cols-2 gap-8 text-xs font-sans pt-4 mt-6 break-inside-avoid print-pengesahan">
               {/* Bawah Kiri: Mengetahui Kepala Sekolah */}
               <div className="text-center flex flex-col justify-between h-full pt-6">
                 <div>

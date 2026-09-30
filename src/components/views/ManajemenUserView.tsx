@@ -571,7 +571,7 @@ export const ManajemenUserView: React.FC = () => {
               </div>
 
               {/* Area Pengesahan Tanda Tangan */}
-              <div className="pt-8 flex justify-end">
+              <div className="pt-8 flex justify-end break-inside-avoid print-pengesahan">
                 <div className="text-center w-64 space-y-1">
                   <p className="text-xs text-slate-700 font-medium">
                     {settings?.city || 'Kota'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
