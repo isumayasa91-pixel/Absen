@@ -328,6 +328,21 @@ export const KonfigurasiView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleHeaderBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target?.result as string;
+      if (base64) {
+        setFormData((prev) => ({ ...prev, headerBannerImage: base64, useHeaderBannerImage: true }));
+        showNotice('✅ Gambar Header / Banner KOP Surat berhasil diunggah!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSignatureFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2293,6 +2308,99 @@ export const KonfigurasiView: React.FC = () => {
                         Logo Pemda / Tut Wuri
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* GAMBAR HEADER / KOP SURAT CETAKAN (HEADER BANNER) */}
+              <div className="md:col-span-2 p-4 bg-purple-50/70 border border-purple-200 rounded-2xl space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <label className="text-xs font-extrabold text-purple-950 uppercase tracking-wider flex items-center space-x-1.5">
+                    <ImageIcon className="w-4 h-4 text-purple-600" />
+                    <span>Gambar Header / Banner KOP Surat Cetakan (Custom Header)</span>
+                  </label>
+
+                  {/* Toggle Checkbox */}
+                  <label className="inline-flex items-center space-x-2 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-purple-200 shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.useHeaderBannerImage}
+                      onChange={(e) =>
+                        setFormData({ ...formData, useHeaderBannerImage: e.target.checked })
+                      }
+                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                    />
+                    <span className="text-xs font-extrabold text-purple-900">
+                      Gunakan Gambar Header pada Cetakan Laporan
+                    </span>
+                  </label>
+                </div>
+
+                <p className="text-[11px] text-slate-600">
+                  Unggah gambar banner KOP Surat resmi sekolah (file PNG/JPG). Jika diaktifkan, cetakan dokumen (Jurnal Guru, Daftar Nilai, Buku Piket) akan menampilkan gambar header kustom ini di bagian paling atas.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+                  {/* Banner Preview */}
+                  <div className="w-full sm:w-64 h-20 rounded-xl border-2 border-purple-300 bg-white p-1 shadow-xs flex items-center justify-center shrink-0 overflow-hidden relative">
+                    {formData.headerBannerImage ? (
+                      <img
+                        src={formData.headerBannerImage}
+                        alt="Header Banner"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-center p-2">
+                        <ImageIcon className="w-6 h-6 text-purple-300 mx-auto mb-1" />
+                        <span className="text-[10px] font-bold text-slate-400">Belum ada Gambar Header</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={formData.headerBannerImage || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, headerBannerImage: e.target.value })
+                        }
+                        placeholder="https://... atau Data URL Gambar Header PNG/JPG"
+                        className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-700"
+                      />
+                      <label className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs inline-flex items-center justify-center space-x-1.5 cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-3.5 h-3.5 text-purple-200" />
+                        <span>Upload Gambar Header</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleHeaderBannerFileUpload}
+                        />
+                      </label>
+                    </div>
+
+                    {formData.headerBannerImage && (
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10.5px] font-bold text-emerald-700 flex items-center space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" />
+                          <span>Gambar Header Tersimpan & Ready</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              headerBannerImage: '',
+                              useHeaderBannerImage: false,
+                            })
+                          }
+                          className="text-rose-600 hover:text-rose-800 text-[11px] font-bold underline cursor-pointer"
+                        >
+                          Hapus Gambar Header
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

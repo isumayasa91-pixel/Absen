@@ -33,6 +33,8 @@ export const initialSystemSettings: SystemSetting = {
   principalNip: '19750812 199903 1 002',
   schoolLogo: 'https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=150&auto=format&fit=crop&q=80',
   regencyLogo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&auto=format&fit=crop&q=80',
+  headerBannerImage: '',
+  useHeaderBannerImage: false,
   governmentHeaderLine1: 'PEMERINTAH KABUPATEN TABANAN',
   governmentHeaderLine2: 'DINAS PENDIDIKAN',
   principalSignature: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="60" viewBox="0 0 150 60"><path d="M10 40 Q 30 10, 45 35 T 70 25 T 95 40 T 130 15 M 25 35 L 110 35 M 40 45 Q 70 55, 120 40" stroke="%231e3a8a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,

@@ -226,6 +226,8 @@ export interface SystemSetting {
   principalNip: string;
   schoolLogo: string;
   regencyLogo?: string;
+  headerBannerImage?: string; // Gambar Banner Header KOP Surat Resmi
+  useHeaderBannerImage?: boolean; // Aktifkan Banner Gambar KOP Surat pada Cetakan
   governmentHeaderLine1?: string; // Baris 1 KOP Surat (contoh: PEMERINTAH KABUPATEN TABANAN)
   governmentHeaderLine2?: string; // Baris 2 KOP Surat (contoh: DINAS PENDIDIKAN)
   principalSignature?: string;
