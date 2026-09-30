@@ -1208,7 +1208,7 @@ export const DaftarNilaiView: React.FC = () => {
       {/* Modal Cetak / Preview PDF Daftar Nilai Resmi */}
       {showPdfModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static">
-          <div className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 my-8 print:border-none print:shadow-none print:m-0 print:p-0 print:rounded-none">
+          <div className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 my-8 print:border-none print:shadow-none print:m-0 print:p-4 print:rounded-none">
             {/* Modal Header Controls (Hidden during print) */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden">
               <div className="flex items-center gap-2">
@@ -1238,9 +1238,9 @@ export const DaftarNilaiView: React.FC = () => {
             </div>
 
             {/* Printable Document Content Container */}
-            <div ref={printRef} className="print-area space-y-4 text-slate-900 font-sans print:p-0 print:m-0 print:pt-0 print:mt-0">
+            <div ref={printRef} className="print-area space-y-6 text-slate-900 font-sans p-2">
               {/* Kop Surat Resmi Dual Logo (Kabupaten & Sekolah) */}
-              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-2 gap-4 print:pt-0 print:mt-0">
+              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 gap-4">
                 {/* Logo Kabupaten (Kiri) */}
                 {settings?.regencyLogo ? (
                   <img src={settings.regencyLogo} alt="Logo Kabupaten" className="w-16 h-16 object-contain shrink-0" />
