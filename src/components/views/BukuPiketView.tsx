@@ -1568,11 +1568,11 @@ export const BukuPiketView: React.FC = () => {
           <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-300 shadow-xl max-w-5xl mx-auto text-slate-900 font-serif leading-relaxed print:p-0 print:m-0 print:border-none print:shadow-none print-area">
             {/* Kop Surat Sekolah (Custom Banner atau Dual Logo) */}
             {settings?.useHeaderBannerImage && settings?.headerBannerImage ? (
-              <div className="w-full border-b-4 border-double border-slate-900 pb-2 mb-3 text-center">
+              <div className="w-full border-b-4 border-double border-slate-900 pb-2 mb-3 text-center overflow-hidden">
                 <img
                   src={settings.headerBannerImage}
                   alt="Header KOP Surat Resmi"
-                  className="w-full max-h-36 object-contain mx-auto"
+                  className="w-full h-auto object-contain print-header-banner-img mx-auto block"
                 />
               </div>
             ) : (

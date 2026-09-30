@@ -113,6 +113,18 @@
     z-index: 9999999 !important;
   }
 
+  /* Ensure header banner images stretch cleanly across 100% paper width when printed */
+  .print-header-banner-img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: fill !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
   /* Ensure pengesahan & signature sections never get split or truncated */
   .print-pengesahan,
   .print-signature-block,

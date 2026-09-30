@@ -1241,11 +1241,11 @@ export const DaftarNilaiView: React.FC = () => {
             <div ref={printRef} className="print-area space-y-6 text-slate-900 font-sans p-2">
               {/* Kop Surat Resmi (Custom Banner atau Dual Logo) */}
               {settings?.useHeaderBannerImage && settings?.headerBannerImage ? (
-                <div className="w-full border-b-2 border-slate-900 pb-2 mb-2 text-center">
+                <div className="w-full border-b-2 border-slate-900 pb-2 mb-2 text-center overflow-hidden">
                   <img
                     src={settings.headerBannerImage}
                     alt="Header KOP Surat Resmi"
-                    className="w-full max-h-36 object-contain mx-auto"
+                    className="w-full h-auto object-contain print-header-banner-img mx-auto block"
                   />
                 </div>
               ) : (
