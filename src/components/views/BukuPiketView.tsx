@@ -1724,8 +1724,8 @@ export const BukuPiketView: React.FC = () => {
             </div>
 
             {/* KEJADIAN PENTING & SISWA MENDAHULUI PULANG */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-xs font-sans">
-              <div className="border border-slate-800 p-3 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 text-xs font-sans break-inside-avoid print:grid print:grid-cols-2 print:gap-4 print-signature-block">
+              <div className="border border-slate-800 p-3 rounded-lg break-inside-avoid overflow-visible">
                 <div className="font-bold uppercase tracking-wider mb-2 border-b border-slate-300 pb-1">
                   Siswa Yang Mendahului Pulang
                 </div>
@@ -1742,11 +1742,11 @@ export const BukuPiketView: React.FC = () => {
                 )}
               </div>
 
-              <div className="border border-slate-800 p-3 rounded-lg">
+              <div className="border border-slate-800 p-3 rounded-lg break-inside-avoid overflow-visible">
                 <div className="font-bold uppercase tracking-wider mb-2 border-b border-slate-300 pb-1">
                   Kejadian Penting / Catatan Piket
                 </div>
-                <p className="text-[11px] whitespace-pre-line leading-relaxed">
+                <p className="text-[11px] whitespace-pre-line leading-relaxed break-words overflow-visible">
                   {formData.importantEvents || 'KBM terlaksana dengan aman, tertib, dan lancar.'}
                 </p>
               </div>
