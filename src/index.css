@@ -15,15 +15,20 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 4mm 10mm 8mm 10mm;
+    margin-top: 0 !important;
+    margin-bottom: 8mm !important;
+    margin-left: 10mm !important;
+    margin-right: 10mm !important;
   }
 
-  /* Reset global document for clean print */
+  /* Reset global document for clean print anchored to absolute top */
   html, body, #root {
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
     width: 100% !important;
     height: auto !important;
     min-height: auto !important;
@@ -57,16 +62,22 @@
     padding: 0 !important;
   }
 
-  /* Reset modal containers so they don't block or add blank spacing or clip overflow */
+  /* Reset modal containers & wrappers so they have 0 padding/margin on print */
   .fixed,
   [class*="backdrop-blur"],
   [class*="bg-slate-950"],
   [class*="bg-slate-900"],
-  [class*="overflow-y-auto"] {
+  [class*="overflow-y-auto"],
+  .fixed > div,
+  .overflow-y-auto > div,
+  div[class*="rounded-3xl"],
+  div[class*="max-w-"] {
     position: static !important;
     background: transparent !important;
     padding: 0 !important;
+    padding-top: 0 !important;
     margin: 0 !important;
+    margin-top: 0 !important;
     backdrop-filter: none !important;
     max-height: none !important;
     height: auto !important;
@@ -101,22 +112,23 @@
   .print-area {
     position: relative !important;
     left: auto !important;
-    top: auto !important;
+    top: 0 !important;
     width: 100% !important;
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
     padding: 0 !important;
+    padding-top: 0 !important;
+    margin: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
     z-index: 9999999 !important;
   }
 
-  /* Compact print header / Kop Surat positioning & tight spacing */
+  /* Compact print header / Kop Surat positioning & tight top alignment */
   .print-area > div:first-child,
-  .print-area header,
+  .print-area header:first-child,
   .print-header-kop {
     margin-top: 0 !important;
     padding-top: 0 !important;
@@ -124,21 +136,21 @@
 
   .print-area .border-b-4,
   .print-area .border-b-2 {
-    margin-bottom: 0.5rem !important;
-    padding-bottom: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+    padding-bottom: 0.25rem !important;
   }
 
   .print-area .mb-6 {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.35rem !important;
   }
 
   .print-area .mb-8 {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
   }
 
   .print-area .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.6rem !important;
-    margin-bottom: 0.6rem !important;
+    margin-top: 0.4rem !important;
+    margin-bottom: 0.4rem !important;
   }
 
   /* Ensure pengesahan & signature sections never get split or truncated */

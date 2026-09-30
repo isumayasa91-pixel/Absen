@@ -1565,9 +1565,9 @@ export const BukuPiketView: React.FC = () => {
           </div>
 
           {/* Printable Document Container */}
-          <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-300 shadow-xl max-w-5xl mx-auto text-slate-900 font-serif leading-relaxed print:p-0 print:border-none print:shadow-none print-area">
+          <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-300 shadow-xl max-w-5xl mx-auto text-slate-900 font-serif leading-relaxed print:p-0 print:m-0 print:border-none print:shadow-none print-area">
             {/* Kop Surat Sekolah Dual Logo */}
-            <div className="flex items-center justify-between border-b-4 border-double border-slate-900 pb-4 mb-6 gap-4">
+            <div className="flex items-center justify-between border-b-4 border-double border-slate-900 pb-2 mb-3 gap-4 print:pt-0 print:mt-0">
               {/* Logo Pemda (Kiri) */}
               {settings?.regencyLogo ? (
                 <img src={settings.regencyLogo} alt="Logo Pemda" className="w-16 h-16 object-contain shrink-0" />

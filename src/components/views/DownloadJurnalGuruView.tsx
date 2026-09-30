@@ -678,7 +678,7 @@ export const DownloadJurnalGuruView: React.FC = () => {
       {/* Modal Cetak / PDF Formal Preview */}
       {showPrintModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static">
-          <div className="bg-white rounded-3xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 my-8 print:border-none print:shadow-none print:m-0 print:p-4 print:rounded-none">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 my-8 print:border-none print:shadow-none print:m-0 print:p-0 print:rounded-none">
             {/* Modal Actions Bar (Hidden on Print) */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 print:hidden no-print">
               <div className="flex items-center gap-2">
@@ -707,9 +707,9 @@ export const DownloadJurnalGuruView: React.FC = () => {
             </div>
 
             {/* Printable Document Area */}
-            <div ref={printRef} className="print-area space-y-6 text-slate-900 font-sans p-2">
+            <div ref={printRef} className="print-area space-y-4 text-slate-900 font-sans print:p-0 print:m-0 print:pt-0 print:mt-0">
               {/* Kop Surat Resmi dengan Dual Logo (Kabupaten & Sekolah) */}
-              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 gap-4">
+              <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-2 gap-4 print:pt-0 print:mt-0">
                 {/* Logo Kabupaten / Pemda (Kiri) */}
                 {settings?.regencyLogo ? (
                   <img src={settings.regencyLogo} alt="Logo Pemda/Kabupaten" className="w-16 h-16 object-contain shrink-0" />
