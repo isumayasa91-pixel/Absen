@@ -15,7 +15,10 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm;
+    margin-top: 2.54cm !important;
+    margin-bottom: 2.54cm !important;
+    margin-left: 1.5cm !important;
+    margin-right: 1.5cm !important;
   }
 
   /* Reset global document for clean print */
@@ -123,6 +126,14 @@
     display: block !important;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+
+  /* Kop Surat tight top anchoring at exact 2.54 cm page margin */
+  .print-area > div:first-child,
+  .print-area header:first-child,
+  .print-header-kop {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 
   /* Ensure pengesahan & signature sections never get split or truncated */
