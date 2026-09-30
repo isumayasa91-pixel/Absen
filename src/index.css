@@ -135,21 +135,49 @@
 
   .print-area .border-b-4,
   .print-area .border-b-2 {
-    margin-bottom: 0.35rem !important;
-    padding-bottom: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+    padding-bottom: 0.15rem !important;
   }
 
-  .print-area .mb-6 {
-    margin-bottom: 0.35rem !important;
-  }
-
+  .print-area .mb-6,
   .print-area .mb-8 {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
-  .print-area .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.4rem !important;
-    margin-bottom: 0.4rem !important;
+  .print-area .mt-6,
+  .print-area .mt-8 {
+    margin-top: 0.25rem !important;
+  }
+
+  .print-area .pb-4 {
+    padding-bottom: 0.15rem !important;
+  }
+
+  .print-area .pt-4,
+  .print-area .pt-6,
+  .print-area .pt-8 {
+    padding-top: 0.15rem !important;
+  }
+
+  .print-area .space-y-6 > :not([hidden]) ~ :not([hidden]),
+  .print-area .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .print-area .h-20 {
+    height: 3.25rem !important;
+  }
+
+  /* Compact table padding in print mode to fit 1 page comfortably */
+  .print-area table th,
+  .print-area table td {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
   }
 
   /* Table multi-page flow and repeating headers */
